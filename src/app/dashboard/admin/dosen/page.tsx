@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { useData } from "@/context/DataContext";
 import { Dosen } from "@/data/dosen";
 import Modal from "@/components/universal/Modal";
-import { HiOutlinePlus, HiOutlinePencilSquare, HiOutlineTrash, HiOutlineArrowUpTray } from "react-icons/hi2";
+import { HiOutlinePlus, HiOutlinePencilSquare, HiOutlineTrash, HiOutlineArrowUpTray, HiOutlineEye, HiOutlineEyeSlash } from "react-icons/hi2";
 import Image from "next/image";
 
 export default function AdminDosenPage() {
@@ -12,18 +12,31 @@ export default function AdminDosenPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<Dosen>>({});
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   const handleOpenAdd = () => {
     setEditingId(null);
-    setFormData({ id: `dosen-${Date.now()}`, nama: "", nidn: "", email: "", bidangKeahlian: [] });
+    setFormData({ nama: "", nidn: "", email: "", bidangKeahlian: [] });
+    setPassword("");
+    setShowPassword(false);
+    setFormError("");
+    setSuccessMsg("");
     setIsModalOpen(true);
   };
 
   const handleOpenEdit = (dosen: Dosen) => {
     setEditingId(dosen.id);
     setFormData(dosen);
+    setPassword("");
+    setShowPassword(false);
+    setFormError("");
+    setSuccessMsg("");
     setIsModalOpen(true);
   };
 
@@ -33,14 +46,48 @@ export default function AdminDosenPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingId) {
-      updateDosen(editingId, formData as Dosen);
-    } else {
-      addDosen(formData as Dosen);
+    setFormError("");
+    setSuccessMsg("");
+    setIsSubmitting(true);
+
+    try {
+      if (editingId) {
+        await updateDosen(editingId, formData as Dosen);
+        setIsModalOpen(false);
+      } else {
+        // Validation for new dosen
+        if (!formData.email) {
+          setFormError("Email wajib diisi untuk membuat akun dosen.");
+          setIsSubmitting(false);
+          return;
+        }
+        if (!password) {
+          setFormError("Password wajib diisi untuk membuat akun dosen.");
+          setIsSubmitting(false);
+          return;
+        }
+        if (password.length < 6) {
+          setFormError("Password harus minimal 6 karakter.");
+          setIsSubmitting(false);
+          return;
+        }
+
+        await addDosen(formData as Dosen, password);
+        setSuccessMsg(`Akun dosen berhasil dibuat! Dosen dapat login menggunakan email: ${formData.email}`);
+        
+        // Auto-close after showing success
+        setTimeout(() => {
+          setIsModalOpen(false);
+          setSuccessMsg("");
+        }, 3000);
+      }
+    } catch (err: any) {
+      setFormError(err.message || "Terjadi kesalahan.");
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsModalOpen(false);
   };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,6 +172,20 @@ export default function AdminDosenPage() {
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingId ? "Edit Dosen" : "Tambah Dosen Baru"}>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Error message */}
+          {formError && (
+            <div className="p-3 rounded-xl bg-red-50 text-red-600 text-sm font-medium border border-red-100">
+              {formError}
+            </div>
+          )}
+
+          {/* Success message */}
+          {successMsg && (
+            <div className="p-3 rounded-xl bg-green-50 text-green-700 text-sm font-medium border border-green-100">
+              ✅ {successMsg}
+            </div>
+          )}
+
           {/* Photo upload */}
           {editingId && (
             <div className="flex items-center gap-4">
@@ -172,15 +233,50 @@ export default function AdminDosenPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email {!editingId && <span className="text-red-500">*</span>}
+              </label>
               <input
                 type="email"
+                required={!editingId}
                 value={formData.email || ""}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                placeholder="email@polimdo.ac.id"
               />
             </div>
           </div>
+
+          {/* Password field — only shown when adding a new dosen */}
+          {!editingId && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Password <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 pr-10"
+                  placeholder="Minimal 6 karakter"
+                  minLength={6}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {showPassword ? <HiOutlineEyeSlash className="w-5 h-5" /> : <HiOutlineEye className="w-5 h-5" />}
+                </button>
+              </div>
+              <p className="text-xs text-gray-400 mt-1">
+                Dosen akan menggunakan email & password ini untuk login ke dashboard.
+              </p>
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Program Studi (Homebase)</label>
             <input
@@ -222,9 +318,10 @@ export default function AdminDosenPage() {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 transition-colors"
+              disabled={isSubmitting}
+              className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Simpan Data
+              {isSubmitting ? "Menyimpan..." : "Simpan Data"}
             </button>
           </div>
         </form>

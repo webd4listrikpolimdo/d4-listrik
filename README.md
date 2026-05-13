@@ -1,3 +1,9 @@
+# D4 Teknik Listrik — Sistem Informasi Program Studi
+
+**GitHub Repository:** [https://github.com/webd4listrikpolimdo/d4-listrik](https://github.com/webd4listrikpolimdo/d4-listrik)
+
+---
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

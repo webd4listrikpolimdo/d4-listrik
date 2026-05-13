@@ -1,13 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 
 // GET /api/dosen — Public: List all dosen
 export async function GET() {
   try {
-    const supabase = await createClient();
+    const adminSupabase = createAdminClient();
 
-    const { data, error } = await supabase
+    const { data, error } = await adminSupabase
       .from("dosen")
       .select("*")
       .order("nama");
@@ -25,28 +26,92 @@ export async function GET() {
   }
 }
 
-// POST /api/dosen — Admin only: Create new dosen
+// POST /api/dosen — Admin only: Create new dosen + auth account
 export async function POST(request: NextRequest) {
   try {
     const result = await requireRole(["admin"]);
     if (result instanceof NextResponse) return result;
 
     const body = await request.json();
-    const { id, nama, nidn, foto_url, jabatan, pangkat, email, telepon, bidang_keahlian, program_studi, pendidikan_terakhir } = body;
+    const {
+      nama,
+      nidn,
+      foto_url,
+      jabatan,
+      pangkat,
+      email,
+      password,
+      telepon,
+      bidang_keahlian,
+      program_studi,
+      pendidikan_terakhir,
+    } = body;
 
-    if (!id || !nama || !nidn) {
+    if (!nama || !nidn) {
       return NextResponse.json(
-        { error: "id, nama, and nidn are required" },
+        { error: "nama and nidn are required" },
         { status: 400 }
       );
     }
 
-    const supabase = await createClient();
+    if (!email || !password) {
+      return NextResponse.json(
+        { error: "email and password are required to create a dosen account" },
+        { status: 400 }
+      );
+    }
 
-    const { data, error } = await supabase
+    if (password.length < 6) {
+      return NextResponse.json(
+        { error: "Password harus minimal 6 karakter" },
+        { status: 400 }
+      );
+    }
+
+    const adminSupabase = createAdminClient();
+
+    // 1. Create auth user in Supabase Auth
+    const { data: authData, error: authError } =
+      await adminSupabase.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true, // Auto-confirm the email
+        user_metadata: { full_name: nama, nidn },
+      });
+
+    if (authError) {
+      return NextResponse.json(
+        { error: `Gagal membuat akun: ${authError.message}` },
+        { status: 400 }
+      );
+    }
+
+    const authUserId = authData.user.id;
+
+    // 2. Create profile row (links auth user to role + nidn)
+    const { error: profileError } = await adminSupabase
+      .from("profiles")
+      .insert({
+        id: authUserId,
+        role: "dosen",
+        full_name: nama,
+        nidn,
+      });
+
+    if (profileError) {
+      // Rollback: delete the auth user if profile creation fails
+      await adminSupabase.auth.admin.deleteUser(authUserId);
+      return NextResponse.json(
+        { error: `Gagal membuat profil: ${profileError.message}` },
+        { status: 400 }
+      );
+    }
+
+    // 3. Create dosen row using the auth user's UUID as the dosen id
+    const { data, error } = await adminSupabase
       .from("dosen")
       .insert({
-        id,
+        id: authUserId,
         nama,
         nidn,
         foto_url: foto_url || null,
@@ -62,11 +127,21 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      // Rollback: delete profile and auth user
+      await adminSupabase.from("profiles").delete().eq("id", authUserId);
+      await adminSupabase.auth.admin.deleteUser(authUserId);
+      return NextResponse.json(
+        { error: `Gagal menyimpan data dosen: ${error.message}` },
+        { status: 400 }
+      );
     }
 
-    return NextResponse.json(data, { status: 201 });
-  } catch {
+    return NextResponse.json(
+      { ...data, auth_user_id: authUserId },
+      { status: 201 }
+    );
+  } catch (err) {
+    console.error("POST /api/dosen error:", err);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

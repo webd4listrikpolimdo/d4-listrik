@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Modal from "@/components/universal/Modal";
+import PersonLinker from "@/components/universal/PersonLinker";
+import type { PersonLink } from "@/components/universal/PersonLinker";
 import { HiOutlineCheck, HiOutlineXMark, HiOutlineTrash, HiOutlineClock, HiOutlineCheckCircle, HiOutlineXCircle, HiOutlinePlus, HiOutlinePencilSquare } from "react-icons/hi2";
 
 interface PendingKarya {
@@ -60,6 +62,69 @@ export default function AdminKaryaPage() {
   const [editingKaryaId, setEditingKaryaId] = useState<string | null>(null);
   const [karyaForm, setKaryaForm] = useState<Record<string, string | number>>({});
 
+  // Metadata state per jenis
+  const [metaJurnal, setMetaJurnal] = useState("");
+  const [metaLink, setMetaLink] = useState("");
+  const [metaPenulis, setMetaPenulis] = useState<PersonLink[]>([]);
+  const [metaSumberDana, setMetaSumberDana] = useState("");
+  const [metaKetua, setMetaKetua] = useState<PersonLink[]>([]);
+  const [metaAnggota, setMetaAnggota] = useState<PersonLink[]>([]);
+  const [metaMitra, setMetaMitra] = useState("");
+  const [metaPenerbit, setMetaPenerbit] = useState("");
+  const [metaIsbn, setMetaIsbn] = useState("");
+  const [metaJenisHki, setMetaJenisHki] = useState("");
+  const [metaNomorSertifikat, setMetaNomorSertifikat] = useState("");
+  const [metaPenyelenggara, setMetaPenyelenggara] = useState("");
+  const [metaLinkSertifikat, setMetaLinkSertifikat] = useState("");
+
+  const resetMeta = () => {
+    setMetaJurnal(""); setMetaLink(""); setMetaPenulis([]);
+    setMetaSumberDana(""); setMetaKetua([]); setMetaAnggota([]);
+    setMetaMitra(""); setMetaPenerbit(""); setMetaIsbn("");
+    setMetaJenisHki(""); setMetaNomorSertifikat("");
+    setMetaPenyelenggara(""); setMetaLinkSertifikat("");
+  };
+
+  const populateMeta = (jenis: string, meta: Record<string, unknown> | null) => {
+    resetMeta();
+    if (!meta) return;
+    if (jenis === "publikasi") {
+      setMetaJurnal((meta.jurnal as string) || "");
+      setMetaLink((meta.link as string) || "");
+      setMetaPenulis((meta.penulis as PersonLink[]) || []);
+    } else if (jenis === "penelitian") {
+      setMetaSumberDana((meta.sumberDana as string) || "");
+      setMetaKetua(meta.ketua ? [meta.ketua as PersonLink] : []);
+      setMetaAnggota((meta.anggota as PersonLink[]) || []);
+    } else if (jenis === "pengabdian") {
+      setMetaMitra((meta.mitra as string) || "");
+      setMetaKetua(meta.ketua ? [meta.ketua as PersonLink] : []);
+      setMetaAnggota((meta.anggota as PersonLink[]) || []);
+    } else if (jenis === "bukuAjar") {
+      setMetaPenerbit((meta.penerbit as string) || "");
+      setMetaIsbn((meta.isbn as string) || "");
+      setMetaPenulis((meta.penulis as PersonLink[]) || []);
+    } else if (jenis === "hki") {
+      setMetaJenisHki((meta.jenisHki as string) || "");
+      setMetaNomorSertifikat((meta.nomorSertifikat as string) || "");
+    } else if (jenis === "sertifikasi") {
+      setMetaPenyelenggara((meta.penyelenggara as string) || "");
+      setMetaLinkSertifikat((meta.linkSertifikat as string) || "");
+    }
+  };
+
+  const buildMetadata = (jenis: string): Record<string, unknown> => {
+    switch (jenis) {
+      case "publikasi": return { jurnal: metaJurnal, link: metaLink, penulis: metaPenulis };
+      case "penelitian": return { sumberDana: metaSumberDana, ketua: metaKetua[0] || null, anggota: metaAnggota };
+      case "pengabdian": return { mitra: metaMitra, ketua: metaKetua[0] || null, anggota: metaAnggota };
+      case "bukuAjar": return { penerbit: metaPenerbit, isbn: metaIsbn, penulis: metaPenulis };
+      case "hki": return { jenisHki: metaJenisHki, nomorSertifikat: metaNomorSertifikat };
+      case "sertifikasi": return { penyelenggara: metaPenyelenggara, linkSertifikat: metaLinkSertifikat };
+      default: return {};
+    }
+  };
+
   const inputCls = "w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500";
 
   const fetchData = async () => {
@@ -112,24 +177,27 @@ export default function AdminKaryaPage() {
   const handleOpenAddKarya = () => {
     setEditingKaryaId(null);
     setKaryaForm({ dosen_id: dosenOptions[0]?.id || "", jenis: "publikasi", judul: "", tahun: new Date().getFullYear(), deskripsi: "" });
+    resetMeta();
     setKaryaModalOpen(true);
   };
 
   const handleOpenEditKarya = (k: Karya) => {
     setEditingKaryaId(k.id);
     setKaryaForm({ dosen_id: k.dosen_id, jenis: k.jenis, judul: k.judul, tahun: k.tahun, deskripsi: k.deskripsi || "" });
+    populateMeta(k.jenis, k.metadata);
     setKaryaModalOpen(true);
   };
 
   const handleKaryaSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const jenis = karyaForm.jenis as string;
     const payload = {
       dosen_id: karyaForm.dosen_id,
-      jenis: karyaForm.jenis,
+      jenis,
       judul: karyaForm.judul,
       tahun: Number(karyaForm.tahun),
       deskripsi: karyaForm.deskripsi || null,
-      metadata: null,
+      metadata: buildMetadata(jenis),
     };
 
     if (editingKaryaId) {
@@ -328,6 +396,88 @@ export default function AdminKaryaPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Deskripsi (opsional)</label>
             <textarea rows={2} value={karyaForm.deskripsi || ""} onChange={e => setKaryaForm({ ...karyaForm, deskripsi: e.target.value })} className={inputCls + " resize-none"} />
           </div>
+
+          {/* ===== Jenis-specific metadata fields ===== */}
+          <div className="border-t border-gray-100 pt-4 mt-2 space-y-4">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Detail {jenisLabels[karyaForm.jenis as string] || ""}</p>
+
+            {karyaForm.jenis === "publikasi" && (
+              <>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Nama Jurnal</label>
+                  <input type="text" value={metaJurnal} onChange={e => setMetaJurnal(e.target.value)} className={inputCls} placeholder="Contoh: IEEE Transactions" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Link Publikasi</label>
+                  <input type="url" value={metaLink} onChange={e => setMetaLink(e.target.value)} className={inputCls} placeholder="https://..." />
+                </div>
+                <PersonLinker label="Penulis" dosenOptions={dosenOptions} value={metaPenulis} onChange={setMetaPenulis} />
+              </>
+            )}
+
+            {karyaForm.jenis === "penelitian" && (
+              <>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Sumber Dana</label>
+                  <input type="text" value={metaSumberDana} onChange={e => setMetaSumberDana(e.target.value)} className={inputCls} placeholder="Contoh: Kemendikbud Ristek" />
+                </div>
+                <PersonLinker label="Ketua" dosenOptions={dosenOptions} value={metaKetua} onChange={setMetaKetua} single />
+                <PersonLinker label="Anggota" dosenOptions={dosenOptions} value={metaAnggota} onChange={setMetaAnggota} />
+              </>
+            )}
+
+            {karyaForm.jenis === "pengabdian" && (
+              <>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Mitra</label>
+                  <input type="text" value={metaMitra} onChange={e => setMetaMitra(e.target.value)} className={inputCls} placeholder="Contoh: Desa Buha" />
+                </div>
+                <PersonLinker label="Ketua" dosenOptions={dosenOptions} value={metaKetua} onChange={setMetaKetua} single />
+                <PersonLinker label="Anggota" dosenOptions={dosenOptions} value={metaAnggota} onChange={setMetaAnggota} />
+              </>
+            )}
+
+            {karyaForm.jenis === "bukuAjar" && (
+              <>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Penerbit</label>
+                  <input type="text" value={metaPenerbit} onChange={e => setMetaPenerbit(e.target.value)} className={inputCls} placeholder="Contoh: Polimdo Press" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">ISBN</label>
+                  <input type="text" value={metaIsbn} onChange={e => setMetaIsbn(e.target.value)} className={inputCls} placeholder="978-..." />
+                </div>
+                <PersonLinker label="Penulis" dosenOptions={dosenOptions} value={metaPenulis} onChange={setMetaPenulis} />
+              </>
+            )}
+
+            {karyaForm.jenis === "hki" && (
+              <>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Jenis HKI</label>
+                  <input type="text" value={metaJenisHki} onChange={e => setMetaJenisHki(e.target.value)} className={inputCls} placeholder="Paten / Hak Cipta" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Nomor Sertifikat</label>
+                  <input type="text" value={metaNomorSertifikat} onChange={e => setMetaNomorSertifikat(e.target.value)} className={inputCls} placeholder="P00202312345" />
+                </div>
+              </>
+            )}
+
+            {karyaForm.jenis === "sertifikasi" && (
+              <>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Penyelenggara</label>
+                  <input type="text" value={metaPenyelenggara} onChange={e => setMetaPenyelenggara(e.target.value)} className={inputCls} placeholder="Contoh: LSP Kelistrikan" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Link Sertifikat</label>
+                  <input type="url" value={metaLinkSertifikat} onChange={e => setMetaLinkSertifikat(e.target.value)} className={inputCls} placeholder="https://drive.google.com/..." />
+                </div>
+              </>
+            )}
+          </div>
+
           <div className="pt-4 flex justify-end gap-3 border-t border-gray-100 mt-6">
             <button type="button" onClick={() => setKaryaModalOpen(false)} className="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors">Batal</button>
             <button type="submit" className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 transition-colors">Simpan</button>

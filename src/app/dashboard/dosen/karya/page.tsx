@@ -5,6 +5,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useData } from "@/context/DataContext";
 import { Dosen, KaryaItem } from "@/data/dosen";
 import Modal from "@/components/universal/Modal";
+import PersonLinker from "@/components/universal/PersonLinker";
+import type { PersonLink } from "@/components/universal/PersonLinker";
 import { HiOutlinePlus, HiOutlineTrash, HiOutlineClock, HiOutlineCheckCircle, HiOutlineXCircle } from "react-icons/hi2";
 
 interface PendingKarya {
@@ -36,6 +38,42 @@ export default function DosenKaryaPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<Record<string, string | number>>({ jenis: "publikasi" });
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [dosenOptions, setDosenOptions] = useState<{id: string; nama: string}[]>([]);
+
+  // Metadata state per jenis
+  const [metaJurnal, setMetaJurnal] = useState("");
+  const [metaLink, setMetaLink] = useState("");
+  const [metaPenulis, setMetaPenulis] = useState<PersonLink[]>([]);
+  const [metaSumberDana, setMetaSumberDana] = useState("");
+  const [metaKetua, setMetaKetua] = useState<PersonLink[]>([]);
+  const [metaAnggota, setMetaAnggota] = useState<PersonLink[]>([]);
+  const [metaMitra, setMetaMitra] = useState("");
+  const [metaPenerbit, setMetaPenerbit] = useState("");
+  const [metaIsbn, setMetaIsbn] = useState("");
+  const [metaJenisHki, setMetaJenisHki] = useState("");
+  const [metaNomorSertifikat, setMetaNomorSertifikat] = useState("");
+  const [metaPenyelenggara, setMetaPenyelenggara] = useState("");
+  const [metaLinkSertifikat, setMetaLinkSertifikat] = useState("");
+
+  const resetMeta = () => {
+    setMetaJurnal(""); setMetaLink(""); setMetaPenulis([]);
+    setMetaSumberDana(""); setMetaKetua([]); setMetaAnggota([]);
+    setMetaMitra(""); setMetaPenerbit(""); setMetaIsbn("");
+    setMetaJenisHki(""); setMetaNomorSertifikat("");
+    setMetaPenyelenggara(""); setMetaLinkSertifikat("");
+  };
+
+  const buildMetadata = (jenis: string): Record<string, unknown> => {
+    switch (jenis) {
+      case "publikasi": return { jurnal: metaJurnal, link: metaLink, penulis: metaPenulis };
+      case "penelitian": return { sumberDana: metaSumberDana, ketua: metaKetua[0] || null, anggota: metaAnggota };
+      case "pengabdian": return { mitra: metaMitra, ketua: metaKetua[0] || null, anggota: metaAnggota };
+      case "bukuAjar": return { penerbit: metaPenerbit, isbn: metaIsbn, penulis: metaPenulis };
+      case "hki": return { jenisHki: metaJenisHki, nomorSertifikat: metaNomorSertifikat };
+      case "sertifikasi": return { penyelenggara: metaPenyelenggara, linkSertifikat: metaLinkSertifikat };
+      default: return {};
+    }
+  };
 
   useEffect(() => {
     if (user && user.role === "dosen") {
@@ -44,15 +82,22 @@ export default function DosenKaryaPage() {
     }
   }, [user, dosenList]);
 
-  // Fetch pending submissions
+  // Fetch pending submissions + dosen options
   useEffect(() => {
-    const fetchPending = async () => {
+    const fetchData = async () => {
       try {
-        const res = await fetch("/api/karya-pending");
-        if (res.ok) setPendingList(await res.json());
-      } catch (e) { console.error("Failed to fetch pending", e); }
+        const [pendingRes, dosenRes] = await Promise.all([
+          fetch("/api/karya-pending"),
+          fetch("/api/dosen"),
+        ]);
+        if (pendingRes.ok) setPendingList(await pendingRes.json());
+        if (dosenRes.ok) {
+          const data = await dosenRes.json();
+          setDosenOptions(data.map((d: {id: string; nama: string}) => ({ id: d.id, nama: d.nama })));
+        }
+      } catch (e) { console.error("Failed to fetch data", e); }
     };
-    if (user) fetchPending();
+    if (user) fetchData();
   }, [user, submitSuccess]);
 
   if (!user || user.role !== "dosen" || !dosen) return null;
@@ -61,32 +106,30 @@ export default function DosenKaryaPage() {
 
   const handleOpenAdd = () => {
     setFormData({ judul: "", jenis: "publikasi", tahun: new Date().getFullYear(), deskripsi: "" });
+    resetMeta();
     setIsModalOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const metadata: Record<string, unknown> = {};
-      if (formData.jenis === "publikasi" && formData.jurnal) metadata.jurnal = formData.jurnal;
-      if (formData.peran) metadata.peran = formData.peran;
-
+      const jenis = formData.jenis as string;
       const res = await fetch("/api/karya-pending", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           dosen_id: dosen.id,
-          jenis: formData.jenis,
+          jenis,
           judul: formData.judul,
           tahun: Number(formData.tahun),
           deskripsi: formData.deskripsi || null,
-          metadata: Object.keys(metadata).length > 0 ? metadata : null,
+          metadata: buildMetadata(jenis),
         }),
       });
 
       if (res.ok) {
         setIsModalOpen(false);
-        setSubmitSuccess(prev => !prev); // trigger re-fetch
+        setSubmitSuccess(prev => !prev);
       }
     } catch (e) { console.error("Failed to submit karya", e); }
   };
@@ -216,15 +259,90 @@ export default function DosenKaryaPage() {
               <input type="number" required value={formData.tahun || ""} onChange={e => setFormData({ ...formData, tahun: e.target.value })} className={inputCls} />
             </div>
           </div>
-          {formData.jenis === "publikasi" && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nama Jurnal / Konferensi</label>
-              <input type="text" value={formData.jurnal || ""} onChange={e => setFormData({ ...formData, jurnal: e.target.value })} className={inputCls} />
-            </div>
-          )}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Deskripsi (opsional)</label>
             <textarea rows={2} value={formData.deskripsi || ""} onChange={e => setFormData({ ...formData, deskripsi: e.target.value })} className={inputCls + " resize-none"} />
+          </div>
+
+          {/* ===== Jenis-specific metadata fields ===== */}
+          <div className="border-t border-gray-100 pt-4 mt-2 space-y-4">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Detail {jenisLabels[formData.jenis as string] || ""}</p>
+
+            {formData.jenis === "publikasi" && (
+              <>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Nama Jurnal</label>
+                  <input type="text" value={metaJurnal} onChange={e => setMetaJurnal(e.target.value)} className={inputCls} placeholder="Contoh: IEEE Transactions" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Link Publikasi</label>
+                  <input type="url" value={metaLink} onChange={e => setMetaLink(e.target.value)} className={inputCls} placeholder="https://..." />
+                </div>
+                <PersonLinker label="Penulis" dosenOptions={dosenOptions} value={metaPenulis} onChange={setMetaPenulis} />
+              </>
+            )}
+
+            {formData.jenis === "penelitian" && (
+              <>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Sumber Dana</label>
+                  <input type="text" value={metaSumberDana} onChange={e => setMetaSumberDana(e.target.value)} className={inputCls} placeholder="Contoh: Kemendikbud Ristek" />
+                </div>
+                <PersonLinker label="Ketua" dosenOptions={dosenOptions} value={metaKetua} onChange={setMetaKetua} single />
+                <PersonLinker label="Anggota" dosenOptions={dosenOptions} value={metaAnggota} onChange={setMetaAnggota} />
+              </>
+            )}
+
+            {formData.jenis === "pengabdian" && (
+              <>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Mitra</label>
+                  <input type="text" value={metaMitra} onChange={e => setMetaMitra(e.target.value)} className={inputCls} placeholder="Contoh: Desa Buha" />
+                </div>
+                <PersonLinker label="Ketua" dosenOptions={dosenOptions} value={metaKetua} onChange={setMetaKetua} single />
+                <PersonLinker label="Anggota" dosenOptions={dosenOptions} value={metaAnggota} onChange={setMetaAnggota} />
+              </>
+            )}
+
+            {formData.jenis === "bukuAjar" && (
+              <>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Penerbit</label>
+                  <input type="text" value={metaPenerbit} onChange={e => setMetaPenerbit(e.target.value)} className={inputCls} placeholder="Contoh: Polimdo Press" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">ISBN</label>
+                  <input type="text" value={metaIsbn} onChange={e => setMetaIsbn(e.target.value)} className={inputCls} placeholder="978-..." />
+                </div>
+                <PersonLinker label="Penulis" dosenOptions={dosenOptions} value={metaPenulis} onChange={setMetaPenulis} />
+              </>
+            )}
+
+            {formData.jenis === "hki" && (
+              <>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Jenis HKI</label>
+                  <input type="text" value={metaJenisHki} onChange={e => setMetaJenisHki(e.target.value)} className={inputCls} placeholder="Paten / Hak Cipta" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Nomor Sertifikat</label>
+                  <input type="text" value={metaNomorSertifikat} onChange={e => setMetaNomorSertifikat(e.target.value)} className={inputCls} placeholder="P00202312345" />
+                </div>
+              </>
+            )}
+
+            {formData.jenis === "sertifikasi" && (
+              <>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Penyelenggara</label>
+                  <input type="text" value={metaPenyelenggara} onChange={e => setMetaPenyelenggara(e.target.value)} className={inputCls} placeholder="Contoh: LSP Kelistrikan" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Link Sertifikat</label>
+                  <input type="url" value={metaLinkSertifikat} onChange={e => setMetaLinkSertifikat(e.target.value)} className={inputCls} placeholder="https://drive.google.com/..." />
+                </div>
+              </>
+            )}
           </div>
           <div className="p-3 rounded-xl bg-amber-50 text-amber-700 text-xs border border-amber-100">
             <strong>Info:</strong> Karya yang diajukan akan ditinjau oleh admin sebelum dipublikasikan.

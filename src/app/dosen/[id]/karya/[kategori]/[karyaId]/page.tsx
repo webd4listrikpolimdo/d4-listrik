@@ -90,18 +90,22 @@ export default function KaryaDetailPage() {
   );
 
   const renderSpecificDetails = () => {
-    // Fallback if jenis is missing (e.g. from generic form)
     const jenis = karya?.jenis || kategori;
+    // Helper: read from metadata JSONB (new DB format) or direct field (old mock format)
+    const md = (karya as any)?.metadata || {};
+    const meta = (key: string) => md[key] ?? (karya as any)?.[key];
 
     switch (jenis) {
       case "publikasi": {
-        const p = karya as Publikasi;
+        const jurnal = meta("jurnal") as string | undefined;
+        const link = meta("link") as string | undefined;
+        const penulis = meta("penulis") as PersonLink | PersonLink[] | undefined;
         return (
           <>
-            <InfoItem icon={HiOutlineBookOpen} label="Jurnal / Konferensi" value={p.jurnal} />
-            <PersonBadgeList title="Penulis" persons={p.penulis || { nama: (p as any).peran || "Penulis" }} />
-            {p.link && (
-              <a href={p.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors mt-2 text-primary-600">
+            <InfoItem icon={HiOutlineBookOpen} label="Jurnal / Konferensi" value={jurnal} />
+            {penulis && <PersonBadgeList title="Penulis" persons={penulis} />}
+            {link && (
+              <a href={link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors mt-2 text-primary-600">
                 <HiOutlineLink /> Kunjungi Tautan Publikasi
               </a>
             )}
@@ -109,68 +113,76 @@ export default function KaryaDetailPage() {
         );
       }
       case "penelitian": {
-        const p = karya as Penelitian;
+        const sumberDana = meta("sumberDana") as string | undefined;
+        const ketua = meta("ketua") as PersonLink | undefined;
+        const anggota = meta("anggota") as PersonLink[] | undefined;
         return (
           <>
-            <InfoItem icon={HiOutlineBuildingOffice} label="Sumber Dana" value={p.sumberDana} />
+            <InfoItem icon={HiOutlineBuildingOffice} label="Sumber Dana" value={sumberDana} />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <PersonBadgeList title="Ketua Peneliti" persons={p.ketua || { nama: (p as any).peran || "Ketua" }} />
-              <PersonBadgeList title="Anggota" persons={p.anggota || []} />
+              {ketua && <PersonBadgeList title="Ketua Peneliti" persons={ketua} />}
+              {anggota && anggota.length > 0 && <PersonBadgeList title="Anggota" persons={anggota} />}
             </div>
-            {p.deskripsi && (
+            {karya.deskripsi && (
               <div className="mt-4">
                 <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Deskripsi / Abstrak</h3>
-                <p className="text-gray-700 text-sm leading-relaxed bg-gray-50 p-4 rounded-xl border border-gray-100">{p.deskripsi}</p>
+                <p className="text-gray-700 text-sm leading-relaxed bg-gray-50 p-4 rounded-xl border border-gray-100">{karya.deskripsi}</p>
               </div>
             )}
           </>
         );
       }
       case "pengabdian": {
-        const p = karya as Pengabdian;
+        const mitra = meta("mitra") as string | undefined;
+        const ketua = meta("ketua") as PersonLink | undefined;
+        const anggota = meta("anggota") as PersonLink[] | undefined;
         return (
           <>
-            <InfoItem icon={HiOutlineBuildingOffice} label="Mitra" value={p.mitra} />
+            <InfoItem icon={HiOutlineBuildingOffice} label="Mitra" value={mitra} />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <PersonBadgeList title="Ketua" persons={p.ketua || { nama: (p as any).peran || "Ketua" }} />
-              <PersonBadgeList title="Anggota" persons={p.anggota || []} />
+              {ketua && <PersonBadgeList title="Ketua" persons={ketua} />}
+              {anggota && anggota.length > 0 && <PersonBadgeList title="Anggota" persons={anggota} />}
             </div>
-            {p.deskripsi && (
+            {karya.deskripsi && (
               <div className="mt-4">
                 <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Deskripsi Kegiatan</h3>
-                <p className="text-gray-700 text-sm leading-relaxed bg-gray-50 p-4 rounded-xl border border-gray-100">{p.deskripsi}</p>
+                <p className="text-gray-700 text-sm leading-relaxed bg-gray-50 p-4 rounded-xl border border-gray-100">{karya.deskripsi}</p>
               </div>
             )}
           </>
         );
       }
       case "bukuAjar": {
-        const p = karya as BukuAjar;
+        const penerbit = meta("penerbit") as string | undefined;
+        const isbn = meta("isbn") as string | undefined;
+        const penulis = meta("penulis") as PersonLink | PersonLink[] | undefined;
         return (
           <>
-            <InfoItem icon={HiOutlineBuildingOffice} label="Penerbit" value={p.penerbit} />
-            <InfoItem icon={HiOutlineIdentification} label="ISBN" value={p.isbn} />
-            <PersonBadgeList title="Penulis" persons={p.penulis || { nama: (p as any).peran || "Penulis" }} />
+            <InfoItem icon={HiOutlineBuildingOffice} label="Penerbit" value={penerbit} />
+            <InfoItem icon={HiOutlineIdentification} label="ISBN" value={isbn} />
+            {penulis && <PersonBadgeList title="Penulis" persons={penulis} />}
           </>
         );
       }
       case "hki": {
-        const p = karya as Hki;
+        const jenisHki = meta("jenisHki") as string | undefined;
+        const nomorSertifikat = meta("nomorSertifikat") as string | undefined;
         return (
           <>
-            <InfoItem icon={HiOutlineDocumentText} label="Jenis HKI" value={p.jenisHki} />
-            <InfoItem icon={HiOutlineIdentification} label="Nomor Sertifikat" value={p.nomorSertifikat} />
+            <InfoItem icon={HiOutlineDocumentText} label="Jenis HKI" value={jenisHki} />
+            <InfoItem icon={HiOutlineIdentification} label="Nomor Sertifikat" value={nomorSertifikat} />
           </>
         );
       }
       case "sertifikasi": {
-        const p = karya as Sertifikasi;
+        const penyelenggara = meta("penyelenggara") as string | undefined;
+        const linkSertifikat = meta("linkSertifikat") as string | undefined;
         return (
           <>
-            <InfoItem icon={HiOutlineBuildingOffice} label="Penyelenggara / Lembaga" value={p.penyelenggara} />
+            <InfoItem icon={HiOutlineBuildingOffice} label="Penyelenggara / Lembaga" value={penyelenggara} />
             <div className="mt-6 pt-4 border-t border-gray-100">
-              {p.linkSertifikat ? (
-                <a href={p.linkSertifikat} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 transition-colors shadow-md hover:shadow-lg">
+              {linkSertifikat ? (
+                <a href={linkSertifikat} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 transition-colors shadow-md hover:shadow-lg">
                   <HiOutlineDocumentText className="w-5 h-5" /> Lihat Selengkapnya
                 </a>
               ) : (

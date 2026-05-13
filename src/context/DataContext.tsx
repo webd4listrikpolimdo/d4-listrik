@@ -10,7 +10,7 @@ interface DataContextType {
   isLoading: boolean;
 
   // Dosen Actions
-  addDosen: (dosen: Dosen) => Promise<void>;
+  addDosen: (dosen: Dosen, password?: string) => Promise<void>;
   updateDosen: (id: string, updatedDosen: Dosen) => Promise<void>;
   deleteDosen: (id: string) => Promise<void>;
 
@@ -65,6 +65,7 @@ function mapKarya(k: any) {
     judul: k.judul,
     tahun: k.tahun,
     deskripsi: k.deskripsi || undefined,
+    metadata: k.metadata || undefined,
     ...(k.metadata || {}),
   };
 }
@@ -97,13 +98,50 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       const dosenRows = await res.json();
 
       // For each dosen, fetch their karya
-      const dosenWithKarya = await Promise.all(
+      const dosenWithKarya: Dosen[] = await Promise.all(
         dosenRows.map(async (d: any) => {
           const karyaRes = await fetch(`/api/karya?dosen_id=${d.id}`);
           const karya = karyaRes.ok ? await karyaRes.json() : [];
           return transformDosenFromApi({ ...d, karya });
         })
       );
+
+      // Cross-reference: if a karya's metadata links other dosen,
+      // add that karya to those dosen's lists too.
+      const dosenMap = new Map(dosenWithKarya.map(d => [d.id, d]));
+
+      for (const owner of dosenWithKarya) {
+        const allOwnerKarya = Object.values(owner.karya).flat();
+        for (const k of allOwnerKarya) {
+          const meta = (k as any).metadata;
+          if (!meta) continue;
+          // Collect all person-link IDs from metadata
+          const linkedIds = new Set<string>();
+          for (const val of Object.values(meta)) {
+            if (Array.isArray(val)) {
+              for (const p of val) {
+                if (p && typeof p === "object" && p.id) linkedIds.add(p.id);
+              }
+            } else if (val && typeof val === "object" && (val as any).id) {
+              linkedIds.add((val as any).id);
+            }
+          }
+          // Remove the owner themselves
+          linkedIds.delete(owner.id);
+          // Add karya to each linked dosen's list (if not already present)
+          for (const linkedId of linkedIds) {
+            const target = dosenMap.get(linkedId);
+            if (!target) continue;
+            const jenis = (k as any).jenis as string;
+            const cat = jenis as keyof Dosen["karya"];
+            if (!target.karya[cat]) continue;
+            const existing = target.karya[cat] as any[];
+            if (!existing.some((e: any) => e.id === (k as any).id)) {
+              existing.push(k);
+            }
+          }
+        }
+      }
 
       setDosenList(dosenWithKarya);
     } catch (e) {
@@ -131,18 +169,18 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, [refreshDosen, refreshGaleri]);
 
   // --- Dosen Actions ---
-  const addDosen = async (dosen: Dosen) => {
+  const addDosen = async (dosen: Dosen, password?: string) => {
     const res = await fetch("/api/dosen", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        id: dosen.id,
         nama: dosen.nama,
         nidn: dosen.nidn,
         foto_url: dosen.foto || null,
         jabatan: dosen.jabatan || null,
         pangkat: dosen.pangkat || null,
         email: dosen.email || null,
+        password: password || null,
         telepon: dosen.telepon || null,
         bidang_keahlian: dosen.bidangKeahlian || [],
         program_studi: dosen.programStudi || "D4 Teknik Listrik",

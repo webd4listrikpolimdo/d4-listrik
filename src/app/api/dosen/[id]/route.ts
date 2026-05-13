@@ -68,7 +68,8 @@ export async function PUT(request: NextRequest, { params }: Params) {
     const body = await request.json();
     const { nama, foto_url, jabatan, pangkat, email, telepon, bidang_keahlian, program_studi, pendidikan_terakhir } = body;
 
-    const supabase = await createClient();
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const adminSupabase = createAdminClient();
 
     const updateData: Record<string, unknown> = {};
     if (nama !== undefined) updateData.nama = nama;
@@ -81,7 +82,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
     if (program_studi !== undefined) updateData.program_studi = program_studi;
     if (pendidikan_terakhir !== undefined) updateData.pendidikan_terakhir = pendidikan_terakhir;
 
-    const { data, error } = await supabase
+    const { data, error } = await adminSupabase
       .from("dosen")
       .update(updateData)
       .eq("id", id)
