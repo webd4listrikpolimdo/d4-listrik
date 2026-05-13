@@ -1,0 +1,181 @@
+-- INSERT DOSEN DATA (id is auto-generated UUID)
+
+INSERT INTO dosen (nama, nidn, jabatan, pangkat, email, telepon, bidang_keahlian) VALUES
+('Dr. Ahmad Fauzi, S.T., M.T.', '0012345601', 'Lektor Kepala', 'Pembina - IV/a', 'ahmad.fauzi@polimdo.ac.id', '081234567890', ARRAY['Sistem Tenaga Listrik', 'Proteksi Sistem Kelistrikan', 'Smart Grid']),
+('Siti Nurhaliza, S.T., M.Eng.', '0023456702', 'Lektor', 'Penata Tingkat I - III/d', 'siti.nurhaliza@polimdo.ac.id', NULL, ARRAY['Elektronika Daya', 'Energi Terbarukan', 'Konverter Daya']),
+('Ir. Budi Santoso, M.T.', '0034567803', 'Asisten Ahli', NULL, 'budi.santoso@polimdo.ac.id', '081345678901', ARRAY['Instalasi Listrik', 'Teknik Iluminasi', 'K3 Kelistrikan']),
+('Dewi Kartika Sari, S.T., M.T.', '0045678904', NULL, 'Penata Muda Tingkat I - III/b', 'dewi.kartika@polimdo.ac.id', NULL, ARRAY['Sistem Kontrol', 'Otomasi Industri', 'PLC & SCADA']),
+('Muhammad Rizki Pratama, S.T., M.Sc.', '0056789005', 'Lektor', 'Penata - III/c', NULL, '082456789012', ARRAY['Mesin Listrik', 'Drives & Motion Control', 'Motor Listrik']),
+('Ratna Wulandari, S.T., M.T.', '0067890106', NULL, NULL, NULL, NULL, ARRAY['Teknik Tegangan Tinggi', 'Isolasi & Dielektrik', 'Pengujian Material']),
+('Dr. Hendro Prasetyo, S.T., M.T.', '0078901207', 'Lektor Kepala', 'Pembina - IV/a', 'hendro.prasetyo@polinema.ac.id', '083567890123', ARRAY['Teknik Pengukuran', 'Instrumentasi', 'Sensor & Transduser']),
+('Agus Wijaya, S.T., M.Eng.', '0089012308', 'Asisten Ahli', 'Penata Muda - III/a', 'agus.wijaya@polinema.ac.id', NULL, ARRAY['Jaringan Distribusi', 'GIS Kelistrikan', 'Manajemen Energi']);
+
+-- INSERT KURIKULUM AKTIF
+INSERT INTO kurikulum_aktif (id, nama, deskripsi, berlaku_sejak, file_url) VALUES
+(1, 'Kurikulum OBE-MBKM 2022', 'Kurikulum berbasis Outcome-Based Education (OBE) yang terintegrasi dengan program Merdeka Belajar Kampus Merdeka (MBKM), dirancang untuk menghasilkan lulusan yang kompeten dan siap bersaing di industri ketenagalistrikan nasional maupun internasional.', 'Tahun Akademik 2022/2023', NULL);
+
+-- INSERT MATA KULIAH (Semester 1-8)
+INSERT INTO mata_kuliah (kode, nama, sks, semester, jenis) VALUES
+-- Semester 1
+('TL101', 'Fisika Terapan', 3, 1, 'Teori'),
+('TL102', 'Matematika Teknik I', 3, 1, 'Teori'),
+('TL103', 'Rangkaian Listrik I', 3, 1, 'Teori & Praktik'),
+('TL104', 'Praktikum Dasar Listrik', 2, 1, 'Praktik'),
+('TL105', 'Gambar Teknik Listrik', 2, 1, 'Praktik'),
+('TL106', 'Bahasa Inggris Teknik', 2, 1, 'Teori'),
+('TL107', 'Keselamatan dan Kesehatan Kerja (K3)', 2, 1, 'Teori'),
+('TL108', 'Pendidikan Agama', 2, 1, 'Teori'),
+-- Semester 2
+('TL201', 'Matematika Teknik II', 3, 2, 'Teori'),
+('TL202', 'Rangkaian Listrik II', 3, 2, 'Teori & Praktik'),
+('TL203', 'Elektronika Analog', 3, 2, 'Teori & Praktik'),
+('TL204', 'Medan Elektromagnetik', 2, 2, 'Teori'),
+('TL205', 'Pengukuran Listrik', 3, 2, 'Teori & Praktik'),
+('TL206', 'Bahasa Indonesia', 2, 2, 'Teori'),
+('TL207', 'Pendidikan Pancasila', 2, 2, 'Teori'),
+-- Semester 3
+('TL301', 'Mesin Listrik I', 3, 3, 'Teori & Praktik'),
+('TL302', 'Elektronika Daya', 3, 3, 'Teori & Praktik'),
+('TL303', 'Instalasi Listrik', 3, 3, 'Teori & Praktik'),
+('TL304', 'Teknik Digital', 3, 3, 'Teori & Praktik'),
+('TL305', 'Sistem Kontrol I', 3, 3, 'Teori'),
+('TL306', 'Material Teknik Listrik', 2, 3, 'Teori'),
+('TL307', 'Pendidikan Kewarganegaraan', 2, 3, 'Teori'),
+-- Semester 4
+('TL401', 'Mesin Listrik II', 3, 4, 'Teori & Praktik'),
+('TL402', 'Sistem Tenaga Listrik I', 3, 4, 'Teori'),
+('TL403', 'Sistem Kontrol II', 3, 4, 'Teori & Praktik'),
+('TL404', 'Pemrograman PLC', 3, 4, 'Teori & Praktik'),
+('TL405', 'Teknik Tegangan Tinggi', 3, 4, 'Teori & Praktik'),
+('TL406', 'Mikroprosesor & Mikrokontroler', 3, 4, 'Teori & Praktik'),
+-- Semester 5
+('TL501', 'Sistem Tenaga Listrik II', 3, 5, 'Teori'),
+('TL502', 'Proteksi Sistem Tenaga', 3, 5, 'Teori & Praktik'),
+('TL503', 'Sistem SCADA', 3, 5, 'Teori & Praktik'),
+('TL504', 'Energi Terbarukan', 3, 5, 'Teori & Praktik'),
+('TL505', 'Manajemen Energi', 2, 5, 'Teori'),
+('TL506', 'Metodologi Penelitian', 2, 5, 'Teori'),
+('TL507', 'Kewirausahaan', 2, 5, 'Teori'),
+-- Semester 6
+('TL601', 'Distribusi Tenaga Listrik', 3, 6, 'Teori & Praktik'),
+('TL602', 'Analisis Sistem Tenaga', 3, 6, 'Teori & Praktik'),
+('TL603', 'GIS Kelistrikan', 3, 6, 'Teori & Praktik'),
+('TL604', 'Motor Drives', 3, 6, 'Teori & Praktik'),
+('TL605', 'Smart Grid', 3, 6, 'Teori'),
+('TL606', 'Proposal Tugas Akhir', 2, 6, 'Teori'),
+-- Semester 7
+('TL701', 'Kerja Praktik / Magang Industri', 4, 7, 'Praktik'),
+('TL702', 'Seminar Kerja Praktik', 2, 7, 'Teori'),
+('TL703', 'Mata Kuliah Pilihan I', 3, 7, 'Teori & Praktik'),
+('TL704', 'Mata Kuliah Pilihan II', 3, 7, 'Teori & Praktik'),
+('TL705', 'Tugas Akhir I', 4, 7, 'Praktik'),
+-- Semester 8
+('TL801', 'Tugas Akhir II', 6, 8, 'Praktik'),
+('TL802', 'Seminar Tugas Akhir', 2, 8, 'Teori'),
+('TL803', 'Mata Kuliah Pilihan III', 3, 8, 'Teori & Praktik'),
+('TL804', 'Etika Profesi', 2, 8, 'Teori');
+
+-- INSERT CPL (Capaian Pembelajaran Lulusan)
+INSERT INTO cpl (kode, deskripsi) VALUES
+('CPL-01', 'Mampu menerapkan prinsip-prinsip matematika, sains, dan keteknikan untuk menyelesaikan permasalahan di bidang teknik ketenagalistrikan.'),
+('CPL-02', 'Mampu merancang, menginstalasi, mengoperasikan, dan memelihara sistem ketenagalistrikan sesuai standar keselamatan kerja.'),
+('CPL-03', 'Mampu mengidentifikasi, memformulasikan, dan menyelesaikan permasalahan teknik ketenagalistrikan secara sistematis.'),
+('CPL-04', 'Mampu menggunakan peralatan pengukuran, perangkat lunak, dan teknologi modern dalam bidang teknik ketenagalistrikan.'),
+('CPL-05', 'Mampu bekerja sama dalam tim multidisiplin dan berkomunikasi secara efektif baik lisan maupun tulisan.'),
+('CPL-06', 'Mampu menerapkan prinsip etika profesi, tanggung jawab sosial, dan pembelajaran sepanjang hayat dalam pengembangan karir.'),
+('CPL-07', 'Mampu melakukan penelitian terapan dan pengembangan inovasi di bidang teknik ketenagalistrikan.'),
+('CPL-08', 'Mampu menerapkan konsep manajemen energi dan teknologi energi terbarukan untuk pembangunan berkelanjutan.'),
+('CPL-09', 'Mampu merancang dan mengimplementasikan sistem otomasi dan kontrol pada instalasi ketenagalistrikan.');
+
+-- INSERT GALERI DATA
+INSERT INTO galeri (judul, deskripsi, tanggal, kategori, foto_urls) VALUES
+('Laboratorium Tegangan Tinggi', 'Fasilitas pengujian tegangan tinggi dengan peralatan standar industri yang memungkinkan mahasiswa melakukan praktikum pengujian isolator, breakdown voltage, dan analisis korona. Laboratorium ini dilengkapi dengan sistem safety yang canggih untuk menjamin keselamatan praktikan.', '2024-03-15', 'fasilitas', ARRAY[]::text[]),
+('Laboratorium Instalasi Listrik', 'Ruang praktikum instalasi listrik industri dan rumah tangga. Mahasiswa dilatih untuk merancang, merakit, dan menguji berbagai panel distribusi dan panel kendali motor sesuai dengan standar PUIL terkini.', '2024-02-10', 'fasilitas', ARRAY[]::text[]),
+('Laboratorium PLC & SCADA', 'Dilengkapi dengan berbagai merk PLC terkemuka seperti Siemens, Allen-Bradley, dan Omron. Laboratorium ini memfasilitasi pembelajaran otomasi industri tingkat lanjut dengan integrasi sistem SCADA untuk monitoring jarak jauh.', '2023-11-20', 'fasilitas', ARRAY[]::text[]),
+('Laboratorium Mesin Listrik', 'Fasilitas pengujian karakteristik motor listrik DC/AC dan generator. Terdapat berbagai modul dynamometer dan alat ukur kepresisian tinggi untuk analisis performa mesin-mesin listrik.', '2023-09-05', 'fasilitas', ARRAY[]::text[]),
+('Workshop Energi Terbarukan', 'Kegiatan pelatihan dan instalasi panel surya (PLTS) on-grid maupun off-grid untuk masyarakat pedesaan. Program ini bertujuan untuk memberikan solusi energi alternatif yang ramah lingkungan.', '2024-04-02', 'tridharma', ARRAY[]::text[]),
+('Seminar Nasional Kelistrikan', 'Seminar tahunan yang menghadirkan pakar kelistrikan tingkat nasional dan internasional, membahas tentang inovasi terbaru di bidang smart grid, transisi energi, dan otomasi industri.', '2023-12-12', 'tridharma', ARRAY[]::text[]),
+('Pengabdian Instalasi Listrik Desa', 'Program rutin himpunan mahasiswa dan dosen berupa perbaikan dan pemasangan instalasi listrik gratis bagi rumah-rumah ibadah dan fasilitas umum di desa mitra.', '2023-08-25', 'tridharma', ARRAY[]::text[]),
+('Riset Kolaboratif Smart Grid', 'Penelitian bersama PLN dan universitas mitra dalam pengembangan purwarupa Smart Grid skala mikro (Microgrid) yang mengintegrasikan sumber energi terbarukan dengan jaringan PLN.', '2024-01-18', 'tridharma', ARRAY[]::text[]);
+
+-- KARYA DATA is in a separate file: karya-sql.txt
+-- Run karya-sql.txt AFTER this file
+
+('dr-ahmad-fauzi', 'publikasi', 'Studi Proteksi Adaptif pada Jaringan Distribusi', 2022, NULL, '{"jurnal": "Jurnal Ilmiah Teknik Elektro", "penulis": [{"id": "dr-ahmad-fauzi", "nama": "Dr. Ahmad Fauzi"}]}'),
+('dr-ahmad-fauzi', 'penelitian', 'Pengembangan Smart Grid untuk Desa Mandiri Energi', 2024, 'Penelitian ini berfokus pada implementasi smart grid skala kecil untuk kemandirian energi desa.', '{"ketua": {"id": "dr-ahmad-fauzi", "nama": "Dr. Ahmad Fauzi"}, "anggota": [{"id": "siti-nurhaliza", "nama": "Siti Nurhaliza"}], "sumberDana": "Kemendikbud Ristek"}'),
+('dr-ahmad-fauzi', 'penelitian', 'Riset Sistem Proteksi Cerdas Berbasis IoT', 2023, NULL, '{"ketua": {"id": "dr-ahmad-fauzi", "nama": "Dr. Ahmad Fauzi"}, "anggota": [{"id": "dewi-kartika", "nama": "Dewi Kartika Sari"}], "sumberDana": "Internal PNM"}'),
+('dr-ahmad-fauzi', 'pengabdian', 'Pelatihan Instalasi Listrik untuk Masyarakat Desa Buha', 2024, NULL, '{"ketua": {"id": "dr-ahmad-fauzi", "nama": "Dr. Ahmad Fauzi"}, "anggota": [{"id": "ir-budi-santoso", "nama": "Ir. Budi Santoso"}], "mitra": "Desa Buha"}'),
+('dr-ahmad-fauzi', 'bukuAjar', 'Dasar-Dasar Sistem Tenaga Listrik', 2022, NULL, '{"penulis": [{"id": "dr-ahmad-fauzi", "nama": "Dr. Ahmad Fauzi"}], "penerbit": "Polimdo Press", "isbn": "978-602-123-456-7"}'),
+('dr-ahmad-fauzi', 'hki', 'Alat Monitoring Kualitas Daya Listrik Berbasis IoT', 2023, NULL, '{"jenisHki": "Paten", "nomorSertifikat": "P00202312345"}'),
+('dr-ahmad-fauzi', 'sertifikasi', 'Sertifikasi Ahli Teknik Tenaga Listrik', 2021, NULL, '{"penyelenggara": "LSP Kelistrikan", "linkSertifikat": "https://drive.google.com/file/d/dummy-link-123/view"}');
+
+-- Siti Nurhaliza
+INSERT INTO karya (dosen_id, jenis, judul, tahun, deskripsi, metadata) VALUES
+('siti-nurhaliza', 'publikasi', 'Desain Inverter Multilevel untuk Sistem Photovoltaic', 2024, NULL, '{"jurnal": "Jurnal Teknologi Energi", "penulis": [{"id": "siti-nurhaliza", "nama": "Siti Nurhaliza"}]}'),
+('siti-nurhaliza', 'publikasi', 'Perancangan MPPT Berbasis Fuzzy Logic Controller', 2023, NULL, '{"jurnal": "International Journal of Renewable Energy", "penulis": [{"id": "siti-nurhaliza", "nama": "Siti Nurhaliza"}, {"id": "dewi-kartika", "nama": "Dewi Kartika Sari"}]}'),
+('siti-nurhaliza', 'penelitian', 'Studi Kelayakan Pembangkit Listrik Tenaga Surya 1 MWp', 2024, NULL, '{"ketua": {"id": "siti-nurhaliza", "nama": "Siti Nurhaliza"}, "anggota": [], "sumberDana": "Pemprov Sulut"}'),
+('siti-nurhaliza', 'pengabdian', 'Instalasi Panel Surya untuk Musholla Desa Mapanget', 2023, NULL, '{"ketua": {"id": "siti-nurhaliza", "nama": "Siti Nurhaliza"}, "anggota": [{"nama": "Mahasiswa D4 Listrik"}], "mitra": "Desa Mapanget"}'),
+('siti-nurhaliza', 'pengabdian', 'Workshop Energi Terbarukan bagi Guru SMK', 2022, NULL, '{"ketua": {"id": "siti-nurhaliza", "nama": "Siti Nurhaliza"}, "anggota": [], "mitra": "Dinas Pendidikan"}'),
+('siti-nurhaliza', 'sertifikasi', 'Sertifikasi Kompetensi Energi Surya', 2023, NULL, '{"penyelenggara": "LSP Energi Terbarukan"}');
+
+-- Ir. Budi Santoso
+INSERT INTO karya (dosen_id, jenis, judul, tahun, deskripsi, metadata) VALUES
+('ir-budi-santoso', 'publikasi', 'Evaluasi Sistem Penerangan Jalan Umum Berbasis LED', 2023, NULL, '{"jurnal": "Jurnal Iluminasi Terapan", "penulis": [{"id": "ir-budi-santoso", "nama": "Ir. Budi Santoso"}]}'),
+('ir-budi-santoso', 'penelitian', 'Audit Energi Gedung Perkantoran di Kota Manado', 2024, NULL, '{"ketua": {"id": "ir-budi-santoso", "nama": "Ir. Budi Santoso"}, "anggota": [{"id": "agus-wijaya", "nama": "Agus Wijaya"}]}'),
+('ir-budi-santoso', 'penelitian', 'Studi Efisiensi Pencahayaan pada Gedung Pendidikan', 2022, NULL, '{"ketua": {"id": "ir-budi-santoso", "nama": "Ir. Budi Santoso"}, "anggota": []}'),
+('ir-budi-santoso', 'pengabdian', 'Sosialisasi K3 Kelistrikan untuk Teknisi Lapangan', 2024, NULL, '{"ketua": {"id": "ir-budi-santoso", "nama": "Ir. Budi Santoso"}, "anggota": [], "mitra": "PLN Manado"}'),
+('ir-budi-santoso', 'bukuAjar', 'Panduan Praktikum Instalasi Listrik Industri', 2023, NULL, '{"penulis": [{"id": "ir-budi-santoso", "nama": "Ir. Budi Santoso"}], "penerbit": "Polimdo Press"}'),
+('ir-budi-santoso', 'bukuAjar', 'Modul Teknik Iluminasi Modern', 2021, NULL, '{"penulis": [{"id": "ir-budi-santoso", "nama": "Ir. Budi Santoso"}], "penerbit": "Penerbit Andi"}');
+
+-- Dewi Kartika Sari
+INSERT INTO karya (dosen_id, jenis, judul, tahun, deskripsi, metadata) VALUES
+('dewi-kartika', 'publikasi', 'Implementasi SCADA pada Gardu Distribusi 20 kV', 2024, NULL, '{"jurnal": "Jurnal Kontrol Industri", "penulis": [{"id": "dewi-kartika", "nama": "Dewi Kartika Sari"}]}'),
+('dewi-kartika', 'publikasi', 'Desain Sistem Otomasi Berbasis PLC Siemens S7-1200', 2023, NULL, '{"jurnal": "Jurnal Otomasi Nasional", "penulis": [{"id": "dewi-kartika", "nama": "Dewi Kartika Sari"}]}'),
+('dewi-kartika', 'publikasi', 'Kontrol PID untuk Motor Induksi Tiga Fasa', 2022, NULL, '{"jurnal": "Jurnal Teknik Elektro", "penulis": [{"id": "dewi-kartika", "nama": "Dewi Kartika Sari"}]}'),
+('dewi-kartika', 'publikasi', 'Monitoring Real-Time Berbasis HMI pada Industri Manufaktur', 2021, NULL, '{"jurnal": "Industrial Automation Journal", "penulis": [{"id": "dewi-kartika", "nama": "Dewi Kartika Sari"}]}'),
+('dewi-kartika', 'penelitian', 'Pengembangan Sistem SCADA untuk Jaringan Distribusi Listrik', 2024, NULL, '{"ketua": {"id": "dewi-kartika", "nama": "Dewi Kartika Sari"}, "anggota": [{"id": "dr-ahmad-fauzi", "nama": "Dr. Ahmad Fauzi"}], "sumberDana": "Kemendikbud Ristek"}'),
+('dewi-kartika', 'hki', 'Software Simulasi Sistem Kontrol Industri', 2023, NULL, '{"jenisHki": "Hak Cipta", "nomorSertifikat": "C00202356789"}'),
+('dewi-kartika', 'sertifikasi', 'Sertifikasi Programmer PLC Tingkat Madya', 2022, NULL, '{"penyelenggara": "Siemens Training Center"}'),
+('dewi-kartika', 'sertifikasi', 'Sertifikasi Kompetensi Otomasi Industri', 2020, NULL, '{"penyelenggara": "BNSP"}');
+
+-- Muhammad Rizki Pratama
+INSERT INTO karya (dosen_id, jenis, judul, tahun, deskripsi, metadata) VALUES
+('muhammad-rizki', 'publikasi', 'Analisis Performa Motor BLDC untuk Kendaraan Listrik', 2024, NULL, '{"jurnal": "Jurnal Kendaraan Listrik Nasional", "penulis": [{"id": "muhammad-rizki", "nama": "Muhammad Rizki Pratama"}]}'),
+('muhammad-rizki', 'publikasi', 'Desain Generator Sinkron Magnet Permanen', 2023, NULL, '{"jurnal": "Jurnal Mesin Listrik", "penulis": [{"id": "muhammad-rizki", "nama": "Muhammad Rizki Pratama"}]}'),
+('muhammad-rizki', 'penelitian', 'Pengembangan Motor Hub untuk Sepeda Listrik', 2024, NULL, '{"ketua": {"id": "muhammad-rizki", "nama": "Muhammad Rizki Pratama"}, "anggota": []}'),
+('muhammad-rizki', 'penelitian', 'Riset Bahan Magnet Permanen untuk Mesin Listrik', 2023, NULL, '{"ketua": {"id": "muhammad-rizki", "nama": "Muhammad Rizki Pratama"}, "anggota": []}'),
+('muhammad-rizki', 'penelitian', 'Studi Karakteristik Motor Induksi Efisiensi Tinggi', 2022, NULL, '{"ketua": {"id": "muhammad-rizki", "nama": "Muhammad Rizki Pratama"}, "anggota": []}'),
+('muhammad-rizki', 'pengabdian', 'Pelatihan Rewinding Motor Listrik untuk Bengkel Lokal', 2023, NULL, '{"ketua": {"id": "muhammad-rizki", "nama": "Muhammad Rizki Pratama"}, "anggota": [], "mitra": "Bengkel Dinamo Manado"}'),
+('muhammad-rizki', 'bukuAjar', 'Mesin-Mesin Listrik: Teori dan Aplikasi', 2022, NULL, '{"penulis": [{"id": "muhammad-rizki", "nama": "Muhammad Rizki Pratama"}], "penerbit": "Erlangga"}'),
+('muhammad-rizki', 'hki', 'Paten Desain Motor BLDC Efisiensi Tinggi', 2024, NULL, '{"jenisHki": "Paten", "nomorSertifikat": "P00202498765"}');
+
+-- Ratna Wulandari
+INSERT INTO karya (dosen_id, jenis, judul, tahun, deskripsi, metadata) VALUES
+('ratna-wulandari', 'publikasi', 'Karakteristik Breakdown Voltage pada Minyak Transformator', 2024, NULL, '{"jurnal": "Jurnal Material Listrik", "penulis": [{"id": "ratna-wulandari", "nama": "Ratna Wulandari"}]}'),
+('ratna-wulandari', 'publikasi', 'Analisis Partial Discharge pada Kabel XLPE 150 kV', 2023, NULL, '{"jurnal": "Jurnal Tegangan Tinggi", "penulis": [{"id": "ratna-wulandari", "nama": "Ratna Wulandari"}]}'),
+('ratna-wulandari', 'penelitian', 'Studi Degradasi Isolasi Transformator Daya', 2024, NULL, '{"ketua": {"id": "ratna-wulandari", "nama": "Ratna Wulandari"}, "anggota": []}'),
+('ratna-wulandari', 'pengabdian', 'Pengujian Gratis Instalasi Listrik Rumah Tangga', 2023, NULL, '{"ketua": {"id": "ratna-wulandari", "nama": "Ratna Wulandari"}, "anggota": [], "mitra": "PLN"}'),
+('ratna-wulandari', 'pengabdian', 'Penyuluhan Keselamatan Listrik Tegangan Tinggi', 2022, NULL, '{"ketua": {"id": "ratna-wulandari", "nama": "Ratna Wulandari"}, "anggota": [], "mitra": "Masyarakat Umum"}'),
+('ratna-wulandari', 'sertifikasi', 'Sertifikasi Pengujian Tegangan Tinggi', 2023, NULL, '{"penyelenggara": "LSP Ketenagalistrikan"}');
+
+-- Dr. Hendro Prasetyo
+INSERT INTO karya (dosen_id, jenis, judul, tahun, deskripsi, metadata) VALUES
+('hendro-prasetyo', 'publikasi', 'Pengembangan Sensor Arus Berbasis Hall Effect', 2024, NULL, '{"jurnal": "Jurnal Instrumentasi", "penulis": [{"id": "hendro-prasetyo", "nama": "Dr. Hendro Prasetyo"}]}'),
+('hendro-prasetyo', 'publikasi', 'Sistem Monitoring Kualitas Daya Berbasis Raspberry Pi', 2023, NULL, '{"jurnal": "Jurnal Teknik Elektro", "penulis": [{"id": "hendro-prasetyo", "nama": "Dr. Hendro Prasetyo"}]}'),
+('hendro-prasetyo', 'publikasi', 'Kalibrasi Alat Ukur Listrik Standar Nasional', 2022, NULL, '{"jurnal": "Jurnal Metrologi", "penulis": [{"id": "hendro-prasetyo", "nama": "Dr. Hendro Prasetyo"}]}'),
+('hendro-prasetyo', 'penelitian', 'Riset Pengembangan Smart Meter untuk PLN', 2024, NULL, '{"ketua": {"id": "hendro-prasetyo", "nama": "Dr. Hendro Prasetyo"}, "anggota": [{"id": "agus-wijaya", "nama": "Agus Wijaya"}]}'),
+('hendro-prasetyo', 'penelitian', 'Studi Akurasi Power Analyzer Portabel', 2023, NULL, '{"ketua": {"id": "hendro-prasetyo", "nama": "Dr. Hendro Prasetyo"}, "anggota": []}'),
+('hendro-prasetyo', 'pengabdian', 'Pelatihan Penggunaan Alat Ukur Listrik Digital', 2024, NULL, '{"ketua": {"id": "hendro-prasetyo", "nama": "Dr. Hendro Prasetyo"}, "anggota": [], "mitra": "SMK N 1"}'),
+('hendro-prasetyo', 'pengabdian', 'Kalibrasi Gratis Alat Ukur untuk UKM', 2022, NULL, '{"ketua": {"id": "hendro-prasetyo", "nama": "Dr. Hendro Prasetyo"}, "anggota": [], "mitra": "UKM Manado"}'),
+('hendro-prasetyo', 'bukuAjar', 'Teknik Pengukuran dan Instrumentasi Listrik', 2023, NULL, '{"penulis": [{"id": "hendro-prasetyo", "nama": "Dr. Hendro Prasetyo"}], "penerbit": "Penerbit Salemba"}'),
+('hendro-prasetyo', 'bukuAjar', 'Praktikum Sensor dan Transduser', 2021, NULL, '{"penulis": [{"id": "hendro-prasetyo", "nama": "Dr. Hendro Prasetyo"}], "penerbit": "Polinema Press"}'),
+('hendro-prasetyo', 'hki', 'Hak Cipta Software Monitoring Energi Listrik', 2023, NULL, '{"jenisHki": "Hak Cipta", "nomorSertifikat": "C00202311223"}'),
+('hendro-prasetyo', 'hki', 'Paten Alat Ukur Harmonisa Portabel', 2022, NULL, '{"jenisHki": "Paten", "nomorSertifikat": "P00202233445"}'),
+('hendro-prasetyo', 'sertifikasi', 'Sertifikasi Metrologi dan Kalibrasi', 2021, NULL, '{"penyelenggara": "KAN"}'),
+('hendro-prasetyo', 'sertifikasi', 'Sertifikasi Instrumen Industri', 2020, NULL, '{"penyelenggara": "BNSP"}');
+
+-- Agus Wijaya
+INSERT INTO karya (dosen_id, jenis, judul, tahun, deskripsi, metadata) VALUES
+('agus-wijaya', 'publikasi', 'Pemetaan Jaringan Distribusi Berbasis GIS', 2024, NULL, '{"jurnal": "Jurnal Spatial", "penulis": [{"id": "agus-wijaya", "nama": "Agus Wijaya"}]}'),
+('agus-wijaya', 'penelitian', 'Analisis Rugi-Rugi Daya pada Jaringan Distribusi 20 kV', 2024, NULL, '{"ketua": {"id": "agus-wijaya", "nama": "Agus Wijaya"}, "anggota": []}'),
+('agus-wijaya', 'sertifikasi', 'Sertifikasi Ahli K3 Listrik', 2023, NULL, '{"penyelenggara": "Kemenaker", "linkSertifikat": "https://drive.google.com/file/d/dummy-link-456/view"}');

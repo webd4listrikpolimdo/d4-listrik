@@ -1,0 +1,240 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { useData } from "@/context/DataContext";
+import { Dosen, KaryaItem } from "@/data/dosen";
+import Modal from "@/components/universal/Modal";
+import { HiOutlinePlus, HiOutlineTrash, HiOutlineClock, HiOutlineCheckCircle, HiOutlineXCircle } from "react-icons/hi2";
+
+interface PendingKarya {
+  id: string;
+  jenis: string;
+  judul: string;
+  tahun: number;
+  status: "pending" | "approved" | "rejected";
+  catatan_admin: string | null;
+  created_at: string;
+}
+
+const statusConfig = {
+  pending: { label: "Menunggu Approval", cls: "bg-amber-100 text-amber-700", icon: HiOutlineClock },
+  approved: { label: "Disetujui", cls: "bg-green-100 text-green-700", icon: HiOutlineCheckCircle },
+  rejected: { label: "Ditolak", cls: "bg-red-100 text-red-700", icon: HiOutlineXCircle },
+};
+
+const jenisLabels: Record<string, string> = {
+  publikasi: "Publikasi", penelitian: "Penelitian", pengabdian: "Pengabdian",
+  bukuAjar: "Buku Ajar", hki: "HKI", sertifikasi: "Sertifikasi",
+};
+
+export default function DosenKaryaPage() {
+  const { user } = useAuth();
+  const { dosenList } = useData();
+  const [dosen, setDosen] = useState<Dosen | null>(null);
+  const [pendingList, setPendingList] = useState<PendingKarya[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState<Record<string, string | number>>({ jenis: "publikasi" });
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  useEffect(() => {
+    if (user && user.role === "dosen") {
+      const d = dosenList.find((d) => d.nidn === user.nidn);
+      if (d) setDosen(d);
+    }
+  }, [user, dosenList]);
+
+  // Fetch pending submissions
+  useEffect(() => {
+    const fetchPending = async () => {
+      try {
+        const res = await fetch("/api/karya-pending");
+        if (res.ok) setPendingList(await res.json());
+      } catch (e) { console.error("Failed to fetch pending", e); }
+    };
+    if (user) fetchPending();
+  }, [user, submitSuccess]);
+
+  if (!user || user.role !== "dosen" || !dosen) return null;
+
+  const allKarya = Object.values(dosen.karya || {}).flat() as KaryaItem[];
+
+  const handleOpenAdd = () => {
+    setFormData({ judul: "", jenis: "publikasi", tahun: new Date().getFullYear(), deskripsi: "" });
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const metadata: Record<string, unknown> = {};
+      if (formData.jenis === "publikasi" && formData.jurnal) metadata.jurnal = formData.jurnal;
+      if (formData.peran) metadata.peran = formData.peran;
+
+      const res = await fetch("/api/karya-pending", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dosen_id: dosen.id,
+          jenis: formData.jenis,
+          judul: formData.judul,
+          tahun: Number(formData.tahun),
+          deskripsi: formData.deskripsi || null,
+          metadata: Object.keys(metadata).length > 0 ? metadata : null,
+        }),
+      });
+
+      if (res.ok) {
+        setIsModalOpen(false);
+        setSubmitSuccess(prev => !prev); // trigger re-fetch
+      }
+    } catch (e) { console.error("Failed to submit karya", e); }
+  };
+
+  const handleDeletePending = async (id: string) => {
+    if (!confirm("Batalkan pengajuan ini?")) return;
+    const res = await fetch(`/api/karya-pending/${id}`, { method: "DELETE" });
+    if (res.ok) setPendingList(prev => prev.filter(k => k.id !== id));
+  };
+
+  const pendingOnly = pendingList.filter(k => k.status === "pending");
+  const reviewedList = pendingList.filter(k => k.status !== "pending");
+
+  const inputCls = "w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500";
+
+  return (
+    <div>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Karya & Kontribusi</h1>
+          <p className="text-gray-500 text-sm">Ajukan karya baru untuk disetujui oleh admin.</p>
+        </div>
+        <button onClick={handleOpenAdd}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm">
+          <HiOutlinePlus className="w-5 h-5" /> Ajukan Karya
+        </button>
+      </div>
+
+      {/* Pending Submissions */}
+      {pendingOnly.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-base font-bold text-amber-700 mb-3 flex items-center gap-2"><HiOutlineClock className="w-5 h-5" /> Menunggu Persetujuan ({pendingOnly.length})</h2>
+          <div className="bg-white border border-amber-200 rounded-2xl shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm text-gray-600">
+                <thead className="bg-amber-50 text-amber-800 font-semibold border-b border-amber-100">
+                  <tr><th className="px-6 py-4">Judul</th><th className="px-6 py-4">Kategori</th><th className="px-6 py-4">Tahun</th><th className="px-6 py-4">Tanggal Ajuan</th><th className="px-6 py-4 text-right">Aksi</th></tr>
+                </thead>
+                <tbody className="divide-y divide-amber-50">
+                  {pendingOnly.map(k => (
+                    <tr key={k.id} className="hover:bg-amber-50/30 transition-colors">
+                      <td className="px-6 py-3 font-medium text-gray-900 max-w-xs truncate">{k.judul}</td>
+                      <td className="px-6 py-3"><span className="px-2 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-600">{jenisLabels[k.jenis] || k.jenis}</span></td>
+                      <td className="px-6 py-3">{k.tahun}</td>
+                      <td className="px-6 py-3 text-xs text-gray-400">{new Date(k.created_at).toLocaleDateString("id-ID")}</td>
+                      <td className="px-6 py-3 text-right">
+                        <button onClick={() => handleDeletePending(k.id)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-red-600 hover:bg-red-50 transition-colors" title="Batalkan"><HiOutlineTrash className="w-4 h-4" /></button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reviewed (approved/rejected) */}
+      {reviewedList.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-base font-bold text-gray-700 mb-3">Riwayat Pengajuan</h2>
+          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm text-gray-600">
+                <thead className="bg-gray-50 text-gray-700 font-semibold border-b border-gray-100">
+                  <tr><th className="px-6 py-4">Judul</th><th className="px-6 py-4">Jenis</th><th className="px-6 py-4">Status</th><th className="px-6 py-4">Catatan</th></tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {reviewedList.map(k => {
+                    const cfg = statusConfig[k.status];
+                    const Icon = cfg.icon;
+                    return (
+                      <tr key={k.id} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="px-6 py-3 font-medium text-gray-900 max-w-xs truncate">{k.judul}</td>
+                        <td className="px-6 py-3"><span className="px-2 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-600">{jenisLabels[k.jenis] || k.jenis}</span></td>
+                        <td className="px-6 py-3"><span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium ${cfg.cls}`}><Icon className="w-3.5 h-3.5" />{cfg.label}</span></td>
+                        <td className="px-6 py-3 text-xs text-gray-500">{k.catatan_admin || "—"}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Approved Karya (from karya table) */}
+      <h2 className="text-base font-bold text-gray-700 mb-3">Karya Terpublikasi ({allKarya.length})</h2>
+      <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm text-gray-600">
+            <thead className="bg-gray-50 text-gray-700 font-semibold border-b border-gray-100">
+              <tr><th className="px-6 py-4">Judul</th><th className="px-6 py-4">Kategori</th><th className="px-6 py-4">Tahun</th></tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {allKarya.map(k => (
+                <tr key={k.id} className="hover:bg-gray-50/50 transition-colors">
+                  <td className="px-6 py-4 font-medium text-gray-900 max-w-md truncate">{k.judul}</td>
+                  <td className="px-6 py-4"><span className="px-2 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-600">{jenisLabels[k.jenis] || k.jenis}</span></td>
+                  <td className="px-6 py-4">{k.tahun}</td>
+                </tr>
+              ))}
+              {allKarya.length === 0 && <tr><td colSpan={3} className="px-6 py-8 text-center text-gray-400">Belum ada karya terpublikasi.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Submit Modal */}
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Ajukan Karya Baru">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Judul Karya</label>
+            <textarea required rows={2} value={formData.judul || ""} onChange={e => setFormData({ ...formData, judul: e.target.value })} className={inputCls + " resize-none"} />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
+              <select required value={formData.jenis || "publikasi"} onChange={e => setFormData({ ...formData, jenis: e.target.value })} className={inputCls}>
+                <option value="publikasi">Publikasi</option><option value="penelitian">Penelitian</option><option value="pengabdian">Pengabdian</option>
+                <option value="bukuAjar">Buku Ajar</option><option value="hki">HKI</option><option value="sertifikasi">Sertifikasi</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Tahun</label>
+              <input type="number" required value={formData.tahun || ""} onChange={e => setFormData({ ...formData, tahun: e.target.value })} className={inputCls} />
+            </div>
+          </div>
+          {formData.jenis === "publikasi" && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nama Jurnal / Konferensi</label>
+              <input type="text" value={formData.jurnal || ""} onChange={e => setFormData({ ...formData, jurnal: e.target.value })} className={inputCls} />
+            </div>
+          )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Deskripsi (opsional)</label>
+            <textarea rows={2} value={formData.deskripsi || ""} onChange={e => setFormData({ ...formData, deskripsi: e.target.value })} className={inputCls + " resize-none"} />
+          </div>
+          <div className="p-3 rounded-xl bg-amber-50 text-amber-700 text-xs border border-amber-100">
+            <strong>Info:</strong> Karya yang diajukan akan ditinjau oleh admin sebelum dipublikasikan.
+          </div>
+          <div className="pt-4 flex justify-end gap-3 border-t border-gray-100 mt-6">
+            <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors">Batal</button>
+            <button type="submit" className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 transition-colors">Ajukan Karya</button>
+          </div>
+        </form>
+      </Modal>
+    </div>
+  );
+}

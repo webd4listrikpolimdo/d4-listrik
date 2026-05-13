@@ -1,0 +1,86 @@
+# D4 Teknik Listrik - Supabase Database Documentation
+
+This document explains the structure and purpose of the tables and storage buckets in the Supabase database for the D4 Teknik Listrik Information System.
+
+---
+
+## 1. Supabase Storage (Buckets)
+
+All images and documents are stored in Supabase Storage buckets. The database tables store only the **paths** or **public URLs** to these files.
+
+### Bucket: `dosen-profiles`
+- **Purpose**: Stores profile photos for lecturers.
+- **Path Structure**: `profiles/[dosen-id].jpg` (e.g., `profiles/dr-ahmad-fauzi.png`).
+- **Policy**: Public read-only; Upload/Update allowed only for Admins and the specific Dosen.
+
+### Bucket: `galeri-images`
+- **Purpose**: Stores images for laboratory facilities and tridharma activities.
+- **Path Structure**: `[category]/[item-id]/[image-name].jpg`.
+- **Policy**: Public read-only; Upload allowed only for Admins.
+
+### Bucket: `dokumen-kurikulum`
+- **Purpose**: Stores PDF curriculum documents.
+- **Policy**: Public read-only; Upload allowed only for Admins.
+
+---
+
+## 2. Authentication & Roles
+
+### Table: `profiles`
+Links Supabase Auth users to application roles.
+- `id` (UUID): Matches the `auth.uid()` from Supabase Auth.
+- `role` (Text): Either 'admin' or 'dosen'.
+- `full_name` (Text): Display name.
+- `nidn` (Text): Unique identification number for lecturers.
+
+---
+
+## 3. Academic Data
+
+### Table: `dosen`
+Stores the primary information for faculty members.
+- `id` (Text): A unique URL-friendly ID (e.g., 'dr-ahmad-fauzi').
+- `nama` (Text): Full name with titles.
+- `nidn` (Text): National Lecturer ID.
+- `foto_url` (Text): **Path/URL to the image in the `dosen-profiles` bucket.**
+- `jabatan` & `pangkat`: Academic rank and grade.
+- `bidang_keahlian` (Text[]): Array of expertise strings.
+
+### Table: `karya`
+Stores all research, publications, and professional activities.
+- `dosen_id` (Text): Foreign key to the `dosen` table.
+- `jenis` (Text): Type of work ('publikasi', 'penelitian', 'pengabdian', 'bukuAjar', 'hki', 'sertifikasi').
+- `metadata` (JSONB): Dynamic data based on the type. 
+
+---
+
+## 4. Public Information
+
+### Table: `galeri`
+Media items for the Gallery page.
+- `kategori` (Text): 'fasilitas' or 'tridharma'.
+- `foto_urls` (Text[]): **Array of paths/URLs to images in the `galeri-images` bucket.**
+
+---
+
+## 5. Curriculum
+
+### Table: `kurikulum_aktif`
+A single-row table containing global curriculum settings.
+- `file_url` (Text): **Path/URL to the PDF in the `dokumen-kurikulum` bucket.**
+
+### Table: `mata_kuliah`
+List of all courses categorized by semester.
+
+### Table: `cpl`
+Capaian Pembelajaran Lulusan definitions.
+
+---
+
+## 6. Security (Row Level Security - RLS)
+
+1.  **Public Read Access**: All tables and buckets can be viewed by anyone (Public).
+2.  **Admin Access**: Users with `role = 'admin'` can manage all data and files.
+3.  **Dosen Access**: 
+    - Can update their own profile data and upload their own photo to `dosen-profiles`.
+    - Can manage their own `karya` entries.

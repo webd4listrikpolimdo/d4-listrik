@@ -1,0 +1,339 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import Modal from "@/components/universal/Modal";
+import { HiOutlineCheck, HiOutlineXMark, HiOutlineTrash, HiOutlineClock, HiOutlineCheckCircle, HiOutlineXCircle, HiOutlinePlus, HiOutlinePencilSquare } from "react-icons/hi2";
+
+interface PendingKarya {
+  id: string;
+  dosen_id: string;
+  jenis: string;
+  judul: string;
+  tahun: number;
+  deskripsi: string | null;
+  metadata: Record<string, unknown> | null;
+  status: "pending" | "approved" | "rejected";
+  catatan_admin: string | null;
+  created_at: string;
+  reviewed_at: string | null;
+  dosen: { id: string; nama: string } | null;
+}
+
+interface Karya {
+  id: string;
+  dosen_id: string;
+  jenis: string;
+  judul: string;
+  tahun: number;
+  deskripsi: string | null;
+  metadata: Record<string, unknown> | null;
+}
+
+interface DosenOption {
+  id: string;
+  nama: string;
+}
+
+const jenisLabels: Record<string, string> = {
+  publikasi: "Publikasi", penelitian: "Penelitian", pengabdian: "Pengabdian",
+  bukuAjar: "Buku Ajar", hki: "HKI", sertifikasi: "Sertifikasi",
+};
+
+const statusConfig = {
+  pending: { label: "Menunggu", cls: "bg-amber-100 text-amber-700", icon: HiOutlineClock },
+  approved: { label: "Disetujui", cls: "bg-green-100 text-green-700", icon: HiOutlineCheckCircle },
+  rejected: { label: "Ditolak", cls: "bg-red-100 text-red-700", icon: HiOutlineXCircle },
+};
+
+export default function AdminKaryaPage() {
+  const [pendingList, setPendingList] = useState<PendingKarya[]>([]);
+  const [allKarya, setAllKarya] = useState<Karya[]>([]);
+  const [dosenOptions, setDosenOptions] = useState<DosenOption[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
+  const [catatan, setCatatan] = useState("");
+  const [activeSection, setActiveSection] = useState<"pending" | "all">("pending");
+
+  // CRUD modal state
+  const [karyaModalOpen, setKaryaModalOpen] = useState(false);
+  const [editingKaryaId, setEditingKaryaId] = useState<string | null>(null);
+  const [karyaForm, setKaryaForm] = useState<Record<string, string | number>>({});
+
+  const inputCls = "w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500";
+
+  const fetchData = async () => {
+    try {
+      const [pendingRes, karyaRes, dosenRes] = await Promise.all([
+        fetch("/api/karya-pending"),
+        fetch("/api/karya"),
+        fetch("/api/dosen"),
+      ]);
+      if (pendingRes.ok) setPendingList(await pendingRes.json());
+      if (karyaRes.ok) setAllKarya(await karyaRes.json());
+      if (dosenRes.ok) {
+        const data = await dosenRes.json();
+        setDosenOptions(data.map((d: DosenOption) => ({ id: d.id, nama: d.nama })));
+      }
+    } catch (e) { console.error("Failed to fetch karya data", e); }
+    finally { setIsLoading(false); }
+  };
+
+  useEffect(() => { fetchData(); }, []);
+
+  // ========== Pending actions ==========
+  const handleApprove = async (id: string) => {
+    if (!confirm("Setujui karya ini?")) return;
+    const res = await fetch(`/api/karya-pending/${id}`, {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "approve" }),
+    });
+    if (res.ok) fetchData();
+  };
+
+  const openRejectModal = (id: string) => { setRejectingId(id); setCatatan(""); setRejectModalOpen(true); };
+
+  const handleReject = async () => {
+    if (!rejectingId) return;
+    const res = await fetch(`/api/karya-pending/${rejectingId}`, {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "reject", catatan_admin: catatan || null }),
+    });
+    if (res.ok) { setRejectModalOpen(false); fetchData(); }
+  };
+
+  const handleDeletePending = async (id: string) => {
+    if (!confirm("Hapus pengajuan ini?")) return;
+    const res = await fetch(`/api/karya-pending/${id}`, { method: "DELETE" });
+    if (res.ok) setPendingList(prev => prev.filter(k => k.id !== id));
+  };
+
+  // ========== Karya CRUD ==========
+  const handleOpenAddKarya = () => {
+    setEditingKaryaId(null);
+    setKaryaForm({ dosen_id: dosenOptions[0]?.id || "", jenis: "publikasi", judul: "", tahun: new Date().getFullYear(), deskripsi: "" });
+    setKaryaModalOpen(true);
+  };
+
+  const handleOpenEditKarya = (k: Karya) => {
+    setEditingKaryaId(k.id);
+    setKaryaForm({ dosen_id: k.dosen_id, jenis: k.jenis, judul: k.judul, tahun: k.tahun, deskripsi: k.deskripsi || "" });
+    setKaryaModalOpen(true);
+  };
+
+  const handleKaryaSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const payload = {
+      dosen_id: karyaForm.dosen_id,
+      jenis: karyaForm.jenis,
+      judul: karyaForm.judul,
+      tahun: Number(karyaForm.tahun),
+      deskripsi: karyaForm.deskripsi || null,
+      metadata: null,
+    };
+
+    if (editingKaryaId) {
+      const res = await fetch(`/api/karya/${editingKaryaId}`, {
+        method: "PUT", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) { setKaryaModalOpen(false); fetchData(); }
+    } else {
+      const res = await fetch("/api/karya", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) { setKaryaModalOpen(false); fetchData(); }
+    }
+  };
+
+  const handleDeleteKarya = async (id: string) => {
+    if (!confirm("Hapus karya ini?")) return;
+    const res = await fetch(`/api/karya/${id}`, { method: "DELETE" });
+    if (res.ok) setAllKarya(prev => prev.filter(k => k.id !== id));
+  };
+
+  if (isLoading) return <div className="text-center py-12 text-gray-400">Memuat data karya...</div>;
+
+  const pendingOnly = pendingList.filter(k => k.status === "pending");
+  const reviewedList = pendingList.filter(k => k.status !== "pending");
+
+  const sectionTabs = [
+    { key: "pending" as const, label: `Pengajuan (${pendingOnly.length})` },
+    { key: "all" as const, label: `Semua Karya (${allKarya.length})` },
+  ];
+
+  return (
+    <div>
+      <h1 className="text-2xl font-bold text-gray-900 mb-2">Manajemen Karya</h1>
+      <p className="text-gray-500 text-sm mb-6">Kelola pengajuan dan semua data karya dosen.</p>
+
+      <div className="flex gap-1 mb-6 border-b border-gray-100">
+        {sectionTabs.map(tab => (
+          <button key={tab.key} onClick={() => setActiveSection(tab.key)}
+            className={`px-4 py-2.5 text-sm font-medium rounded-t-xl transition-colors ${activeSection === tab.key ? "bg-primary-50 text-primary-700 border-b-2 border-primary-600" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}>
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ========== PENDING TAB ========== */}
+      {activeSection === "pending" && (
+        <>
+          {pendingOnly.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-lg font-bold text-amber-700 mb-3 flex items-center gap-2"><HiOutlineClock className="w-5 h-5" /> Menunggu Persetujuan</h2>
+              <div className="bg-white border border-amber-200 rounded-2xl shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm text-gray-600">
+                    <thead className="bg-amber-50 text-amber-800 font-semibold border-b border-amber-100">
+                      <tr><th className="px-6 py-4">Dosen</th><th className="px-6 py-4">Judul</th><th className="px-6 py-4">Jenis</th><th className="px-6 py-4">Tahun</th><th className="px-6 py-4">Tanggal</th><th className="px-6 py-4 text-right">Aksi</th></tr>
+                    </thead>
+                    <tbody className="divide-y divide-amber-50">
+                      {pendingOnly.map(k => (
+                        <tr key={k.id} className="hover:bg-amber-50/30 transition-colors">
+                          <td className="px-6 py-3 font-medium text-gray-900">{k.dosen?.nama || "—"}</td>
+                          <td className="px-6 py-3 text-gray-900 max-w-xs truncate">{k.judul}</td>
+                          <td className="px-6 py-3"><span className="px-2 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-600">{jenisLabels[k.jenis] || k.jenis}</span></td>
+                          <td className="px-6 py-3">{k.tahun}</td>
+                          <td className="px-6 py-3 text-xs text-gray-400">{new Date(k.created_at).toLocaleDateString("id-ID")}</td>
+                          <td className="px-6 py-3 text-right space-x-1">
+                            <button onClick={() => handleApprove(k.id)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-green-600 hover:bg-green-50 transition-colors" title="Setujui"><HiOutlineCheck className="w-5 h-5" /></button>
+                            <button onClick={() => openRejectModal(k.id)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-red-600 hover:bg-red-50 transition-colors" title="Tolak"><HiOutlineXMark className="w-5 h-5" /></button>
+                            <button onClick={() => handleDeletePending(k.id)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:bg-gray-50 transition-colors" title="Hapus"><HiOutlineTrash className="w-4 h-4" /></button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {pendingOnly.length === 0 && (
+            <div className="text-center py-12 text-gray-400 bg-gray-50 rounded-2xl border border-gray-100">Tidak ada pengajuan yang menunggu persetujuan.</div>
+          )}
+
+          {reviewedList.length > 0 && (
+            <div className="mt-8">
+              <h2 className="text-lg font-bold text-gray-700 mb-3">Riwayat Review</h2>
+              <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm text-gray-600">
+                    <thead className="bg-gray-50 text-gray-700 font-semibold border-b border-gray-100">
+                      <tr><th className="px-6 py-4">Dosen</th><th className="px-6 py-4">Judul</th><th className="px-6 py-4">Jenis</th><th className="px-6 py-4">Status</th><th className="px-6 py-4 text-right">Aksi</th></tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {reviewedList.map(k => {
+                        const cfg = statusConfig[k.status];
+                        const Icon = cfg.icon;
+                        return (
+                          <tr key={k.id} className="hover:bg-gray-50/50 transition-colors">
+                            <td className="px-6 py-3 font-medium text-gray-900">{k.dosen?.nama || "—"}</td>
+                            <td className="px-6 py-3 text-gray-900 max-w-xs truncate">{k.judul}</td>
+                            <td className="px-6 py-3"><span className="px-2 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-600">{jenisLabels[k.jenis] || k.jenis}</span></td>
+                            <td className="px-6 py-3"><span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium ${cfg.cls}`}><Icon className="w-3.5 h-3.5" />{cfg.label}</span></td>
+                            <td className="px-6 py-3 text-right"><button onClick={() => handleDeletePending(k.id)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:bg-gray-50 transition-colors" title="Hapus"><HiOutlineTrash className="w-4 h-4" /></button></td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ========== ALL KARYA TAB (with full CRUD) ========== */}
+      {activeSection === "all" && (
+        <>
+          <div className="flex justify-end mb-4">
+            <button onClick={handleOpenAddKarya}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm">
+              <HiOutlinePlus className="w-5 h-5" /> Tambah Karya
+            </button>
+          </div>
+          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm text-gray-600">
+                <thead className="bg-gray-50 text-gray-700 font-semibold border-b border-gray-100">
+                  <tr><th className="px-6 py-4">Dosen</th><th className="px-6 py-4">Judul</th><th className="px-6 py-4">Jenis</th><th className="px-6 py-4">Tahun</th><th className="px-6 py-4 text-right">Aksi</th></tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {allKarya.map(k => (
+                    <tr key={k.id} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="px-6 py-3 font-medium text-gray-900">{dosenOptions.find(d => d.id === k.dosen_id)?.nama || k.dosen_id}</td>
+                      <td className="px-6 py-3 text-gray-900 max-w-xs truncate">{k.judul}</td>
+                      <td className="px-6 py-3"><span className="px-2 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-600">{jenisLabels[k.jenis] || k.jenis}</span></td>
+                      <td className="px-6 py-3">{k.tahun}</td>
+                      <td className="px-6 py-3 text-right space-x-1">
+                        <button onClick={() => handleOpenEditKarya(k)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-primary-600 hover:bg-primary-50 transition-colors" title="Edit"><HiOutlinePencilSquare className="w-4 h-4" /></button>
+                        <button onClick={() => handleDeleteKarya(k.id)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-red-600 hover:bg-red-50 transition-colors" title="Hapus"><HiOutlineTrash className="w-4 h-4" /></button>
+                      </td>
+                    </tr>
+                  ))}
+                  {allKarya.length === 0 && <tr><td colSpan={5} className="px-6 py-8 text-center text-gray-400">Belum ada data karya.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Reject Modal */}
+      <Modal isOpen={rejectModalOpen} onClose={() => setRejectModalOpen(false)} title="Tolak Pengajuan Karya">
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">Berikan catatan atau alasan penolakan (opsional).</p>
+          <textarea rows={3} value={catatan} onChange={e => setCatatan(e.target.value)}
+            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
+            placeholder="Alasan penolakan..." />
+          <div className="pt-4 flex justify-end gap-3 border-t border-gray-100">
+            <button onClick={() => setRejectModalOpen(false)} className="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors">Batal</button>
+            <button onClick={handleReject} className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-colors">Tolak Pengajuan</button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Karya Add/Edit Modal */}
+      <Modal isOpen={karyaModalOpen} onClose={() => setKaryaModalOpen(false)} title={editingKaryaId ? "Edit Karya" : "Tambah Karya Baru"}>
+        <form onSubmit={handleKaryaSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Dosen</label>
+            <select required value={karyaForm.dosen_id || ""} onChange={e => setKaryaForm({ ...karyaForm, dosen_id: e.target.value })} className={inputCls}>
+              <option value="" disabled>Pilih dosen...</option>
+              {dosenOptions.map(d => <option key={d.id} value={d.id}>{d.nama}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Judul Karya</label>
+            <textarea required rows={2} value={karyaForm.judul || ""} onChange={e => setKaryaForm({ ...karyaForm, judul: e.target.value })} className={inputCls + " resize-none"} />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
+              <select required value={karyaForm.jenis || "publikasi"} onChange={e => setKaryaForm({ ...karyaForm, jenis: e.target.value })} className={inputCls}>
+                <option value="publikasi">Publikasi</option><option value="penelitian">Penelitian</option><option value="pengabdian">Pengabdian</option>
+                <option value="bukuAjar">Buku Ajar</option><option value="hki">HKI</option><option value="sertifikasi">Sertifikasi</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Tahun</label>
+              <input type="number" required value={karyaForm.tahun || ""} onChange={e => setKaryaForm({ ...karyaForm, tahun: e.target.value })} className={inputCls} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Deskripsi (opsional)</label>
+            <textarea rows={2} value={karyaForm.deskripsi || ""} onChange={e => setKaryaForm({ ...karyaForm, deskripsi: e.target.value })} className={inputCls + " resize-none"} />
+          </div>
+          <div className="pt-4 flex justify-end gap-3 border-t border-gray-100 mt-6">
+            <button type="button" onClick={() => setKaryaModalOpen(false)} className="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors">Batal</button>
+            <button type="submit" className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 transition-colors">Simpan</button>
+          </div>
+        </form>
+      </Modal>
+    </div>
+  );
+}
