@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("karya")
-      .select("*")
+      .select("*, dosen(id, nama)")
       .order("tahun", { ascending: false });
 
     if (dosenId) {
