@@ -17,10 +17,10 @@ const jenisLabels: Record<string, string> = {
 };
 
 const jenisGradients: Record<string, string> = {
-  publikasi: "from-blue-500 to-indigo-600",
-  penelitian: "from-violet-500 to-purple-600",
-  pengabdian: "from-lime-500 to-green-600",
-  bukuAjar: "from-amber-500 to-orange-600",
+  publikasi: "from-blue-600 to-indigo-700",
+  penelitian: "from-blue-600 to-indigo-700",
+  pengabdian: "from-blue-600 to-indigo-700",
+  bukuAjar: "from-blue-600 to-indigo-700",
 };
 
 export default function GaleriPage() {

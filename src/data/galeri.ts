@@ -53,7 +53,7 @@ export const galeriData: GaleriItem[] = [
     tanggal: "2024-04-02",
     kategori: "tridharma",
     foto: ["/images/default.svg", "/images/default.svg"],
-    warna: "from-amber-500 to-orange-600",
+    warna: "from-blue-600 to-indigo-700",
   },
   {
     id: "seminar-nasional-kelistrikan",
@@ -62,7 +62,7 @@ export const galeriData: GaleriItem[] = [
     tanggal: "2023-12-12",
     kategori: "tridharma",
     foto: ["/images/default.svg", "/images/default.svg"],
-    warna: "from-rose-500 to-pink-600",
+    warna: "from-blue-600 to-indigo-700",
   },
   {
     id: "pengabdian-instalasi-desa",
@@ -71,7 +71,7 @@ export const galeriData: GaleriItem[] = [
     tanggal: "2023-08-25",
     kategori: "tridharma",
     foto: ["/images/default.svg"],
-    warna: "from-lime-500 to-green-600",
+    warna: "from-blue-600 to-indigo-700",
   },
   {
     id: "riset-smart-grid",
@@ -80,6 +80,6 @@ export const galeriData: GaleriItem[] = [
     tanggal: "2024-01-18",
     kategori: "tridharma",
     foto: ["/images/default.svg", "/images/default.svg"],
-    warna: "from-sky-500 to-blue-600",
+    warna: "from-blue-600 to-indigo-700",
   },
 ];
