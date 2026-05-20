@@ -102,16 +102,30 @@ export default function KaryaDetailPage() {
     // Ensure the karya owner is always present in person lists with a profile link
     const ownerPerson: PersonLink = { id: dosen.id, nama: dosen.nama };
 
+    const isSamePerson = (p: PersonLink) => {
+      if (p.id === dosen.id) return true;
+      const cleanPName = p.nama.split(",")[0].trim().toLowerCase();
+      const cleanDosenName = dosen.nama.split(",")[0].trim().toLowerCase();
+      return cleanPName === cleanDosenName || cleanDosenName.includes(cleanPName) || cleanPName.includes(cleanDosenName);
+    };
+
     const ensureOwnerInList = (persons: PersonLink | PersonLink[] | undefined): PersonLink[] => {
       const list = persons ? (Array.isArray(persons) ? [...persons] : [persons]) : [];
-      if (!list.some(p => p.id === dosen.id)) {
+      const ownerIndex = list.findIndex(isSamePerson);
+
+      if (ownerIndex !== -1) {
+        // Upgrade the unlinked/differently-formatted item to the linked ownerPerson
+        list[ownerIndex] = ownerPerson;
+      } else {
         list.unshift(ownerPerson);
       }
       return list;
     };
 
     const ensureOwnerAsSingle = (person: PersonLink | undefined): PersonLink => {
-      return person?.id ? person : ownerPerson;
+      if (!person) return ownerPerson;
+      if (isSamePerson(person)) return ownerPerson;
+      return person.id ? person : ownerPerson;
     };
 
     switch (jenis) {
