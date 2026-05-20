@@ -6,7 +6,7 @@ import GaleriFilter from "@/components/galeri/GaleriFilter";
 import GaleriCard from "@/components/galeri/GaleriCard";
 import { useData } from "@/context/DataContext";
 import { GaleriItem } from "@/data/galeri";
-import { cachedFetch } from "@/lib/fetchCache";
+import { cachedFetch, invalidateCache } from "@/lib/fetchCache";
 import { HiInboxStack } from "react-icons/hi2";
 
 const jenisLabels: Record<string, string> = {
@@ -31,6 +31,7 @@ export default function GaleriPage() {
 
   // Fetch karya and transform into virtual galeri items
   useEffect(() => {
+    invalidateCache("/api/karya");
     cachedFetch<any[]>("/api/karya")
       .then((karyaList) => {
         if (!karyaList) return;
@@ -55,10 +56,14 @@ export default function GaleriPage() {
   const [filter, setFilter] = useState<"semua" | "fasilitas" | "tridharma">("semua");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Merge galeri + karya virtual items, deduplicated, sorted by date desc
-  const mergedList = [...galeriList, ...karyaGaleri].sort(
-    (a, b) => new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime()
-  );
+  // Merge galeri + karya virtual items, deduplicated, sorted by date desc with safe parsing
+  const mergedList = [...galeriList, ...karyaGaleri].sort((a, b) => {
+    const timeA = a.tanggal ? new Date(a.tanggal).getTime() : 0;
+    const timeB = b.tanggal ? new Date(b.tanggal).getTime() : 0;
+    const cleanA = isNaN(timeA) ? 0 : timeA;
+    const cleanB = isNaN(timeB) ? 0 : timeB;
+    return cleanB - cleanA;
+  });
 
   const filtered = mergedList.filter((item) => {
     const matchesFilter = filter === "semua" || item.kategori === filter;

@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { useData } from "@/context/DataContext";
 import { notFound, useParams } from "next/navigation";
 import Link from "next/link";
-import { 
-  HiArrowLeft, 
-  HiOutlineCalendar, 
+import {
+  HiArrowLeft,
+  HiOutlineCalendar,
   HiOutlineTag,
   HiOutlineBookOpen,
   HiOutlineBuildingOffice,
@@ -31,7 +31,7 @@ const jenisGradients: Record<string, string> = {
   bukuAjar: "from-blue-600 to-indigo-700",
 };
 
-function PersonBadgeList({ title, persons, ownerPerson }: { title: string, persons: any, ownerPerson?: {id: string, nama: string} | null }) {
+function PersonBadgeList({ title, persons, ownerPerson }: { title: string, persons: any, ownerPerson?: { id: string, nama: string } | null }) {
   if (!persons) return null;
   const pList = Array.isArray(persons) ? persons : [persons];
   if (pList.length === 0) return null;
@@ -275,11 +275,11 @@ export default function GaleriDetailPage() {
                     {formattedDate}
                   </span>
                 </div>
-                
+
                 <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight mb-6">
                   {item.judul}
                 </h1>
-                
+
                 <p className="text-lg text-gray-600 leading-relaxed max-w-3xl">
                   {item.deskripsi}
                 </p>
@@ -291,12 +291,12 @@ export default function GaleriDetailPage() {
               {/* Photos Gallery */}
               <div className="p-6 sm:p-10 bg-white">
                 <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-6">Dokumentasi Terkait</h2>
-                
+
                 {(!item.foto || item.foto.length === 0) ? (
                   <div className="rounded-2xl overflow-hidden shadow-sm border border-gray-100">
-                    <img 
-                      src="/images/default.svg" 
-                      alt="Placeholder" 
+                    <img
+                      src="/images/default.svg"
+                      alt="Placeholder"
                       className="w-full h-auto object-cover aspect-video opacity-20"
                     />
                   </div>
@@ -304,9 +304,9 @@ export default function GaleriDetailPage() {
                   <div className={`grid gap-6 ${item.foto.length === 1 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
                     {item.foto.map((url, idx) => (
                       <div key={idx} className="relative rounded-2xl overflow-hidden shadow-sm border border-gray-100 group">
-                        <img 
-                          src={url} 
-                          alt={`${item.judul} - Foto ${idx + 1}`} 
+                        <img
+                          src={url}
+                          alt={`${item.judul} - Foto ${idx + 1}`}
                           className="w-full h-auto object-cover aspect-video group-hover:scale-105 transition-transform duration-500"
                         />
                       </div>

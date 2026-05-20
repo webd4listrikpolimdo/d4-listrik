@@ -7,20 +7,27 @@ export async function GET() {
   try {
     const supabase = await createClient();
 
-    const [statResult, dosenResult, galeriResult] = await Promise.all([
+    const [statResult, dosenResult, galeriResult, karyaResult] = await Promise.all([
       supabase.from("statistik_mahasiswa").select("*").eq("id", 1).single(),
       supabase.from("dosen").select("id", { count: "exact", head: true }),
       supabase.from("galeri").select("id", { count: "exact", head: true }),
+      supabase.from("karya")
+        .select("jenis, foto_urls")
+        .in("jenis", ["publikasi", "penelitian", "pengabdian", "bukuAjar"]),
     ]);
 
     if (statResult.error) {
       return NextResponse.json({ error: statResult.error.message }, { status: 500 });
     }
 
+    const virtualGaleriCount = (karyaResult.data || []).filter(
+      (k: any) => k.foto_urls && k.foto_urls.length > 0
+    ).length;
+
     return NextResponse.json({
       ...statResult.data,
       total_dosen: dosenResult.count ?? 0,
-      total_galeri: galeriResult.count ?? 0,
+      total_galeri: (galeriResult.count ?? 0) + virtualGaleriCount,
     });
   } catch {
     return NextResponse.json(
