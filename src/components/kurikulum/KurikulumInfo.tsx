@@ -7,18 +7,48 @@ import {
   HiArrowTopRightOnSquare,
 } from "react-icons/hi2";
 
-export default function KurikulumInfo() {
+interface KurikulumInfoProps {
+  kurikulum?: {
+    nama: string;
+    deskripsi: string;
+    berlaku_sejak: string;
+    file_url: string | null;
+  } | null;
+  mataKuliah?: {
+    kode: string;
+    nama: string;
+    sks: number;
+    semester: number;
+  }[];
+}
+
+export default function KurikulumInfo({ kurikulum, mataKuliah }: KurikulumInfoProps) {
+  // Fallback values using static data
+  const name = kurikulum?.nama ?? kurikulumAktif.nama;
+  const description = kurikulum?.deskripsi ?? kurikulumAktif.deskripsi;
+  const berlakuSejak = kurikulum?.berlaku_sejak ?? kurikulumAktif.berlakuSejak;
+  const fileUrl = kurikulum ? kurikulum.file_url : kurikulumAktif.fileUrl;
+
   // Hitung total SKS dari semua semester
-  const totalSKS = kurikulumData.reduce(
-    (total, sem) => total + sem.mataKuliah.reduce((sum, mk) => sum + mk.sks, 0),
-    0
-  );
+  const totalSKS = mataKuliah
+    ? mataKuliah.reduce((sum, mk) => sum + mk.sks, 0)
+    : kurikulumData.reduce(
+        (total, sem) => total + sem.mataKuliah.reduce((sum, mk) => sum + mk.sks, 0),
+        0
+      );
 
   // Hitung total mata kuliah
-  const totalMK = kurikulumData.reduce(
-    (total, sem) => total + sem.mataKuliah.length,
-    0
-  );
+  const totalMK = mataKuliah
+    ? mataKuliah.length
+    : kurikulumData.reduce(
+        (total, sem) => total + sem.mataKuliah.length,
+        0
+      );
+
+  // Hitung jumlah semester
+  const totalSemester = mataKuliah
+    ? Array.from(new Set(mataKuliah.map((m) => m.semester))).length || 8
+    : kurikulumData.length;
 
   return (
     <div className="animate-fade-in-up">
@@ -37,12 +67,12 @@ export default function KurikulumInfo() {
 
           {/* Nama kurikulum */}
           <h2 className="text-xl sm:text-2xl font-bold text-primary-950 mb-3">
-            {kurikulumAktif.nama}
+            {name}
           </h2>
 
           {/* Deskripsi */}
           <p className="text-sm text-gray-500 leading-relaxed mb-6 max-w-3xl">
-            {kurikulumAktif.deskripsi}
+            {description}
           </p>
 
           {/* Stats row */}
@@ -53,7 +83,7 @@ export default function KurikulumInfo() {
               </div>
               <div>
                 <p className="text-[11px] text-gray-400 font-medium uppercase tracking-wider">Berlaku Sejak</p>
-                <p className="text-sm font-semibold text-primary-900">{kurikulumAktif.berlakuSejak}</p>
+                <p className="text-sm font-semibold text-primary-900">{berlakuSejak}</p>
               </div>
             </div>
 
@@ -73,15 +103,15 @@ export default function KurikulumInfo() {
               </div>
               <div>
                 <p className="text-[11px] text-gray-400 font-medium uppercase tracking-wider">Mata Kuliah</p>
-                <p className="text-sm font-semibold text-primary-900">{totalMK} MK · {kurikulumData.length} Semester</p>
+                <p className="text-sm font-semibold text-primary-900">{totalMK} MK · {totalSemester} Semester</p>
               </div>
             </div>
           </div>
 
           {/* Tombol lihat file */}
-          {kurikulumAktif.fileUrl ? (
+          {fileUrl ? (
             <a
-              href={kurikulumAktif.fileUrl}
+              href={fileUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 shadow-md hover:shadow-lg transition-all duration-200"

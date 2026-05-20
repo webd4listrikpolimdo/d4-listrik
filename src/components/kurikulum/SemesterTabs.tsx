@@ -3,9 +3,38 @@
 import { useState } from "react";
 import { kurikulumData } from "@/data/kurikulum";
 
-export default function SemesterTabs() {
+interface SemesterTabsProps {
+  mataKuliah?: {
+    kode: string;
+    nama: string;
+    sks: number;
+    semester: number;
+    jenis: string | null;
+  }[];
+}
+
+export default function SemesterTabs({ mataKuliah }: SemesterTabsProps) {
   const [activeSemester, setActiveSemester] = useState(1);
-  const semester = kurikulumData.find((s) => s.semester === activeSemester);
+
+  // Group by semester dynamically if mataKuliah is passed, otherwise fallback to static kurikulumData
+  const groupedData = mataKuliah
+    ? Array.from({ length: 8 }, (_, i) => {
+        const semNum = i + 1;
+        return {
+          semester: semNum,
+          mataKuliah: mataKuliah
+            .filter((mk) => mk.semester === semNum)
+            .map((mk) => ({
+              kode: mk.kode,
+              nama: mk.nama,
+              sks: mk.sks,
+              jenis: (mk.jenis as any) || "Teori",
+            })),
+        };
+      })
+    : kurikulumData;
+
+  const semester = groupedData.find((s) => s.semester === activeSemester);
   const totalSKS = semester
     ? semester.mataKuliah.reduce((sum, mk) => sum + mk.sks, 0)
     : 0;
@@ -14,7 +43,7 @@ export default function SemesterTabs() {
     <div>
       {/* Semester tabs */}
       <div className="flex flex-wrap gap-2 mb-8">
-        {kurikulumData.map((sem) => (
+        {groupedData.map((sem) => (
           <button
             key={sem.semester}
             onClick={() => setActiveSemester(sem.semester)}
@@ -57,7 +86,7 @@ export default function SemesterTabs() {
                 <tbody>
                   {semester.mataKuliah.map((mk, index) => (
                     <tr
-                      key={mk.kode}
+                       key={mk.kode}
                       className="border-t border-gray-50 hover:bg-primary-50/50 transition-colors"
                     >
                       <td className="px-5 py-3 text-gray-400">{index + 1}</td>

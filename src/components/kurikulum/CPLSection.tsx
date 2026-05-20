@@ -1,7 +1,16 @@
 import { cplData } from "@/data/kurikulum";
 import SectionTitle from "@/components/universal/SectionTitle";
 
-export default function CPLSection() {
+interface CPLSectionProps {
+  cplList?: {
+    kode: string;
+    deskripsi: string;
+  }[];
+}
+
+export default function CPLSection({ cplList }: CPLSectionProps) {
+  const activeCplList = cplList || cplData;
+
   return (
     <div>
       <SectionTitle
@@ -10,7 +19,7 @@ export default function CPLSection() {
       />
 
       <div className="grid gap-4">
-        {cplData.map((cpl, index) => (
+        {activeCplList.map((cpl, index) => (
           <div
             key={cpl.kode}
             className="flex items-start gap-4 bg-white rounded-xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 animate-fade-in-up"
