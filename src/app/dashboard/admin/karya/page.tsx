@@ -136,21 +136,30 @@ export default function AdminKaryaPage() {
 
   const inputCls = "w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500";
 
-  const fetchData = async () => {
+  const fetchData = async (active = true) => {
     try {
       const [pendingRes, karyaRes, dosenRes] = await Promise.all([
         cachedFetch<PendingKarya[]>("/api/karya-pending"),
         cachedFetch<Karya[]>("/api/karya"),
         cachedFetch<DosenOption[]>("/api/dosen"),
       ]);
+      if (!active) return;
       if (pendingRes) setPendingList(pendingRes);
       if (karyaRes) setAllKarya(karyaRes);
       if (dosenRes) setDosenOptions(dosenRes);
     } catch (e) { console.error("Failed to fetch karya data", e); }
-    finally { setIsLoading(false); }
+    finally { 
+      if (active) setIsLoading(false); 
+    }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    let active = true;
+    fetchData(active);
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // ========== Pending actions ==========
   const handleApprove = async (id: string) => {

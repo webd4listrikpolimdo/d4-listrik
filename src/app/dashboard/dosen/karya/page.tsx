@@ -98,12 +98,14 @@ export default function DosenKaryaPage() {
 
   // Fetch pending submissions + dosen options
   useEffect(() => {
+    let active = true;
     const fetchData = async () => {
       try {
         const [pendingRes, dosenRes] = await Promise.all([
           cachedFetch<PendingKarya[]>("/api/karya-pending"),
           cachedFetch<any[]>("/api/dosen"),
         ]);
+        if (!active) return;
         if (pendingRes) setPendingList(pendingRes);
         if (dosenRes) {
           setDosenOptions(dosenRes.map((d: {id: string; nama: string}) => ({ id: d.id, nama: d.nama })));
@@ -111,6 +113,9 @@ export default function DosenKaryaPage() {
       } catch (e) { console.error("Failed to fetch data", e); }
     };
     if (user) fetchData();
+    return () => {
+      active = false;
+    };
   }, [user, submitSuccess]);
 
   if (!user || user.role !== "dosen" || !dosen) return null;

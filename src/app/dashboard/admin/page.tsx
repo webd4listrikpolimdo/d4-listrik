@@ -25,12 +25,15 @@ export default function AdminDashboardPage() {
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
+    let active = true;
     const fetchStats = async () => {
       try {
         const [statData, kurikulumData] = await Promise.all([
           cachedFetch<Stats>("/api/statistik"),
           cachedFetch<any>("/api/kurikulum"),
         ]);
+
+        if (!active) return;
 
         if (statData) {
           setStats(statData);
@@ -47,6 +50,9 @@ export default function AdminDashboardPage() {
     };
 
     fetchStats();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const handleOpenEdit = () => {
