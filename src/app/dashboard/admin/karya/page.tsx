@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Modal from "@/components/universal/Modal";
 import PersonLinker from "@/components/universal/PersonLinker";
+import ComboBox from "@/components/universal/ComboBox";
 import { cachedFetch, invalidateCache } from "@/lib/fetchCache";
 import type { PersonLink } from "@/components/universal/PersonLinker";
 import { HiOutlineCheck, HiOutlineXMark, HiOutlineTrash, HiOutlineClock, HiOutlineCheckCircle, HiOutlineXCircle, HiOutlinePlus, HiOutlinePencilSquare, HiOutlinePhoto, HiOutlineEye } from "react-icons/hi2";
@@ -435,10 +436,12 @@ export default function AdminKaryaPage() {
         <form onSubmit={handleKaryaSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Dosen</label>
-            <select required value={karyaForm.dosen_id || ""} onChange={e => setKaryaForm({ ...karyaForm, dosen_id: e.target.value })} className={inputCls}>
-              <option value="" disabled>Pilih dosen...</option>
-              {dosenOptions.map(d => <option key={d.id} value={d.id}>{d.nama}</option>)}
-            </select>
+            <ComboBox
+              options={dosenOptions}
+              value={String(karyaForm.dosen_id || "")}
+              onChange={(val) => setKaryaForm({ ...karyaForm, dosen_id: val })}
+              placeholder="Pilih dosen..."
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Judul Karya</label>

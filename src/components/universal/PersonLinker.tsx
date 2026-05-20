@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { HiPlus, HiTrash } from "react-icons/hi2";
+import ComboBox from "./ComboBox";
 
 export interface PersonLink {
   id?: string;
@@ -92,19 +93,14 @@ export default function PersonLinker({ label, dosenOptions, value, onChange, sin
 
           return (
             <div key={idx} className="flex items-center gap-2">
-              <select
+              <ComboBox
+                options={dosenOptions}
                 value={selectedId}
-                onChange={(e) => handleSelectChange(idx, e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
-              >
-                <option value="">— Pilih Dosen —</option>
-                {dosenOptions.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.nama}
-                  </option>
-                ))}
-                <option value={CUSTOM_KEY}>✏️ Nama Lainnya...</option>
-              </select>
+                onChange={(val) => handleSelectChange(idx, val)}
+                placeholder="— Pilih Dosen —"
+                className="flex-1"
+                customOption={{ id: CUSTOM_KEY, nama: "✏️ Nama Lainnya..." }}
+              />
 
               {isCustom && (
                 <input
