@@ -8,7 +8,7 @@ import Modal from "@/components/universal/Modal";
 import PersonLinker from "@/components/universal/PersonLinker";
 import { cachedFetch, invalidateCache } from "@/lib/fetchCache";
 import type { PersonLink } from "@/components/universal/PersonLinker";
-import { HiOutlinePlus, HiOutlineTrash, HiOutlineClock, HiOutlineCheckCircle, HiOutlineXCircle, HiOutlinePhoto } from "react-icons/hi2";
+import { HiOutlinePlus, HiOutlineTrash, HiOutlineClock, HiOutlineCheckCircle, HiOutlineXCircle, HiOutlinePhoto, HiOutlineEye } from "react-icons/hi2";
 import { useRef } from "react";
 
 interface PendingKarya {
@@ -16,6 +16,9 @@ interface PendingKarya {
   jenis: string;
   judul: string;
   tahun: number;
+  deskripsi: string | null;
+  metadata: Record<string, unknown> | null;
+  foto_urls: string[];
   status: "pending" | "approved" | "rejected";
   catatan_admin: string | null;
   created_at: string;
@@ -41,6 +44,8 @@ export default function DosenKaryaPage() {
   const [formData, setFormData] = useState<Record<string, string | number>>({ jenis: "publikasi" });
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [dosenOptions, setDosenOptions] = useState<{id: string; nama: string}[]>([]);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [viewingKarya, setViewingKarya] = useState<PendingKarya | null>(null);
 
   // Metadata state per jenis
   const [metaJurnal, setMetaJurnal] = useState("");
@@ -212,7 +217,8 @@ export default function DosenKaryaPage() {
                       <td className="px-6 py-3"><span className="px-2 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-600">{jenisLabels[k.jenis] || k.jenis}</span></td>
                       <td className="px-6 py-3">{k.tahun}</td>
                       <td className="px-6 py-3 text-xs text-gray-400">{new Date(k.created_at).toLocaleDateString("id-ID")}</td>
-                      <td className="px-6 py-3 text-right">
+                      <td className="px-6 py-3 text-right space-x-1">
+                        <button onClick={() => { setViewingKarya(k); setDetailModalOpen(true); }} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-primary-600 hover:bg-primary-50 transition-colors" title="Lihat Detail"><HiOutlineEye className="w-4 h-4" /></button>
                         <button onClick={() => handleDeletePending(k.id)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-red-600 hover:bg-red-50 transition-colors" title="Batalkan"><HiOutlineTrash className="w-4 h-4" /></button>
                       </td>
                     </tr>
@@ -232,7 +238,7 @@ export default function DosenKaryaPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm text-gray-600">
                 <thead className="bg-gray-50 text-gray-700 font-semibold border-b border-gray-100">
-                  <tr><th className="px-6 py-4">Judul</th><th className="px-6 py-4">Jenis</th><th className="px-6 py-4">Status</th><th className="px-6 py-4">Catatan</th></tr>
+                  <tr><th className="px-6 py-4">Judul</th><th className="px-6 py-4">Jenis</th><th className="px-6 py-4">Status</th><th className="px-6 py-4">Catatan</th><th className="px-6 py-4 text-right">Aksi</th></tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                   {reviewedList.map(k => {
@@ -244,6 +250,9 @@ export default function DosenKaryaPage() {
                         <td className="px-6 py-3"><span className="px-2 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-600">{jenisLabels[k.jenis] || k.jenis}</span></td>
                         <td className="px-6 py-3"><span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium ${cfg.cls}`}><Icon className="w-3.5 h-3.5" />{cfg.label}</span></td>
                         <td className="px-6 py-3 text-xs text-gray-500">{k.catatan_admin || "—"}</td>
+                        <td className="px-6 py-3 text-right">
+                          <button onClick={() => { setViewingKarya(k); setDetailModalOpen(true); }} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-primary-600 hover:bg-primary-50 transition-colors" title="Lihat Detail"><HiOutlineEye className="w-4 h-4" /></button>
+                        </td>
                       </tr>
                     );
                   })}
@@ -417,6 +426,105 @@ export default function DosenKaryaPage() {
             <button type="submit" className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 transition-colors">Ajukan Karya</button>
           </div>
         </form>
+      </Modal>
+
+      {/* Detail View Modal */}
+      <Modal isOpen={detailModalOpen} onClose={() => setDetailModalOpen(false)} title="Detail Pengajuan Karya">
+        {viewingKarya && (() => {
+          const k = viewingKarya;
+          const md = k.metadata || {};
+          const metaVal = (key: string) => md[key] as any;
+          const personList = (val: any): {id?: string; nama: string}[] => {
+            if (!val) return [];
+            return Array.isArray(val) ? val : [val];
+          };
+
+          return (
+            <div className="space-y-5">
+              <div>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Judul</p>
+                <p className="text-base font-bold text-gray-900">{k.judul}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Jenis</p>
+                  <span className="px-2 py-1 rounded-lg text-xs font-medium bg-primary-50 text-primary-700">{jenisLabels[k.jenis] || k.jenis}</span>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Tahun</p>
+                  <p className="text-sm font-medium text-gray-800">{k.tahun}</p>
+                </div>
+              </div>
+
+              {k.deskripsi && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Deskripsi</p>
+                  <p className="text-sm text-gray-700 bg-gray-50 rounded-xl p-3 border border-gray-100 leading-relaxed">{k.deskripsi}</p>
+                </div>
+              )}
+
+              {k.metadata && Object.keys(k.metadata).length > 0 && (
+                <div className="border-t border-gray-100 pt-4">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Detail {jenisLabels[k.jenis] || k.jenis}</p>
+                  <div className="space-y-3">
+                    {metaVal("jurnal") && <div><span className="text-xs text-gray-500 font-medium">Jurnal:</span> <span className="text-sm text-gray-800">{metaVal("jurnal")}</span></div>}
+                    {metaVal("link") && <div><span className="text-xs text-gray-500 font-medium">Link:</span> <a href={metaVal("link")} target="_blank" rel="noopener noreferrer" className="text-sm text-primary-600 hover:underline break-all">{metaVal("link")}</a></div>}
+                    {metaVal("sumberDana") && <div><span className="text-xs text-gray-500 font-medium">Sumber Dana:</span> <span className="text-sm text-gray-800">{metaVal("sumberDana")}</span></div>}
+                    {metaVal("mitra") && <div><span className="text-xs text-gray-500 font-medium">Mitra:</span> <span className="text-sm text-gray-800">{metaVal("mitra")}</span></div>}
+                    {metaVal("penerbit") && <div><span className="text-xs text-gray-500 font-medium">Penerbit:</span> <span className="text-sm text-gray-800">{metaVal("penerbit")}</span></div>}
+                    {metaVal("isbn") && <div><span className="text-xs text-gray-500 font-medium">ISBN:</span> <span className="text-sm text-gray-800">{metaVal("isbn")}</span></div>}
+                    {metaVal("jenisHki") && <div><span className="text-xs text-gray-500 font-medium">Jenis HKI:</span> <span className="text-sm text-gray-800">{metaVal("jenisHki")}</span></div>}
+                    {metaVal("nomorSertifikat") && <div><span className="text-xs text-gray-500 font-medium">Nomor Sertifikat:</span> <span className="text-sm text-gray-800">{metaVal("nomorSertifikat")}</span></div>}
+                    {metaVal("penyelenggara") && <div><span className="text-xs text-gray-500 font-medium">Penyelenggara:</span> <span className="text-sm text-gray-800">{metaVal("penyelenggara")}</span></div>}
+                    {metaVal("linkSertifikat") && <div><span className="text-xs text-gray-500 font-medium">Link Sertifikat:</span> <a href={metaVal("linkSertifikat")} target="_blank" rel="noopener noreferrer" className="text-sm text-primary-600 hover:underline break-all">{metaVal("linkSertifikat")}</a></div>}
+                    {personList(metaVal("penulis")).length > 0 && (
+                      <div>
+                        <span className="text-xs text-gray-500 font-medium">Penulis:</span>
+                        <div className="flex flex-wrap gap-1.5 mt-1">{personList(metaVal("penulis")).map((p, i) => <span key={i} className="px-2 py-0.5 rounded-lg text-xs bg-primary-50 text-primary-700 font-medium">{p.nama}</span>)}</div>
+                      </div>
+                    )}
+                    {metaVal("ketua") && (
+                      <div>
+                        <span className="text-xs text-gray-500 font-medium">Ketua:</span>
+                        <span className="ml-1 px-2 py-0.5 rounded-lg text-xs bg-primary-50 text-primary-700 font-medium">{(metaVal("ketua") as any).nama}</span>
+                      </div>
+                    )}
+                    {personList(metaVal("anggota")).length > 0 && (
+                      <div>
+                        <span className="text-xs text-gray-500 font-medium">Anggota:</span>
+                        <div className="flex flex-wrap gap-1.5 mt-1">{personList(metaVal("anggota")).map((p, i) => <span key={i} className="px-2 py-0.5 rounded-lg text-xs bg-gray-100 text-gray-700 font-medium">{p.nama}</span>)}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {k.foto_urls && k.foto_urls.length > 0 && (
+                <div className="border-t border-gray-100 pt-4">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Foto Dokumentasi ({k.foto_urls.length})</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {k.foto_urls.map((url: string, i: number) => (
+                      <div key={i} className="rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+                        <img src={url} alt={`Foto ${i + 1}`} className="w-full h-28 object-cover" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {k.catatan_admin && (
+                <div className="border-t border-gray-100 pt-4">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Catatan Admin</p>
+                  <p className="text-sm text-gray-700 bg-amber-50 rounded-xl p-3 border border-amber-100">{k.catatan_admin}</p>
+                </div>
+              )}
+
+              <div className="pt-4 flex justify-end border-t border-gray-100">
+                <button onClick={() => setDetailModalOpen(false)} className="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors">Tutup</button>
+              </div>
+            </div>
+          );
+        })()}
       </Modal>
     </div>
   );
