@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Modal from "@/components/universal/Modal";
 import PersonLinker from "@/components/universal/PersonLinker";
 import ComboBox from "@/components/universal/ComboBox";
+import ConfirmDialog from "@/components/universal/ConfirmDialog";
 import { cachedFetch, invalidateCache } from "@/lib/fetchCache";
 import type { PersonLink } from "@/components/universal/PersonLinker";
 import { HiOutlineCheck, HiOutlineXMark, HiOutlineTrash, HiOutlineClock, HiOutlineCheckCircle, HiOutlineXCircle, HiOutlinePlus, HiOutlinePencilSquare, HiOutlinePhoto, HiOutlineEye } from "react-icons/hi2";
@@ -71,6 +72,21 @@ export default function AdminKaryaPage() {
   const [fotoUrls, setFotoUrls] = useState<string[]>([]);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
+
+  // Confirm dialog state
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmMsg, setConfirmMsg] = useState("");
+  const [confirmTitle, setConfirmTitle] = useState("");
+  const [confirmVariant, setConfirmVariant] = useState<"danger" | "default">("default");
+  const confirmCallback = useRef<(() => void) | null>(null);
+
+  const showConfirm = (title: string, message: string, onOk: () => void, variant: "danger" | "default" = "default") => {
+    setConfirmTitle(title);
+    setConfirmMsg(message);
+    setConfirmVariant(variant);
+    confirmCallback.current = onOk;
+    setConfirmOpen(true);
+  };
 
   // Metadata state per jenis
   const [metaJurnal, setMetaJurnal] = useState("");
@@ -164,16 +180,17 @@ export default function AdminKaryaPage() {
 
   // ========== Pending actions ==========
   const handleApprove = async (id: string) => {
-    if (!confirm("Setujui karya ini?")) return;
-    const res = await fetch(`/api/karya-pending/${id}`, {
-      method: "PUT", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "approve" }),
+    showConfirm("Setujui Karya", "Setujui karya ini?", async () => {
+      const res = await fetch(`/api/karya-pending/${id}`, {
+        method: "PUT", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "approve" }),
+      });
+      if (res.ok) {
+          invalidateCache("/api/karya-pending");
+          invalidateCache("/api/karya");
+          fetchData();
+      }
     });
-    if (res.ok) {
-        invalidateCache("/api/karya-pending");
-        invalidateCache("/api/karya");
-        fetchData();
-    }
   };
 
   const openRejectModal = (id: string) => { setRejectingId(id); setCatatan(""); setRejectModalOpen(true); };
@@ -192,12 +209,13 @@ export default function AdminKaryaPage() {
   };
 
   const handleDeletePending = async (id: string) => {
-    if (!confirm("Hapus pengajuan ini?")) return;
-    const res = await fetch(`/api/karya-pending/${id}`, { method: "DELETE" });
-    if (res.ok) {
-        invalidateCache("/api/karya-pending");
-        setPendingList(prev => prev.filter(k => k.id !== id));
-    }
+    showConfirm("Hapus Pengajuan", "Hapus pengajuan ini? Tindakan ini tidak dapat dibatalkan.", async () => {
+      const res = await fetch(`/api/karya-pending/${id}`, { method: "DELETE" });
+      if (res.ok) {
+          invalidateCache("/api/karya-pending");
+          setPendingList(prev => prev.filter(k => k.id !== id));
+      }
+    }, "danger");
   };
 
   // ========== Photo Upload ==========
@@ -278,12 +296,13 @@ export default function AdminKaryaPage() {
   };
 
   const handleDeleteKarya = async (id: string) => {
-    if (!confirm("Hapus karya ini?")) return;
-    const res = await fetch(`/api/karya/${id}`, { method: "DELETE" });
-    if (res.ok) {
-        invalidateCache("/api/karya");
-        setAllKarya(prev => prev.filter(k => k.id !== id));
-    }
+    showConfirm("Hapus Karya", "Hapus karya ini? Tindakan ini tidak dapat dibatalkan.", async () => {
+      const res = await fetch(`/api/karya/${id}`, { method: "DELETE" });
+      if (res.ok) {
+          invalidateCache("/api/karya");
+          setAllKarya(prev => prev.filter(k => k.id !== id));
+      }
+    }, "danger");
   };
 
   if (isLoading) return <div className="text-center py-12 text-gray-400">Memuat data karya...</div>;
@@ -679,6 +698,16 @@ export default function AdminKaryaPage() {
           );
         })()}
       </Modal>
+
+      <ConfirmDialog
+        isOpen={confirmOpen}
+        onConfirm={() => { setConfirmOpen(false); confirmCallback.current?.(); confirmCallback.current = null; }}
+        onCancel={() => { setConfirmOpen(false); confirmCallback.current = null; }}
+        title={confirmTitle}
+        message={confirmMsg}
+        confirmLabel="OK"
+        variant={confirmVariant}
+      />
     </div>
   );
 }

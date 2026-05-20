@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Modal from "@/components/universal/Modal";
+import ConfirmDialog from "@/components/universal/ConfirmDialog";
 import { HiOutlinePlus, HiOutlinePencilSquare, HiOutlineTrash, HiOutlineArrowUpTray, HiOutlineDocumentText } from "react-icons/hi2";
 import { cachedFetch, invalidateCache } from "@/lib/fetchCache";
 
@@ -27,6 +28,19 @@ export default function AdminKurikulumPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isMkLoading, setIsMkLoading] = useState(false);
   const [isCplLoading, setIsCplLoading] = useState(false);
+
+  // Confirm dialog state
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmMsg, setConfirmMsg] = useState("");
+  const [confirmTitle, setConfirmTitle] = useState("");
+  const confirmCallback = useRef<(() => void) | null>(null);
+
+  const showConfirm = (title: string, message: string, onOk: () => void) => {
+    setConfirmTitle(title);
+    setConfirmMsg(message);
+    confirmCallback.current = onOk;
+    setConfirmOpen(true);
+  };
   const hasFetchedMK = useRef(false);
   const hasFetchedCPL = useRef(false);
 
@@ -114,12 +128,13 @@ export default function AdminKurikulumPage() {
   };
 
   const handleMkDelete = async (kode: string) => {
-    if (!confirm("Hapus mata kuliah ini?")) return;
-    const res = await fetch(`/api/mata-kuliah/${encodeURIComponent(kode)}`, { method: "DELETE" });
-    if (res.ok) {
-      setMataKuliahList(prev => prev.filter(m => m.kode !== kode));
-      invalidateCache("/api/mata-kuliah");
-    }
+    showConfirm("Hapus Mata Kuliah", "Hapus mata kuliah ini? Tindakan ini tidak dapat dibatalkan.", async () => {
+      const res = await fetch(`/api/mata-kuliah/${encodeURIComponent(kode)}`, { method: "DELETE" });
+      if (res.ok) {
+        setMataKuliahList(prev => prev.filter(m => m.kode !== kode));
+        invalidateCache("/api/mata-kuliah");
+      }
+    });
   };
 
   const handleCplSubmit = async (e: React.FormEvent) => {
@@ -143,12 +158,13 @@ export default function AdminKurikulumPage() {
   };
 
   const handleCplDelete = async (kode: string) => {
-    if (!confirm("Hapus CPL ini?")) return;
-    const res = await fetch(`/api/cpl/${encodeURIComponent(kode)}`, { method: "DELETE" });
-    if (res.ok) {
-      setCplList(prev => prev.filter(c => c.kode !== kode));
-      invalidateCache("/api/cpl");
-    }
+    showConfirm("Hapus CPL", "Hapus CPL ini? Tindakan ini tidak dapat dibatalkan.", async () => {
+      const res = await fetch(`/api/cpl/${encodeURIComponent(kode)}`, { method: "DELETE" });
+      if (res.ok) {
+        setCplList(prev => prev.filter(c => c.kode !== kode));
+        invalidateCache("/api/cpl");
+      }
+    });
   };
 
   if (isLoading) return <div className="text-center py-12 text-gray-400">Memuat data kurikulum...</div>;
@@ -330,6 +346,16 @@ export default function AdminKurikulumPage() {
           </>)}
         </>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmOpen}
+        onConfirm={() => { setConfirmOpen(false); confirmCallback.current?.(); confirmCallback.current = null; }}
+        onCancel={() => { setConfirmOpen(false); confirmCallback.current = null; }}
+        title={confirmTitle}
+        message={confirmMsg}
+        confirmLabel="Hapus"
+        variant="danger"
+      />
     </div>
   );
 }

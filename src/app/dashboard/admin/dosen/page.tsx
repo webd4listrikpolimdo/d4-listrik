@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useData } from "@/context/DataContext";
 import { Dosen } from "@/data/dosen";
 import Modal from "@/components/universal/Modal";
+import ConfirmDialog from "@/components/universal/ConfirmDialog";
 import { HiOutlinePlus, HiOutlinePencilSquare, HiOutlineTrash, HiOutlineArrowUpTray, HiOutlineEye, HiOutlineEyeSlash } from "react-icons/hi2";
 import Image from "next/image";
 
@@ -21,6 +22,8 @@ export default function AdminDosenPage() {
   const [formError, setFormError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const handleOpenAdd = () => {
     setEditingId(null);
@@ -43,9 +46,14 @@ export default function AdminDosenPage() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("Apakah Anda yakin ingin menghapus dosen ini?")) {
-      deleteDosen(id);
-    }
+    setDeletingId(id);
+    setConfirmOpen(true);
+  };
+
+  const executeDelete = () => {
+    if (deletingId) deleteDosen(deletingId);
+    setConfirmOpen(false);
+    setDeletingId(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -328,6 +336,16 @@ export default function AdminDosenPage() {
           </div>
         </form>
       </Modal>
+
+      <ConfirmDialog
+        isOpen={confirmOpen}
+        onConfirm={executeDelete}
+        onCancel={() => { setConfirmOpen(false); setDeletingId(null); }}
+        title="Hapus Dosen"
+        message="Apakah Anda yakin ingin menghapus dosen ini? Tindakan ini tidak dapat dibatalkan."
+        confirmLabel="Hapus"
+        variant="danger"
+      />
     </div>
   );
 }

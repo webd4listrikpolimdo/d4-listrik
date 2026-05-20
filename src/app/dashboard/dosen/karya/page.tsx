@@ -6,6 +6,7 @@ import { useData } from "@/context/DataContext";
 import { Dosen, KaryaItem } from "@/data/dosen";
 import Modal from "@/components/universal/Modal";
 import PersonLinker from "@/components/universal/PersonLinker";
+import ConfirmDialog from "@/components/universal/ConfirmDialog";
 import { cachedFetch, invalidateCache } from "@/lib/fetchCache";
 import type { PersonLink } from "@/components/universal/PersonLinker";
 import { HiOutlinePlus, HiOutlineTrash, HiOutlineClock, HiOutlineCheckCircle, HiOutlineXCircle, HiOutlinePhoto, HiOutlineEye } from "react-icons/hi2";
@@ -178,13 +179,23 @@ export default function DosenKaryaPage() {
     } catch (e) { console.error("Failed to submit karya", e); }
   };
 
-  const handleDeletePending = async (id: string) => {
-    if (!confirm("Batalkan pengajuan ini?")) return;
-    const res = await fetch(`/api/karya-pending/${id}`, { method: "DELETE" });
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmDeletingId, setConfirmDeletingId] = useState<string | null>(null);
+
+  const handleDeletePending = (id: string) => {
+    setConfirmDeletingId(id);
+    setConfirmOpen(true);
+  };
+
+  const executeDeletePending = async () => {
+    if (!confirmDeletingId) return;
+    const res = await fetch(`/api/karya-pending/${confirmDeletingId}`, { method: "DELETE" });
     if (res.ok) {
         invalidateCache("/api/karya-pending");
-        setPendingList(prev => prev.filter(k => k.id !== id));
+        setPendingList(prev => prev.filter(k => k.id !== confirmDeletingId));
     }
+    setConfirmOpen(false);
+    setConfirmDeletingId(null);
   };
 
   const pendingOnly = pendingList.filter(k => k.status === "pending");
@@ -531,6 +542,16 @@ export default function DosenKaryaPage() {
           );
         })()}
       </Modal>
+
+      <ConfirmDialog
+        isOpen={confirmOpen}
+        onConfirm={executeDeletePending}
+        onCancel={() => { setConfirmOpen(false); setConfirmDeletingId(null); }}
+        title="Batalkan Pengajuan"
+        message="Batalkan pengajuan ini? Tindakan ini tidak dapat dibatalkan."
+        confirmLabel="Batalkan"
+        variant="danger"
+      />
     </div>
   );
 }

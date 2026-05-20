@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useData } from "@/context/DataContext";
 import { GaleriItem } from "@/data/galeri";
 import Modal from "@/components/universal/Modal";
+import ConfirmDialog from "@/components/universal/ConfirmDialog";
 import { HiOutlinePlus, HiOutlinePencilSquare, HiOutlineTrash, HiOutlineArrowUpTray, HiOutlineXMark } from "react-icons/hi2";
 import Image from "next/image";
 
@@ -16,6 +17,8 @@ export default function AdminGaleriPage() {
   const [formData, setFormData] = useState<Partial<GaleriItem>>({});
   const [isUploading, setIsUploading] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const handleOpenAdd = () => {
     setEditingId(null);
@@ -30,9 +33,14 @@ export default function AdminGaleriPage() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("Apakah Anda yakin ingin menghapus galeri ini?")) {
-      deleteGaleri(id);
-    }
+    setDeletingId(id);
+    setConfirmOpen(true);
+  };
+
+  const executeDelete = () => {
+    if (deletingId) deleteGaleri(deletingId);
+    setConfirmOpen(false);
+    setDeletingId(null);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -220,6 +228,16 @@ export default function AdminGaleriPage() {
           </div>
         </form>
       </Modal>
+
+      <ConfirmDialog
+        isOpen={confirmOpen}
+        onConfirm={executeDelete}
+        onCancel={() => { setConfirmOpen(false); setDeletingId(null); }}
+        title="Hapus Galeri"
+        message="Apakah Anda yakin ingin menghapus galeri ini? Tindakan ini tidak dapat dibatalkan."
+        confirmLabel="Hapus"
+        variant="danger"
+      />
     </div>
   );
 }
