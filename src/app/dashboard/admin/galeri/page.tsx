@@ -8,10 +8,34 @@ import ConfirmDialog from "@/components/universal/ConfirmDialog";
 import { HiOutlinePlus, HiOutlinePencilSquare, HiOutlineTrash, HiOutlineArrowUpTray, HiOutlineXMark } from "react-icons/hi2";
 import Image from "next/image";
 
+const jenisLabels: Record<string, string> = {
+  publikasi: "Publikasi",
+  penelitian: "Penelitian",
+  pengabdian: "Pengabdian",
+  bukuAjar: "Buku Ajar",
+};
+
 export default function AdminGaleriPage() {
   const { galeriList, addGaleri, updateGaleri, deleteGaleri, ensureGaleriLoaded } = useData();
+  const [karyaList, setKaryaList] = useState<any[]>([]);
 
-  useEffect(() => { ensureGaleriLoaded(); }, [ensureGaleriLoaded]);
+  const fetchKarya = async () => {
+    try {
+      const res = await fetch("/api/karya");
+      if (res.ok) {
+        const data = await res.json();
+        setKaryaList(data || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch karya", err);
+    }
+  };
+
+  useEffect(() => {
+    ensureGaleriLoaded();
+    fetchKarya();
+  }, [ensureGaleriLoaded]);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<GaleriItem>>({});
@@ -19,6 +43,24 @@ export default function AdminGaleriPage() {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const tridharmaJenis = ["publikasi", "penelitian", "pengabdian", "bukuAjar"];
+  const virtualItems: GaleriItem[] = karyaList
+    .filter((k) => tridharmaJenis.includes(k.jenis))
+    .map((k) => ({
+      id: `karya-${k.id}`,
+      judul: k.judul,
+      deskripsi: k.deskripsi || "",
+      tanggal: `${k.tahun}-01-01`,
+      kategori: "tridharma" as const,
+      foto: k.foto_urls || [],
+      warna: "from-blue-600 to-indigo-700",
+      subLabel: jenisLabels[k.jenis] || k.jenis,
+    }));
+
+  const mergedList = [...galeriList, ...virtualItems].sort(
+    (a, b) => new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime()
+  );
 
   const handleOpenAdd = () => {
     setEditingId(null);
@@ -37,20 +79,64 @@ export default function AdminGaleriPage() {
     setConfirmOpen(true);
   };
 
-  const executeDelete = () => {
-    if (deletingId) deleteGaleri(deletingId);
+  const executeDelete = async () => {
+    if (deletingId) {
+      try {
+        if (deletingId.startsWith("karya-")) {
+          const karyaId = deletingId.replace("karya-", "");
+          const res = await fetch(`/api/karya/${karyaId}`, { method: "DELETE" });
+          if (!res.ok) {
+            const err = await res.json();
+            alert(err.error || "Gagal menghapus data Tridarma");
+            return;
+          }
+          await fetchKarya();
+        } else {
+          await deleteGaleri(deletingId);
+        }
+      } catch (err: any) {
+        console.error(err);
+        alert(err.message || "Gagal menghapus");
+      }
+    }
     setConfirmOpen(false);
     setDeletingId(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingId) {
-      updateGaleri(editingId, formData as GaleriItem);
-    } else {
-      addGaleri(formData as GaleriItem);
+    try {
+      if (editingId) {
+        if (editingId.startsWith("karya-")) {
+          const karyaId = editingId.replace("karya-", "");
+          const year = new Date(formData.tanggal || "").getFullYear() || new Date().getFullYear();
+          const res = await fetch(`/api/karya/${karyaId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              judul: formData.judul,
+              deskripsi: formData.deskripsi || null,
+              tahun: year,
+              foto_urls: formData.foto || [],
+            }),
+          });
+          if (!res.ok) {
+            const err = await res.json();
+            alert(err.error || "Gagal mengubah data Tridarma");
+            return;
+          }
+          await fetchKarya();
+        } else {
+          await updateGaleri(editingId, formData as GaleriItem);
+        }
+      } else {
+        await addGaleri(formData as GaleriItem);
+      }
+      setIsModalOpen(false);
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || "Terjadi kesalahan");
     }
-    setIsModalOpen(false);
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,11 +146,30 @@ export default function AdminGaleriPage() {
     try {
       const fd = new FormData();
       fd.append("file", file);
-      if (editingId) fd.append("galeri_id", editingId);
-      const res = await fetch("/api/upload/galeri", { method: "POST", body: fd });
-      if (res.ok) {
-        const data = await res.json();
-        setFormData(prev => ({ ...prev, foto: [...(prev.foto || []), data.url] }));
+      if (editingId) {
+        if (editingId.startsWith("karya-")) {
+          const karyaId = editingId.replace("karya-", "");
+          fd.append("karya_id", karyaId);
+          fd.append("table", "karya");
+          const res = await fetch("/api/upload/karya", { method: "POST", body: fd });
+          if (res.ok) {
+            const data = await res.json();
+            setFormData(prev => ({ ...prev, foto: [...(prev.foto || []), data.url] }));
+          }
+        } else {
+          fd.append("galeri_id", editingId);
+          const res = await fetch("/api/upload/galeri", { method: "POST", body: fd });
+          if (res.ok) {
+            const data = await res.json();
+            setFormData(prev => ({ ...prev, foto: [...(prev.foto || []), data.url] }));
+          }
+        }
+      } else {
+        const res = await fetch("/api/upload/galeri", { method: "POST", body: fd });
+        if (res.ok) {
+          const data = await res.json();
+          setFormData(prev => ({ ...prev, foto: [...(prev.foto || []), data.url] }));
+        }
       }
     } catch (err) { console.error("Upload failed", err); }
     finally { setIsUploading(false); if (imageInputRef.current) imageInputRef.current.value = ""; }
@@ -102,10 +207,19 @@ export default function AdminGaleriPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {galeriList.map((item) => (
+              {mergedList.map((item) => (
                 <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="px-6 py-4 font-medium text-gray-900">{item.judul}</td>
-                  <td className="px-6 py-4 capitalize">{item.kategori}</td>
+                  <td className="px-6 py-4 font-medium text-gray-900">
+                    <div>{item.judul}</div>
+                    {item.subLabel && (
+                      <span className="inline-flex items-center mt-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                        {item.subLabel}
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 capitalize">
+                    {item.kategori === "tridharma" ? "Tridharma" : "Fasilitas"}
+                  </td>
                   <td className="px-6 py-4">{item.tanggal}</td>
                   <td className="px-6 py-4 text-right space-x-2">
                     <button
@@ -125,7 +239,7 @@ export default function AdminGaleriPage() {
                   </td>
                 </tr>
               ))}
-              {galeriList.length === 0 && (
+              {mergedList.length === 0 && (
                 <tr>
                   <td colSpan={4} className="px-6 py-8 text-center text-gray-400">
                     Belum ada data galeri.
@@ -164,12 +278,17 @@ export default function AdminGaleriPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
               <select
                 required
+                disabled={!!editingId?.startsWith("karya-")}
                 value={formData.kategori || "fasilitas"}
                 onChange={(e) => setFormData({ ...formData, kategori: e.target.value as "fasilitas" | "tridharma" })}
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                className={`w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 ${
+                  editingId?.startsWith("karya-") ? "bg-gray-100 text-gray-500 cursor-not-allowed" : "bg-gray-50"
+                }`}
               >
                 <option value="fasilitas">Fasilitas</option>
-                <option value="tridharma">Tridharma Perguruan Tinggi</option>
+                <option value="tridharma">
+                  {formData.subLabel ? `Tridharma (${formData.subLabel})` : "Tridharma Perguruan Tinggi"}
+                </option>
               </select>
             </div>
             <div>
