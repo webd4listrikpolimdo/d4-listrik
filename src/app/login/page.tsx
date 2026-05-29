@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { HiOutlineLockClosed, HiOutlineEnvelope } from "react-icons/hi2";
+import { HiOutlineLockClosed, HiOutlineEnvelope, HiOutlineHome } from "react-icons/hi2";
 
 interface LogoData {
   file_url: string;
@@ -156,8 +157,17 @@ export default function LoginPage() {
             </div>
           </form>
           
-          <div className="mt-6 text-xs text-center text-gray-500 border-t border-gray-100 pt-6">
+          <div className="mt-6 text-xs text-center text-gray-500 border-t border-gray-100 pt-6 space-y-4">
             <p>Gunakan email dan password yang terdaftar.</p>
+            <div className="pt-1">
+              <Link
+                href="/"
+                className="inline-flex items-center gap-1.5 font-semibold text-primary-600 hover:text-primary-700 hover:underline transition-colors"
+              >
+                <HiOutlineHome className="w-4 h-4" />
+                Kembali ke Beranda
+              </Link>
+            </div>
           </div>
         </div>
       </div>
