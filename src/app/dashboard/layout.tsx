@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { HiOutlineUser, HiOutlineUserGroup, HiOutlinePhoto, HiOutlineArrowRightOnRectangle, HiOutlineBookOpen, HiOutlineDocumentText } from "react-icons/hi2";
+import { HiOutlineUser, HiOutlineUserGroup, HiOutlinePhoto, HiOutlineArrowRightOnRectangle, HiOutlineBookOpen, HiOutlineDocumentText, HiOutlineChartBarSquare, HiOutlineCalendar } from "react-icons/hi2";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, logout, isLoading } = useAuth();
@@ -17,24 +17,38 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [user, isLoading, router]);
 
-  if (isLoading || !user) return <div className="min-h-screen pt-24 pb-12 flex justify-center items-center">Memuat...</div>;
+  if (isLoading || !user) return <div className="min-h-screen pt-24 pb-12 flex justify-center items-center text-gray-500 font-medium animate-pulse">Loading Dashboard...</div>;
 
   const isAdmin = user.role === "admin";
+  const isPegawai = user.role === "pegawai";
 
   const adminLinks = [
     { href: "/dashboard/admin", label: "Dashboard", icon: HiOutlineUser },
-    { href: "/dashboard/admin/dosen", label: "Manajemen Dosen", icon: HiOutlineUserGroup },
-    { href: "/dashboard/admin/galeri", label: "Manajemen Galeri", icon: HiOutlinePhoto },
-    { href: "/dashboard/admin/kurikulum", label: "Manajemen Kurikulum", icon: HiOutlineBookOpen },
-    { href: "/dashboard/admin/karya", label: "Manajemen Karya", icon: HiOutlineDocumentText },
+    { href: "/dashboard/admin/staf", label: "Staf", icon: HiOutlineUserGroup },
+    { href: "/dashboard/admin/kurikulum", label: "Kurikulum", icon: HiOutlineBookOpen },
+    { href: "/dashboard/admin/karya", label: "Karya", icon: HiOutlineDocumentText },
+    { href: "/dashboard/admin/fasilitas", label: "Fasilitas", icon: HiOutlinePhoto },
+    { href: "/dashboard/admin/kegiatan", label: "Kegiatan", icon: HiOutlineCalendar },
+    { href: "/dashboard/admin/statistik", label: "Statistik", icon: HiOutlineChartBarSquare },
+    { href: "/dashboard/admin/config", label: "Konfigurasi Website", icon: HiOutlineDocumentText },
+  ];
+
+  const pegawaiLinks = [
+    { href: "/dashboard/pegawai", label: "Dashboard", icon: HiOutlineUser },
+    { href: "/dashboard/pegawai/kurikulum", label: "Kurikulum", icon: HiOutlineBookOpen },
+    { href: "/dashboard/pegawai/fasilitas", label: "Fasilitas", icon: HiOutlinePhoto },
+    { href: "/dashboard/pegawai/kegiatan", label: "Kegiatan", icon: HiOutlineCalendar },
+    { href: "/dashboard/pegawai/statistik", label: "Statistik", icon: HiOutlineChartBarSquare },
+    { href: "/dashboard/pegawai/config", label: "Konfigurasi Website", icon: HiOutlineDocumentText },
   ];
 
   const dosenLinks = [
     { href: "/dashboard/dosen", label: "Profil Saya", icon: HiOutlineUser },
-    { href: "/dashboard/dosen/karya", label: "Karya & Kontribusi", icon: HiOutlineUserGroup }, // You can change icon later
+    { href: "/dashboard/dosen/karya", label: "Karya & Kontribusi", icon: HiOutlineUserGroup },
+    { href: "/dashboard/dosen/kegiatan", label: "Kegiatan", icon: HiOutlineCalendar },
   ];
 
-  const links = isAdmin ? adminLinks : dosenLinks;
+  const links = isAdmin ? adminLinks : isPegawai ? pegawaiLinks : dosenLinks;
 
   const isActive = (href: string) => pathname === href || (pathname.startsWith(href) && href !== `/dashboard/${user.role}`);
 
@@ -45,7 +59,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sticky top-24">
           <div className="mb-6 px-2">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
-              {isAdmin ? "Administrator" : "Dosen"}
+              {isAdmin ? "Administrator" : isPegawai ? "Pegawai" : "Dosen"}
             </p>
             <h2 className="text-lg font-bold text-primary-950 truncate">
               {user.name}

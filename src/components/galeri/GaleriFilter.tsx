@@ -1,14 +1,15 @@
 "use client";
 
 interface GaleriFilterProps {
-  activeFilter: "semua" | "fasilitas" | "tridharma";
-  onFilterChange: (filter: "semua" | "fasilitas" | "tridharma") => void;
+  activeFilter: "semua" | "fasilitas" | "tridharma" | "kegiatan";
+  onFilterChange: (filter: "semua" | "fasilitas" | "tridharma" | "kegiatan") => void;
 }
 
-const filters: { value: "semua" | "fasilitas" | "tridharma"; label: string }[] = [
+const filters: { value: "semua" | "fasilitas" | "tridharma" | "kegiatan"; label: string }[] = [
   { value: "semua", label: "Semua" },
   { value: "fasilitas", label: "Fasilitas" },
   { value: "tridharma", label: "Tridharma Perguruan Tinggi" },
+  { value: "kegiatan", label: "Kegiatan" },
 ];
 
 export default function GaleriFilter({ activeFilter, onFilterChange }: GaleriFilterProps) {

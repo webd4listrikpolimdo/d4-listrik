@@ -66,10 +66,36 @@ export async function PUT(request: NextRequest, { params }: Params) {
     }
 
     const body = await request.json();
-    const { nama, foto_url, jabatan, pangkat, email, telepon, bidang_keahlian, program_studi, pendidikan_terakhir } = body;
+    const { nama, foto_url, jabatan, pangkat, email, telepon, bidang_keahlian, program_studi, pendidikan_terakhir, password } = body;
 
     const { createAdminClient } = await import("@/lib/supabase/admin");
     const adminSupabase = createAdminClient();
+
+    const authUpdates: any = {};
+    if (password) {
+      if (user.role !== "admin") {
+        return NextResponse.json({ error: "Hanya admin yang dapat mengubah password staf." }, { status: 403 });
+      }
+      if (password.length < 6) {
+        return NextResponse.json({ error: "Password harus minimal 6 karakter." }, { status: 400 });
+      }
+      authUpdates.password = password;
+    }
+
+    if (email) {
+      if (user.role !== "admin") {
+        return NextResponse.json({ error: "Hanya admin yang dapat mengubah email staf." }, { status: 403 });
+      }
+      authUpdates.email = email;
+      authUpdates.email_confirm = true;
+    }
+
+    if (Object.keys(authUpdates).length > 0) {
+      const { error: authError } = await adminSupabase.auth.admin.updateUserById(id, authUpdates);
+      if (authError) {
+        return NextResponse.json({ error: `Gagal memperbarui data auth: ${authError.message}` }, { status: 400 });
+      }
+    }
 
     const updateData: Record<string, unknown> = {};
     if (nama !== undefined) updateData.nama = nama;
@@ -82,6 +108,12 @@ export async function PUT(request: NextRequest, { params }: Params) {
     if (program_studi !== undefined) updateData.program_studi = program_studi;
     if (pendidikan_terakhir !== undefined) updateData.pendidikan_terakhir = pendidikan_terakhir;
 
+    const { data: currentDosen } = await adminSupabase
+      .from("dosen")
+      .select("foto_url")
+      .eq("id", id)
+      .single();
+
     const { data, error } = await adminSupabase
       .from("dosen")
       .update(updateData)
@@ -93,10 +125,19 @@ export async function PUT(request: NextRequest, { params }: Params) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
+    if (currentDosen?.foto_url && currentDosen.foto_url !== data.foto_url) {
+      const parts = currentDosen.foto_url.split("/storage/v1/object/public/dosen/");
+      if (parts.length > 1) {
+        const fileName = parts[1];
+        await adminSupabase.storage.from("dosen").remove([fileName]);
+      }
+    }
+
     return NextResponse.json(data);
-  } catch {
+  } catch (err: any) {
+    console.error("PUT /api/dosen/[id] failed:", err);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: err.message || "Internal server error" },
       { status: 500 }
     );
   }
@@ -109,9 +150,18 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
     if (result instanceof NextResponse) return result;
 
     const { id } = await params;
-    const supabase = await createClient();
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const adminClient = createAdminClient();
 
-    const { error } = await supabase
+    // Fetch foto_url before deleting record
+    const { data: dosen } = await adminClient
+      .from("dosen")
+      .select("foto_url")
+      .eq("id", id)
+      .single();
+
+    // 1. Delete dosen record
+    const { error } = await adminClient
       .from("dosen")
       .delete()
       .eq("id", id);
@@ -119,6 +169,21 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
+
+    // Clean up photo from storage
+    if (dosen?.foto_url) {
+      const parts = dosen.foto_url.split("/storage/v1/object/public/dosen/");
+      if (parts.length > 1) {
+        const fileName = parts[1];
+        await adminClient.storage.from("dosen").remove([fileName]);
+      }
+    }
+
+    // 2. Delete profile record
+    await adminClient.from("profiles").delete().eq("id", id);
+
+    // 3. Delete auth user
+    await adminClient.auth.admin.deleteUser(id);
 
     return NextResponse.json({ message: "Dosen deleted successfully" });
   } catch {

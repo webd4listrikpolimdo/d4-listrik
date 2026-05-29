@@ -4,10 +4,10 @@ import { NextRequest, NextResponse } from "next/server";
 
 type Params = { params: Promise<{ kode: string }> };
 
-// PUT /api/cpl/[kode] — Admin only: Update CPL
+// PUT /api/cpl/[kode] — Admin & Pegawai: Update CPL
 export async function PUT(request: NextRequest, { params }: Params) {
   try {
-    const result = await requireRole(["admin"]);
+    const result = await requireRole(["admin", "pegawai"]);
     if (result instanceof NextResponse) return result;
 
     const { kode } = await params;
@@ -31,10 +31,10 @@ export async function PUT(request: NextRequest, { params }: Params) {
   }
 }
 
-// DELETE /api/cpl/[kode] — Admin only: Delete CPL
+// DELETE /api/cpl/[kode] — Admin & Pegawai: Delete CPL
 export async function DELETE(_request: NextRequest, { params }: Params) {
   try {
-    const result = await requireRole(["admin"]);
+    const result = await requireRole(["admin", "pegawai"]);
     if (result instanceof NextResponse) return result;
 
     const { kode } = await params;

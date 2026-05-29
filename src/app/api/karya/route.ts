@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from("karya")
       .select("*, dosen(id, nama)")
-      .order("tahun", { ascending: false });
+      .order("updated_at", { ascending: false });
 
     if (dosenId) {
       query = query.eq("dosen_id", dosenId);

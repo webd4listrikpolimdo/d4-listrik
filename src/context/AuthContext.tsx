@@ -1,11 +1,11 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export interface User {
-  role: "admin" | "dosen";
+  role: "admin" | "dosen" | "pegawai";
   id: string; // Supabase auth user ID
   nidn?: string; // NIDN for dosen
   name: string;
@@ -24,38 +24,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const checkingRef = useRef<Promise<void> | null>(null);
 
   useEffect(() => {
-    // Check current session on mount
-    const checkSession = async () => {
-      try {
-        const res = await fetch("/api/auth/me");
-        if (res.ok) {
-          const data = await res.json();
-          setUser({
-            role: data.user.role,
-            id: data.user.id,
-            nidn: data.user.nidn || undefined,
-            name: data.user.full_name || data.user.email,
-          });
-        }
-      } catch (e) {
-        console.error("Failed to check session", e);
-      }
-      setIsLoading(false);
-    };
+    // Shared user profile loader with in-flight deduplication
+    const fetchUser = async () => {
+      if (checkingRef.current) return checkingRef.current;
 
-    checkSession();
-
-    // Listen for auth state changes via Supabase client
-    const supabase = createClient();
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event) => {
-      if (event === "SIGNED_OUT") {
-        setUser(null);
-      } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-        // Re-fetch user profile from API
+      const promise = (async () => {
         try {
           const res = await fetch("/api/auth/me");
           if (res.ok) {
@@ -66,10 +42,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               nidn: data.user.nidn || undefined,
               name: data.user.full_name || data.user.email,
             });
+          } else {
+            setUser(null);
           }
         } catch (e) {
-          console.error("Failed to refresh user", e);
+          console.error("Failed to check session", e);
+          setUser(null);
+        } finally {
+          setIsLoading(false);
+          checkingRef.current = null;
         }
+      })();
+
+      checkingRef.current = promise;
+      return promise;
+    };
+
+    // Check current session on mount
+    fetchUser();
+
+    // Listen for auth state changes via Supabase client
+    const supabase = createClient();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event) => {
+      if (event === "SIGNED_OUT") {
+        setUser(null);
+      } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        // Re-fetch user profile from API (deduplicated)
+        await fetchUser();
       }
     });
 

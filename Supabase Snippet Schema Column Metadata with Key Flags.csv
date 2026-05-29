@@ -1,0 +1,64 @@
+table_name,column_name,ordinal_position,data_type,postgres_type,character_maximum_length,numeric_precision,numeric_scale,is_nullable,column_default,is_primary_key,is_foreign_key,foreign_table,foreign_column
+cpl,kode,1,text,text,null,null,null,NO,null,true,false,cpl,kode
+cpl,deskripsi,2,text,text,null,null,null,NO,null,false,false,null,null
+dosen,id,1,uuid,uuid,null,null,null,NO,uuid_generate_v4(),true,false,dosen,id
+dosen,nama,2,text,text,null,null,null,NO,null,false,false,null,null
+dosen,nidn,3,text,text,null,null,null,NO,null,false,false,dosen,nidn
+dosen,foto_url,4,text,text,null,null,null,YES,null,false,false,null,null
+dosen,jabatan,5,text,text,null,null,null,YES,null,false,false,null,null
+dosen,pangkat,6,text,text,null,null,null,YES,null,false,false,null,null
+dosen,email,7,text,text,null,null,null,YES,null,false,false,null,null
+dosen,telepon,8,text,text,null,null,null,YES,null,false,false,null,null
+dosen,bidang_keahlian,9,ARRAY,_text,null,null,null,YES,null,false,false,null,null
+dosen,program_studi,10,text,text,null,null,null,YES,'D4 Teknik Listrik'::text,false,false,null,null
+dosen,pendidikan_terakhir,11,text,text,null,null,null,YES,null,false,false,null,null
+dosen,created_at,12,timestamp with time zone,timestamptz,null,null,null,YES,"timezone('utc'::text, now())",false,false,null,null
+galeri,id,1,uuid,uuid,null,null,null,NO,uuid_generate_v4(),true,false,galeri,id
+galeri,judul,2,text,text,null,null,null,NO,null,false,false,null,null
+galeri,deskripsi,3,text,text,null,null,null,YES,null,false,false,null,null
+galeri,tanggal,4,date,date,null,null,null,NO,null,false,false,null,null
+galeri,kategori,5,text,text,null,null,null,YES,null,false,false,null,null
+galeri,foto_urls,6,ARRAY,_text,null,null,null,YES,null,false,false,null,null
+galeri,created_at,7,timestamp with time zone,timestamptz,null,null,null,YES,"timezone('utc'::text, now())",false,false,null,null
+karya,id,1,uuid,uuid,null,null,null,NO,uuid_generate_v4(),true,false,karya,id
+karya,dosen_id,2,uuid,uuid,null,null,null,YES,null,false,true,dosen,id
+karya,jenis,3,text,text,null,null,null,NO,null,false,false,null,null
+karya,judul,4,text,text,null,null,null,NO,null,false,false,null,null
+karya,tahun,5,integer,int4,null,32,0,NO,null,false,false,null,null
+karya,deskripsi,6,text,text,null,null,null,YES,null,false,false,null,null
+karya,metadata,7,jsonb,jsonb,null,null,null,YES,null,false,false,null,null
+karya,created_at,8,timestamp with time zone,timestamptz,null,null,null,YES,"timezone('utc'::text, now())",false,false,null,null
+karya,foto_urls,9,jsonb,jsonb,null,null,null,YES,'[]'::jsonb,false,false,null,null
+karya_pending,id,1,uuid,uuid,null,null,null,NO,uuid_generate_v4(),true,false,karya_pending,id
+karya_pending,dosen_id,2,uuid,uuid,null,null,null,YES,null,false,true,dosen,id
+karya_pending,submitted_by,3,uuid,uuid,null,null,null,YES,null,false,true,null,null
+karya_pending,jenis,4,text,text,null,null,null,NO,null,false,false,null,null
+karya_pending,judul,5,text,text,null,null,null,NO,null,false,false,null,null
+karya_pending,tahun,6,integer,int4,null,32,0,NO,null,false,false,null,null
+karya_pending,deskripsi,7,text,text,null,null,null,YES,null,false,false,null,null
+karya_pending,metadata,8,jsonb,jsonb,null,null,null,YES,null,false,false,null,null
+karya_pending,status,9,text,text,null,null,null,YES,'pending'::text,false,false,null,null
+karya_pending,catatan_admin,10,text,text,null,null,null,YES,null,false,false,null,null
+karya_pending,created_at,11,timestamp with time zone,timestamptz,null,null,null,YES,"timezone('utc'::text, now())",false,false,null,null
+karya_pending,reviewed_at,12,timestamp with time zone,timestamptz,null,null,null,YES,null,false,false,null,null
+karya_pending,foto_urls,13,jsonb,jsonb,null,null,null,YES,'[]'::jsonb,false,false,null,null
+kurikulum_aktif,id,1,integer,int4,null,32,0,NO,1,true,false,kurikulum_aktif,id
+kurikulum_aktif,nama,2,text,text,null,null,null,NO,null,false,false,null,null
+kurikulum_aktif,deskripsi,3,text,text,null,null,null,YES,null,false,false,null,null
+kurikulum_aktif,berlaku_sejak,4,text,text,null,null,null,YES,null,false,false,null,null
+kurikulum_aktif,file_url,5,text,text,null,null,null,YES,null,false,false,null,null
+mata_kuliah,kode,1,text,text,null,null,null,NO,null,true,false,mata_kuliah,kode
+mata_kuliah,nama,2,text,text,null,null,null,NO,null,false,false,null,null
+mata_kuliah,sks,3,integer,int4,null,32,0,NO,null,false,false,null,null
+mata_kuliah,semester,4,integer,int4,null,32,0,NO,null,false,false,null,null
+mata_kuliah,jenis,5,text,text,null,null,null,YES,null,false,false,null,null
+profiles,id,1,uuid,uuid,null,null,null,NO,null,false,true,null,null
+profiles,id,1,uuid,uuid,null,null,null,NO,null,true,false,profiles,id
+profiles,role,2,text,text,null,null,null,YES,'dosen'::text,false,false,null,null
+profiles,full_name,3,text,text,null,null,null,YES,null,false,false,null,null
+profiles,nidn,4,text,text,null,null,null,YES,null,false,false,profiles,nidn
+profiles,updated_at,5,timestamp with time zone,timestamptz,null,null,null,YES,"timezone('utc'::text, now())",false,false,null,null
+statistik_mahasiswa,id,1,integer,int4,null,32,0,NO,1,true,false,statistik_mahasiswa,id
+statistik_mahasiswa,total_mahasiswa_aktif,2,integer,int4,null,32,0,NO,0,false,false,null,null
+statistik_mahasiswa,total_lulusan,3,integer,int4,null,32,0,NO,0,false,false,null,null
+statistik_mahasiswa,updated_at,4,timestamp with time zone,timestamptz,null,null,null,YES,"timezone('utc'::text, now())",false,false,null,null

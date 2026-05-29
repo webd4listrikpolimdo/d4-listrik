@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useData } from "@/context/DataContext";
-import { Dosen } from "@/data/dosen";
+import { Dosen } from "@/types/dosen";
 import { HiOutlineArrowUpTray, HiOutlineTrash } from "react-icons/hi2";
 import Image from "next/image";
 
 export default function DosenProfilePage() {
+  const router = useRouter();
   const { user } = useAuth();
   const { dosenList, updateDosen, ensureDosenLoaded } = useData();
   const [formData, setFormData] = useState<Partial<Dosen>>({});
@@ -35,7 +37,10 @@ export default function DosenProfilePage() {
     if (user && formData.id) {
       updateDosen(formData.id, formData as Dosen);
       setIsSaved(true);
-      setTimeout(() => setIsSaved(false), 3000);
+      router.refresh();
+      setTimeout(() => {
+        setIsSaved(false);
+      }, 3000);
     }
   };
 
@@ -53,6 +58,8 @@ export default function DosenProfilePage() {
       if (res.ok) {
         const data = await res.json();
         setFormData(prev => ({ ...prev, foto: data.url }));
+        updateDosen(formData.id, { ...formData, foto: data.url } as Dosen);
+        router.refresh();
       }
     } catch (err) { console.error("Upload failed", err); }
     finally { setIsUploading(false); if (photoInputRef.current) photoInputRef.current.value = ""; }

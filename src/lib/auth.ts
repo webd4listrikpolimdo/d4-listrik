@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 export interface AuthUser {
   id: string;
   email: string;
-  role: "admin" | "dosen";
+  role: "admin" | "dosen" | "pegawai";
   full_name: string | null;
   nidn: string | null;
 }
@@ -35,7 +35,7 @@ export async function getUser(): Promise<AuthUser | null> {
   return {
     id: user.id,
     email: user.email!,
-    role: profile.role as "admin" | "dosen",
+    role: profile.role as "admin" | "dosen" | "pegawai",
     full_name: profile.full_name,
     nidn: profile.nidn,
   };

@@ -1,4 +1,3 @@
-import { kurikulumAktif, kurikulumData } from "@/data/kurikulum";
 import {
   HiCheckBadge,
   HiBookOpen,
@@ -23,32 +22,23 @@ interface KurikulumInfoProps {
 }
 
 export default function KurikulumInfo({ kurikulum, mataKuliah }: KurikulumInfoProps) {
-  // Fallback values using static data
-  const name = kurikulum?.nama ?? kurikulumAktif.nama;
-  const description = kurikulum?.deskripsi ?? kurikulumAktif.deskripsi;
-  const berlakuSejak = kurikulum?.berlaku_sejak ?? kurikulumAktif.berlakuSejak;
-  const fileUrl = kurikulum ? kurikulum.file_url : kurikulumAktif.fileUrl;
+  const name = kurikulum?.nama ?? "—";
+  const description = kurikulum?.deskripsi ?? "";
+  const berlakuSejak = kurikulum?.berlaku_sejak ?? "—";
+  const fileUrl = kurikulum?.file_url ?? null;
 
   // Hitung total SKS dari semua semester
   const totalSKS = mataKuliah
     ? mataKuliah.reduce((sum, mk) => sum + mk.sks, 0)
-    : kurikulumData.reduce(
-        (total, sem) => total + sem.mataKuliah.reduce((sum, mk) => sum + mk.sks, 0),
-        0
-      );
+    : 0;
 
   // Hitung total mata kuliah
-  const totalMK = mataKuliah
-    ? mataKuliah.length
-    : kurikulumData.reduce(
-        (total, sem) => total + sem.mataKuliah.length,
-        0
-      );
+  const totalMK = mataKuliah ? mataKuliah.length : 0;
 
   // Hitung jumlah semester
   const totalSemester = mataKuliah
     ? Array.from(new Set(mataKuliah.map((m) => m.semester))).length || 8
-    : kurikulumData.length;
+    : 0;
 
   return (
     <div className="animate-fade-in-up">

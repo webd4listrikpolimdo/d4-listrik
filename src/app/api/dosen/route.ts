@@ -11,7 +11,7 @@ export async function GET() {
     const { data, error } = await adminSupabase
       .from("dosen")
       .select("*")
-      .order("nama");
+      .order("updated_at", { ascending: false });
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

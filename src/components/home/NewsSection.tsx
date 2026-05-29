@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import SectionTitle from "@/components/universal/SectionTitle";
 import {
   HiNewspaper,
   HiArrowTopRightOnSquare,
@@ -109,12 +108,30 @@ export default function NewsSection() {
   const totalDots = maxSlide + 1;
 
   return (
-    <section className="py-16 bg-white" id="berita">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <SectionTitle
-          title="Berita & Artikel Terkini"
-          subtitle="Informasi terbaru seputar dunia ketenagalistrikan dan energi."
-        />
+    <section className="py-24 bg-gradient-to-br from-primary-950 via-primary-950/95 to-primary-900/90 relative overflow-hidden border-t border-primary-900 text-white" id="berita">
+      {/* Decorative blurs */}
+      <div className="absolute top-1/4 -right-20 w-72 h-72 rounded-full bg-accent-400/5 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 -left-20 w-72 h-72 rounded-full bg-primary-400/5 blur-3xl pointer-events-none" />
+
+      {/* Grid pattern overlay */}
+      <div
+        className="absolute inset-0 opacity-[0.015] z-0 pointer-events-none"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+        }}
+      />
+
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full">
+        {/* Section heading */}
+        <div className="text-center mb-12 animate-fade-in-up">
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary-900/80 text-primary-300 border border-primary-800/30 text-xs font-semibold uppercase tracking-wider mb-4">
+            Berita & Artikel
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-bold text-white">Berita & Artikel Terkini</h2>
+          <p className="mt-2 text-primary-200/80 text-sm sm:text-base max-w-lg mx-auto">Informasi terbaru seputar dunia ketenagalistrikan dan energi.</p>
+        </div>
 
         {/* Live indicator */}
         {isLive && !loading && (
@@ -123,7 +140,7 @@ export default function NewsSection() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
             </span>
-            <span className="text-xs text-gray-500 font-medium tracking-wide uppercase">
+            <span className="text-xs text-primary-300/80 font-medium tracking-wide uppercase">
               Live — Artikel realtime dari berbagai sumber
             </span>
           </div>
@@ -135,15 +152,15 @@ export default function NewsSection() {
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
-                className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm animate-pulse"
+                className="bg-white/5 rounded-2xl border border-white/10 overflow-hidden shadow-sm animate-pulse"
               >
-                <div className="h-48 bg-gray-200" />
+                <div className="h-48 bg-white/10" />
                 <div className="p-5 space-y-3">
-                  <div className="h-3 bg-gray-200 rounded w-24" />
-                  <div className="h-4 bg-gray-200 rounded w-full" />
-                  <div className="h-4 bg-gray-200 rounded w-3/4" />
-                  <div className="h-3 bg-gray-200 rounded w-full" />
-                  <div className="h-3 bg-gray-200 rounded w-2/3" />
+                  <div className="h-3 bg-white/10 rounded w-24" />
+                  <div className="h-4 bg-white/10 rounded w-full" />
+                  <div className="h-4 bg-white/10 rounded w-3/4" />
+                  <div className="h-3 bg-white/5 rounded w-full" />
+                  <div className="h-3 bg-white/5 rounded w-2/3" />
                 </div>
               </div>
             ))}
@@ -162,14 +179,14 @@ export default function NewsSection() {
               <>
                 <button
                   onClick={prevSlide}
-                  className="absolute -left-3 sm:-left-5 top-1/2 -translate-y-1/2 z-10 w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full shadow-lg border border-gray-100 flex items-center justify-center text-primary-700 hover:bg-primary-50 hover:border-primary-200 transition-all duration-200 hover:scale-110 active:scale-95"
+                  className="absolute -left-3 sm:-left-5 top-1/2 -translate-y-1/2 z-10 w-10 h-10 sm:w-12 sm:h-12 bg-primary-900 text-white rounded-full shadow-lg border border-primary-800 flex items-center justify-center hover:bg-primary-800 hover:border-primary-700 transition-all duration-200 hover:scale-110 active:scale-95"
                   aria-label="Slide sebelumnya"
                 >
                   <HiChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
                 </button>
                 <button
                   onClick={nextSlide}
-                  className="absolute -right-3 sm:-right-5 top-1/2 -translate-y-1/2 z-10 w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full shadow-lg border border-gray-100 flex items-center justify-center text-primary-700 hover:bg-primary-50 hover:border-primary-200 transition-all duration-200 hover:scale-110 active:scale-95"
+                  className="absolute -right-3 sm:-right-5 top-1/2 -translate-y-1/2 z-10 w-10 h-10 sm:w-12 sm:h-12 bg-primary-900 text-white rounded-full shadow-lg border border-primary-800 flex items-center justify-center hover:bg-primary-800 hover:border-primary-700 transition-all duration-200 hover:scale-110 active:scale-95"
                   aria-label="Slide berikutnya"
                 >
                   <HiChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -197,7 +214,7 @@ export default function NewsSection() {
                       rel={
                         article.url !== "#" ? "noopener noreferrer" : undefined
                       }
-                      className="group bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 block h-full"
+                      className="group bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 overflow-hidden shadow-sm hover:shadow-xl hover:border-accent-400/30 transition-all duration-300 hover:-translate-y-1 block h-full"
                     >
                       {/* Image or gradient placeholder */}
                       {article.gambar ? (
@@ -236,23 +253,23 @@ export default function NewsSection() {
 
                       <div className="p-5">
                         <div className="flex items-center justify-between mb-2">
-                          <time className="text-xs text-primary-600 font-semibold uppercase tracking-wider">
+                          <time className="text-xs text-accent-400 font-semibold uppercase tracking-wider">
                             {article.tanggal}
                           </time>
                           {article.sumber &&
                             article.sumber !== "Artikel Statis" && (
-                              <span className="text-[10px] bg-primary-50 text-primary-700 px-2 py-0.5 rounded-full font-medium truncate max-w-[120px]">
+                              <span className="text-[10px] bg-primary-900/80 text-primary-200 border border-primary-800/30 px-2 py-0.5 rounded-full font-medium truncate max-w-[120px]">
                                 {article.sumber}
                               </span>
                             )}
                         </div>
-                        <h3 className="text-base font-bold text-primary-950 leading-snug group-hover:text-primary-700 transition-colors line-clamp-2 min-h-[2.75rem]">
+                        <h3 className="text-base font-bold text-white leading-snug group-hover:text-accent-300 transition-colors line-clamp-2 min-h-[2.75rem]">
                           {article.judul}
                         </h3>
-                        <p className="mt-2 text-sm text-gray-500 leading-relaxed line-clamp-3 min-h-[3.75rem]">
+                        <p className="mt-2 text-sm text-primary-200/80 leading-relaxed line-clamp-3 min-h-[3.75rem]">
                           {article.ringkasan}
                         </p>
-                        <div className="mt-4 inline-flex items-center text-sm font-semibold text-primary-600 group-hover:text-primary-700">
+                        <div className="mt-4 inline-flex items-center text-sm font-semibold text-accent-400 group-hover:text-accent-300">
                           {article.url !== "#"
                             ? "Baca selengkapnya"
                             : "Lihat detail"}
@@ -292,8 +309,8 @@ export default function NewsSection() {
                       onClick={() => goToSlide(i)}
                       className={`rounded-full transition-all duration-300 ${
                         i === currentSlide
-                          ? "w-8 h-2.5 bg-primary-600"
-                          : "w-2.5 h-2.5 bg-gray-300 hover:bg-gray-400"
+                          ? "w-8 h-2.5 bg-accent-400"
+                          : "w-2.5 h-2.5 bg-white/20 hover:bg-white/40"
                       }`}
                       aria-label={`Slide ${i + 1}`}
                     />
@@ -301,7 +318,7 @@ export default function NewsSection() {
                 </div>
 
                 {/* Counter */}
-                <span className="text-xs text-gray-400 font-medium tabular-nums">
+                <span className="text-xs text-primary-300/60 font-medium tabular-nums">
                   {currentSlide + 1}–
                   {Math.min(currentSlide + cardsPerView, articles.length)} /{" "}
                   {articles.length}
@@ -313,7 +330,7 @@ export default function NewsSection() {
 
         {/* Empty state */}
         {!loading && articles.length === 0 && (
-          <div className="text-center py-12 text-gray-400">
+          <div className="text-center py-12 text-primary-300/60">
             <HiNewspaper className="mx-auto text-4xl mb-3 opacity-50" />
             <p className="text-sm">Tidak ada artikel tersedia saat ini.</p>
           </div>

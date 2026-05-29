@@ -2,10 +2,10 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 
-// POST /api/upload/kurikulum — Admin only: Upload PDF to kurikulum bucket
+// POST /api/upload/kurikulum — Admin & Pegawai: Upload PDF to kurikulum bucket
 export async function POST(request: NextRequest) {
   try {
-    const result = await requireRole(["admin"]);
+    const result = await requireRole(["admin", "pegawai"]);
     if (result instanceof NextResponse) return result;
 
     const formData = await request.formData();

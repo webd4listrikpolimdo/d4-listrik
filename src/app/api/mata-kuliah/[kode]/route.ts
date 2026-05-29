@@ -4,15 +4,15 @@ import { NextRequest, NextResponse } from "next/server";
 
 type Params = { params: Promise<{ kode: string }> };
 
-// PUT /api/mata-kuliah/[kode] — Admin only: Update mata kuliah
+// PUT /api/mata-kuliah/[kode] — Admin & Pegawai: Update mata kuliah
 export async function PUT(request: NextRequest, { params }: Params) {
   try {
-    const result = await requireRole(["admin"]);
+    const result = await requireRole(["admin", "pegawai"]);
     if (result instanceof NextResponse) return result;
 
     const { kode } = await params;
     const body = await request.json();
-    const { nama, sks, semester, jenis } = body;
+    const { nama, sks, semester, jenis, deskripsi } = body;
 
     const supabase = await createClient();
     const updateData: Record<string, unknown> = {};
@@ -20,6 +20,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
     if (sks !== undefined) updateData.sks = sks;
     if (semester !== undefined) updateData.semester = semester;
     if (jenis !== undefined) updateData.jenis = jenis;
+    if (deskripsi !== undefined) updateData.deskripsi = deskripsi;
 
     const { data, error } = await supabase
       .from("mata_kuliah")
@@ -37,10 +38,10 @@ export async function PUT(request: NextRequest, { params }: Params) {
   }
 }
 
-// DELETE /api/mata-kuliah/[kode] — Admin only: Delete mata kuliah
+// DELETE /api/mata-kuliah/[kode] — Admin & Pegawai: Delete mata kuliah
 export async function DELETE(_request: NextRequest, { params }: Params) {
   try {
-    const result = await requireRole(["admin"]);
+    const result = await requireRole(["admin", "pegawai"]);
     if (result instanceof NextResponse) return result;
 
     const { kode } = await params;

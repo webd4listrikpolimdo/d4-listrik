@@ -89,10 +89,10 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
     const user = result;
     const supabase = await createClient();
 
-    // Fetch to check ownership
+    // Fetch to check ownership and get foto_urls
     const { data: pending } = await supabase
       .from("karya_pending")
-      .select("submitted_by, status")
+      .select("submitted_by, status, foto_urls")
       .eq("id", id)
       .single();
 
@@ -115,6 +115,21 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
+
+    // Delete files from storage if not approved (so they are not used by the main karya table)
+    if (pending.status !== "approved" && pending.foto_urls && Array.isArray(pending.foto_urls) && pending.foto_urls.length > 0) {
+      const { createAdminClient } = await import("@/lib/supabase/admin");
+      const adminSupabase = createAdminClient();
+      const fileNames = pending.foto_urls.map((url: string) => {
+        const parts = url.split("/storage/v1/object/public/galeri/");
+        return parts.length > 1 ? parts[1] : null;
+      }).filter(Boolean) as string[];
+
+      if (fileNames.length > 0) {
+        await adminSupabase.storage.from("galeri").remove(fileNames);
+      }
+    }
+
     return NextResponse.json({ message: "Deleted" });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Dosen, KaryaCategory, karyaCategoryLabels } from "@/data/dosen";
+import { Dosen, KaryaCategory, karyaCategoryLabels } from "@/types/dosen";
 import { HiInboxStack } from "react-icons/hi2";
 
 const categories: KaryaCategory[] = [
@@ -63,7 +63,7 @@ export default function KaryaTabs({ dosen }: { dosen: Dosen }) {
             {items.map((item, index) => (
               <Link
                 key={item.id}
-                href={`/dosen/${dosen.id}/karya/${activeTab}/${item.id}`}
+                href={`/staf/${dosen.id}/karya/${activeTab}/${item.id}`}
                 className="flex items-start gap-4 bg-white rounded-xl p-4 border border-gray-100 shadow-sm hover:shadow-md hover:border-primary-100 transition-all duration-200"
               >
                 <div className="flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-lg bg-primary-50 text-primary-600 text-xs font-bold">

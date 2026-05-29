@@ -1,20 +1,25 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Modal from "@/components/universal/Modal";
 import ConfirmDialog from "@/components/universal/ConfirmDialog";
-import { HiOutlinePlus, HiOutlinePencilSquare, HiOutlineTrash, HiOutlineArrowUpTray, HiOutlineDocumentText } from "react-icons/hi2";
+import { HiOutlinePlus, HiOutlinePencilSquare, HiOutlineTrash, HiOutlineArrowUpTray, HiOutlineDocumentText, HiOutlineMagnifyingGlass, HiOutlineXMark } from "react-icons/hi2";
 import { cachedFetch, invalidateCache } from "@/lib/fetchCache";
+import ComboBox from "@/components/universal/ComboBox";
+import { useNotification } from "@/context/NotificationContext";
+import TablePagination from "@/components/universal/TablePagination";
 
-interface MataKuliah { kode: string; nama: string; sks: number; semester: number; jenis: string | null; }
+interface MataKuliah { kode: string; nama: string; sks: number; semester: number; jenis: string | null; deskripsi?: string | null; }
 interface Cpl { kode: string; deskripsi: string; }
 interface KurikulumAktif { nama: string; deskripsi: string; berlaku_sejak: string; file_url: string | null; }
 type Tab = "kurikulum" | "mataKuliah" | "cpl";
 
 export default function AdminKurikulumPage() {
+  const router = useRouter();
+  const { showSuccess, showError } = useNotification();
   const [activeTab, setActiveTab] = useState<Tab>("kurikulum");
   const [kurikulum, setKurikulum] = useState<KurikulumAktif>({ nama: "", deskripsi: "", berlaku_sejak: "", file_url: null });
-  const [kurikulumSaved, setKurikulumSaved] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const [mataKuliahList, setMataKuliahList] = useState<MataKuliah[]>([]);
@@ -28,6 +33,15 @@ export default function AdminKurikulumPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isMkLoading, setIsMkLoading] = useState(false);
   const [isCplLoading, setIsCplLoading] = useState(false);
+
+  // Search & Pagination States
+  const [mkSearchQuery, setMkSearchQuery] = useState("");
+  const [mkPage, setMkPage] = useState(1);
+  const [mkPageSize, setMkPageSize] = useState(10);
+
+  const [cplSearchQuery, setCplSearchQuery] = useState("");
+  const [cplPage, setcplPage] = useState(1);
+  const [cplPageSize, setCplPageSize] = useState(10);
 
   // Confirm dialog state
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -44,17 +58,18 @@ export default function AdminKurikulumPage() {
   const hasFetchedMK = useRef(false);
   const hasFetchedCPL = useRef(false);
 
+  const fetchKurikulum = async () => {
+    try {
+      const data = await cachedFetch<any>("/api/kurikulum");
+      if (data) {
+        setKurikulum({ nama: data.kurikulum?.nama || "", deskripsi: data.kurikulum?.deskripsi || "", berlaku_sejak: data.kurikulum?.berlaku_sejak || "", file_url: data.kurikulum?.file_url || null });
+      }
+    } catch (e) { console.error("Failed to fetch kurikulum", e); }
+    finally { setIsLoading(false); }
+  };
+
   // Always fetch kurikulum aktif on mount
   useEffect(() => {
-    const fetchKurikulum = async () => {
-      try {
-        const data = await cachedFetch<any>("/api/kurikulum");
-        if (data) {
-          setKurikulum({ nama: data.kurikulum?.nama || "", deskripsi: data.kurikulum?.deskripsi || "", berlaku_sejak: data.kurikulum?.berlaku_sejak || "", file_url: data.kurikulum?.file_url || null });
-        }
-      } catch (e) { console.error("Failed to fetch kurikulum", e); }
-      finally { setIsLoading(false); }
-    };
     fetchKurikulum();
   }, []);
 
@@ -82,11 +97,18 @@ export default function AdminKurikulumPage() {
 
   const handleKurikulumSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = await fetch("/api/kurikulum", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(kurikulum) });
-    if (res.ok) { 
+    try {
+      const res = await fetch("/api/kurikulum", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(kurikulum) });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Gagal menyimpan kurikulum");
+      }
       invalidateCache("/api/kurikulum");
-      setKurikulumSaved(true); 
-      setTimeout(() => setKurikulumSaved(false), 3000); 
+      await fetchKurikulum();
+      showSuccess("Data kurikulum berhasil disimpan!");
+      router.refresh();
+    } catch (err: any) {
+      showError(err.message || "Gagal menyimpan data.");
     }
   };
 
@@ -102,72 +124,146 @@ export default function AdminKurikulumPage() {
         const data = await res.json();
         setKurikulum(prev => ({ ...prev, file_url: data.url }));
         invalidateCache("/api/kurikulum");
+        await fetchKurikulum();
+        showSuccess("Dokumen PDF berhasil diupload!");
+        router.refresh();
+      } else {
+        const err = await res.json();
+        showError(err.error || "Gagal mengupload PDF.");
       }
-    } catch (err) { console.error("Upload failed", err); }
-    finally { setIsUploading(false); if (pdfInputRef.current) pdfInputRef.current.value = ""; }
+    } catch (err: any) {
+      showError(err.message || "Gagal mengupload PDF.");
+    } finally {
+      setIsUploading(false);
+      if (pdfInputRef.current) pdfInputRef.current.value = "";
+    }
   };
 
   const handleMkSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (mkEditingKode) {
-      const res = await fetch(`/api/mata-kuliah/${encodeURIComponent(mkEditingKode)}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(mkForm) });
-      if (res.ok) { 
+    try {
+      if (mkEditingKode) {
+        const res = await fetch(`/api/mata-kuliah/${encodeURIComponent(mkEditingKode)}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(mkForm) });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || "Gagal mengubah mata kuliah");
+        }
         const u = await res.json(); 
         setMataKuliahList(prev => prev.map(m => m.kode === mkEditingKode ? u : m)); 
         invalidateCache("/api/mata-kuliah");
-      }
-    } else {
-      const res = await fetch("/api/mata-kuliah", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(mkForm) });
-      if (res.ok) { 
+      } else {
+        const res = await fetch("/api/mata-kuliah", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(mkForm) });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || "Gagal membuat mata kuliah");
+        }
         const c = await res.json(); 
         setMataKuliahList(prev => [...prev, c].sort((a, b) => a.semester - b.semester || a.kode.localeCompare(b.kode))); 
         invalidateCache("/api/mata-kuliah");
       }
+      setMkModalOpen(false);
+      showSuccess("Mata kuliah berhasil disimpan!");
+      router.refresh();
+    } catch (err: any) {
+      showError(err.message || "Gagal menyimpan mata kuliah");
     }
-    setMkModalOpen(false);
   };
 
   const handleMkDelete = async (kode: string) => {
     showConfirm("Hapus Mata Kuliah", "Hapus mata kuliah ini? Tindakan ini tidak dapat dibatalkan.", async () => {
-      const res = await fetch(`/api/mata-kuliah/${encodeURIComponent(kode)}`, { method: "DELETE" });
-      if (res.ok) {
+      try {
+        const res = await fetch(`/api/mata-kuliah/${encodeURIComponent(kode)}`, { method: "DELETE" });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || "Gagal menghapus mata kuliah");
+        }
         setMataKuliahList(prev => prev.filter(m => m.kode !== kode));
         invalidateCache("/api/mata-kuliah");
+        showSuccess("Mata kuliah berhasil dihapus!");
+        router.refresh();
+      } catch (err: any) {
+        showError(err.message || "Terjadi kesalahan");
       }
     });
   };
 
   const handleCplSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (cplEditingKode) {
-      const res = await fetch(`/api/cpl/${encodeURIComponent(cplEditingKode)}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ deskripsi: cplForm.deskripsi }) });
-      if (res.ok) { 
+    try {
+      if (cplEditingKode) {
+        const res = await fetch(`/api/cpl/${encodeURIComponent(cplEditingKode)}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ deskripsi: cplForm.deskripsi }) });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || "Gagal mengubah CPL");
+        }
         const u = await res.json(); 
         setCplList(prev => prev.map(c => c.kode === cplEditingKode ? u : c)); 
         invalidateCache("/api/cpl");
-      }
-    } else {
-      const res = await fetch("/api/cpl", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(cplForm) });
-      if (res.ok) { 
+      } else {
+        const res = await fetch("/api/cpl", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(cplForm) });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || "Gagal membuat CPL");
+        }
         const c = await res.json(); 
         setCplList(prev => [...prev, c].sort((a, b) => a.kode.localeCompare(b.kode))); 
         invalidateCache("/api/cpl");
       }
+      setCplModalOpen(false);
+      showSuccess("CPL berhasil disimpan!");
+      router.refresh();
+    } catch (err: any) {
+      showError(err.message || "Gagal menyimpan CPL");
     }
-    setCplModalOpen(false);
   };
 
   const handleCplDelete = async (kode: string) => {
     showConfirm("Hapus CPL", "Hapus CPL ini? Tindakan ini tidak dapat dibatalkan.", async () => {
-      const res = await fetch(`/api/cpl/${encodeURIComponent(kode)}`, { method: "DELETE" });
-      if (res.ok) {
+      try {
+        const res = await fetch(`/api/cpl/${encodeURIComponent(kode)}`, { method: "DELETE" });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || "Gagal menghapus CPL");
+        }
         setCplList(prev => prev.filter(c => c.kode !== kode));
         invalidateCache("/api/cpl");
+        showSuccess("CPL berhasil dihapus!");
+        router.refresh();
+      } catch (err: any) {
+        showError(err.message || "Terjadi kesalahan");
       }
     });
   };
 
-  if (isLoading) return <div className="text-center py-12 text-gray-400">Memuat data kurikulum...</div>;
+  const filteredMataKuliah = mataKuliahList.filter((mk) => {
+    const q = mkSearchQuery.toLowerCase();
+    return (
+      mk.kode.toLowerCase().includes(q) ||
+      mk.nama.toLowerCase().includes(q) ||
+      (mk.jenis || "").toLowerCase().includes(q) ||
+      String(mk.sks).includes(q) ||
+      String(mk.semester).includes(q)
+    );
+  });
+  const totalMkEntries = filteredMataKuliah.length;
+  const totalMkPages = Math.ceil(totalMkEntries / mkPageSize);
+  const paginatedMataKuliah = filteredMataKuliah.slice(
+    (mkPage - 1) * mkPageSize,
+    mkPage * mkPageSize
+  );
+
+  const filteredCpl = cplList.filter((cpl) => {
+    const q = cplSearchQuery.toLowerCase();
+    return cpl.kode.toLowerCase().includes(q) || cpl.deskripsi.toLowerCase().includes(q);
+  });
+  const totalCplEntries = filteredCpl.length;
+  const totalCplPages = Math.ceil(totalCplEntries / cplPageSize);
+  const paginatedCpl = filteredCpl.slice(
+    (cplPage - 1) * cplPageSize,
+    cplPage * cplPageSize
+  );
+
+  if (isLoading) return <div className="text-center py-12 text-gray-400 font-medium animate-pulse">Loading Kurikulum...</div>;
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "kurikulum", label: "Kurikulum Aktif" },
@@ -194,7 +290,6 @@ export default function AdminKurikulumPage() {
 
       {activeTab === "kurikulum" && (
         <form onSubmit={handleKurikulumSave} className="space-y-6 max-w-2xl">
-          {kurikulumSaved && <div className="p-4 rounded-xl bg-green-50 text-green-700 border border-green-100 font-medium text-sm animate-fade-in">Data kurikulum berhasil disimpan!</div>}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nama Kurikulum</label>
             <input type="text" required value={kurikulum.nama} onChange={e => setKurikulum({ ...kurikulum, nama: e.target.value })} className={inputCls} />
@@ -244,12 +339,29 @@ export default function AdminKurikulumPage() {
       {activeTab === "mataKuliah" && (
         <>
           {isMkLoading ? (
-            <div className="text-center py-12 text-gray-400">Memuat data mata kuliah...</div>
+            <div className="text-center py-12 text-gray-400 font-medium animate-pulse">Loading Mata Kuliah...</div>
           ) : (
           <>
-          <div className="flex justify-end mb-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
+            <div className="relative max-w-xs w-full">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                <HiOutlineMagnifyingGlass className="w-4 h-4" />
+              </div>
+              <input
+                type="text"
+                placeholder="Cari mata kuliah..."
+                value={mkSearchQuery}
+                onChange={e => { setMkSearchQuery(e.target.value); setMkPage(1); }}
+                className="w-full pl-9 pr-8 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-gray-900"
+              />
+              {mkSearchQuery && (
+                <button onClick={() => { setMkSearchQuery(""); setMkPage(1); }} className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-gray-400 hover:text-gray-600">
+                  <HiOutlineXMark className="w-4 h-4" />
+                </button>
+              )}
+            </div>
             <button onClick={() => { setMkEditingKode(null); setMkForm({ kode: "", nama: "", sks: 2, semester: 1, jenis: "Teori" }); setMkModalOpen(true); }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm">
+              className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm cursor-pointer w-full sm:w-auto justify-center">
               <HiOutlinePlus className="w-5 h-5" /> Tambah Mata Kuliah
             </button>
           </div>
@@ -260,7 +372,7 @@ export default function AdminKurikulumPage() {
                   <tr><th className="px-6 py-4">Kode</th><th className="px-6 py-4">Nama</th><th className="px-6 py-4">SKS</th><th className="px-6 py-4">Smt</th><th className="px-6 py-4">Jenis</th><th className="px-6 py-4 text-right">Aksi</th></tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {mataKuliahList.map(mk => (
+                  {paginatedMataKuliah.map(mk => (
                     <tr key={mk.kode} className="hover:bg-gray-50/50 transition-colors">
                       <td className="px-6 py-3 font-mono text-xs font-bold text-primary-700">{mk.kode}</td>
                       <td className="px-6 py-3 font-medium text-gray-900">{mk.nama}</td>
@@ -268,15 +380,23 @@ export default function AdminKurikulumPage() {
                       <td className="px-6 py-3">{mk.semester}</td>
                       <td className="px-6 py-3"><span className="px-2 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-600">{mk.jenis || "—"}</span></td>
                       <td className="px-6 py-3 text-right space-x-1">
-                        <button onClick={() => { setMkEditingKode(mk.kode); setMkForm(mk); setMkModalOpen(true); }} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-primary-600 hover:bg-primary-50 transition-colors" title="Edit"><HiOutlinePencilSquare className="w-4 h-4" /></button>
-                        <button onClick={() => handleMkDelete(mk.kode)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-red-600 hover:bg-red-50 transition-colors" title="Hapus"><HiOutlineTrash className="w-4 h-4" /></button>
+                        <button onClick={() => { setMkEditingKode(mk.kode); setMkForm(mk); setMkModalOpen(true); }} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-primary-600 hover:bg-primary-50 transition-colors cursor-pointer" title="Edit"><HiOutlinePencilSquare className="w-4 h-4" /></button>
+                        <button onClick={() => handleMkDelete(mk.kode)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-red-600 hover:bg-red-50 transition-colors cursor-pointer" title="Hapus"><HiOutlineTrash className="w-4 h-4" /></button>
                       </td>
                     </tr>
                   ))}
-                  {mataKuliahList.length === 0 && <tr><td colSpan={6} className="px-6 py-8 text-center text-gray-400">Belum ada data mata kuliah.</td></tr>}
+                  {filteredMataKuliah.length === 0 && <tr><td colSpan={6} className="px-6 py-8 text-center text-gray-400">Tidak ada data mata kuliah.</td></tr>}
                 </tbody>
               </table>
             </div>
+            <TablePagination
+              currentPage={mkPage}
+              totalPages={totalMkPages}
+              totalEntries={totalMkEntries}
+              pageSize={mkPageSize}
+              onPageChange={setMkPage}
+              onPageSizeChange={size => { setMkPageSize(size); setMkPage(1); }}
+            />
           </div>
           <Modal isOpen={mkModalOpen} onClose={() => setMkModalOpen(false)} title={mkEditingKode ? "Edit Mata Kuliah" : "Tambah Mata Kuliah"}>
             <form onSubmit={handleMkSubmit} className="space-y-4">
@@ -287,7 +407,23 @@ export default function AdminKurikulumPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div><label className="block text-sm font-medium text-gray-700 mb-1">SKS</label><input type="number" required min={1} max={8} value={mkForm.sks || ""} onChange={e => setMkForm({ ...mkForm, sks: Number(e.target.value) })} className={inputCls} /></div>
                 <div><label className="block text-sm font-medium text-gray-700 mb-1">Semester</label><input type="number" required min={1} max={8} value={mkForm.semester || ""} onChange={e => setMkForm({ ...mkForm, semester: Number(e.target.value) })} className={inputCls} /></div>
-                <div><label className="block text-sm font-medium text-gray-700 mb-1">Jenis</label><select value={mkForm.jenis || "Teori"} onChange={e => setMkForm({ ...mkForm, jenis: e.target.value })} className={inputCls}><option value="Teori">Teori</option><option value="Praktik">Praktik</option><option value="Teori & Praktik">Teori &amp; Praktik</option></select></div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Jenis</label>
+                  <ComboBox
+                    options={[
+                      { id: "Teori", nama: "Teori" },
+                      { id: "Praktik", nama: "Praktik" },
+                      { id: "Teori & Praktik", nama: "Teori & Praktik" }
+                    ]}
+                    value={mkForm.jenis || "Teori"}
+                    onChange={val => setMkForm({ ...mkForm, jenis: val })}
+                    placeholder="Pilih Jenis..."
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+                <textarea rows={3} value={mkForm.deskripsi || ""} onChange={e => setMkForm({ ...mkForm, deskripsi: e.target.value })} className={inputCls + " resize-none"} placeholder="Masukkan deskripsi mata kuliah..." />
               </div>
               <div className="pt-4 flex justify-end gap-3 border-t border-gray-100 mt-6">
                 <button type="button" onClick={() => setMkModalOpen(false)} className="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors">Batal</button>
@@ -302,12 +438,29 @@ export default function AdminKurikulumPage() {
       {activeTab === "cpl" && (
         <>
           {isCplLoading ? (
-            <div className="text-center py-12 text-gray-400">Memuat data CPL...</div>
+            <div className="text-center py-12 text-gray-400 font-medium animate-pulse">Loading CPL...</div>
           ) : (
           <>
-          <div className="flex justify-end mb-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
+            <div className="relative max-w-xs w-full">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                <HiOutlineMagnifyingGlass className="w-4 h-4" />
+              </div>
+              <input
+                type="text"
+                placeholder="Cari CPL..."
+                value={cplSearchQuery}
+                onChange={e => { setCplSearchQuery(e.target.value); setcplPage(1); }}
+                className="w-full pl-9 pr-8 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-gray-900"
+              />
+              {cplSearchQuery && (
+                <button onClick={() => { setCplSearchQuery(""); setcplPage(1); }} className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-gray-400 hover:text-gray-600">
+                  <HiOutlineXMark className="w-4 h-4" />
+                </button>
+              )}
+            </div>
             <button onClick={() => { setCplEditingKode(null); setCplForm({ kode: "", deskripsi: "" }); setCplModalOpen(true); }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm">
+              className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm cursor-pointer w-full sm:w-auto justify-center">
               <HiOutlinePlus className="w-5 h-5" /> Tambah CPL
             </button>
           </div>
@@ -318,20 +471,28 @@ export default function AdminKurikulumPage() {
                   <tr><th className="px-6 py-4 w-28">Kode</th><th className="px-6 py-4">Deskripsi</th><th className="px-6 py-4 text-right w-28">Aksi</th></tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {cplList.map(cpl => (
+                  {paginatedCpl.map(cpl => (
                     <tr key={cpl.kode} className="hover:bg-gray-50/50 transition-colors">
                       <td className="px-6 py-3 font-mono text-xs font-bold text-primary-700">{cpl.kode}</td>
                       <td className="px-6 py-3 text-gray-900 text-sm leading-relaxed">{cpl.deskripsi}</td>
                       <td className="px-6 py-3 text-right space-x-1">
-                        <button onClick={() => { setCplEditingKode(cpl.kode); setCplForm(cpl); setCplModalOpen(true); }} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-primary-600 hover:bg-primary-50 transition-colors" title="Edit"><HiOutlinePencilSquare className="w-4 h-4" /></button>
-                        <button onClick={() => handleCplDelete(cpl.kode)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-red-600 hover:bg-red-50 transition-colors" title="Hapus"><HiOutlineTrash className="w-4 h-4" /></button>
+                        <button onClick={() => { setCplEditingKode(cpl.kode); setCplForm(cpl); setCplModalOpen(true); }} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-primary-600 hover:bg-primary-50 transition-colors cursor-pointer" title="Edit"><HiOutlinePencilSquare className="w-4 h-4" /></button>
+                        <button onClick={() => handleCplDelete(cpl.kode)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-red-600 hover:bg-red-50 transition-colors cursor-pointer" title="Hapus"><HiOutlineTrash className="w-4 h-4" /></button>
                       </td>
                     </tr>
                   ))}
-                  {cplList.length === 0 && <tr><td colSpan={3} className="px-6 py-8 text-center text-gray-400">Belum ada data CPL.</td></tr>}
+                  {filteredCpl.length === 0 && <tr><td colSpan={3} className="px-6 py-8 text-center text-gray-400">Tidak ada data CPL.</td></tr>}
                 </tbody>
               </table>
             </div>
+            <TablePagination
+              currentPage={cplPage}
+              totalPages={totalCplPages}
+              totalEntries={totalCplEntries}
+              pageSize={cplPageSize}
+              onPageChange={setcplPage}
+              onPageSizeChange={size => { setCplPageSize(size); setcplPage(1); }}
+            />
           </div>
           <Modal isOpen={cplModalOpen} onClose={() => setCplModalOpen(false)} title={cplEditingKode ? "Edit CPL" : "Tambah CPL"}>
             <form onSubmit={handleCplSubmit} className="space-y-4">

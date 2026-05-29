@@ -9,8 +9,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from("mata_kuliah")
       .select("*")
-      .order("semester")
-      .order("kode");
+      .order("updated_at", { ascending: false });
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -21,14 +20,14 @@ export async function GET() {
   }
 }
 
-// POST /api/mata-kuliah — Admin only: Create new mata kuliah
+// POST /api/mata-kuliah — Admin & Pegawai: Create new mata kuliah
 export async function POST(request: NextRequest) {
   try {
-    const result = await requireRole(["admin"]);
+    const result = await requireRole(["admin", "pegawai"]);
     if (result instanceof NextResponse) return result;
 
     const body = await request.json();
-    const { kode, nama, sks, semester, jenis } = body;
+    const { kode, nama, sks, semester, jenis, deskripsi } = body;
 
     if (!kode || !nama || !sks || !semester) {
       return NextResponse.json(
@@ -40,7 +39,14 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("mata_kuliah")
-      .insert({ kode, nama, sks, semester, jenis: jenis || null })
+      .insert({
+        kode,
+        nama,
+        sks,
+        semester,
+        jenis: jenis || null,
+        deskripsi: deskripsi || null,
+      })
       .select()
       .single();
 

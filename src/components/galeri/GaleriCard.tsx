@@ -1,4 +1,4 @@
-import { GaleriItem } from "@/data/galeri";
+import { GaleriItem } from "@/types/galeri";
 import Link from "next/link";
 import { HiOutlineCalendar } from "react-icons/hi2";
 
@@ -33,7 +33,13 @@ export default function GaleriCard({
 
         {/* Category badge */}
         <span className="absolute top-3 right-3 px-3 py-1 rounded-full bg-white/90 text-xs font-semibold text-gray-700 backdrop-blur-sm shadow-sm">
-          {item.kategori === "fasilitas" ? "Fasilitas" : item.subLabel ? `Tridharma · ${item.subLabel}` : "Tridharma"}
+          {item.kategori === "fasilitas"
+            ? "Fasilitas"
+            : item.kategori === "kegiatan"
+              ? `Kegiatan · ${item.subLabel}`
+              : item.subLabel
+                ? `Tridharma · ${item.subLabel}`
+                : "Tridharma"}
         </span>
 
         {/* Date badge on image */}

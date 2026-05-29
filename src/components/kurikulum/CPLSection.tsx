@@ -1,4 +1,3 @@
-import { cplData } from "@/data/kurikulum";
 import SectionTitle from "@/components/universal/SectionTitle";
 
 interface CPLSectionProps {
@@ -9,7 +8,7 @@ interface CPLSectionProps {
 }
 
 export default function CPLSection({ cplList }: CPLSectionProps) {
-  const activeCplList = cplList || cplData;
+  const activeCplList = cplList || [];
 
   return (
     <div>

@@ -9,7 +9,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from("cpl")
       .select("*")
-      .order("kode");
+      .order("updated_at", { ascending: false });
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -20,10 +20,10 @@ export async function GET() {
   }
 }
 
-// POST /api/cpl — Admin only: Create new CPL
+// POST /api/cpl — Admin & Pegawai: Create new CPL
 export async function POST(request: NextRequest) {
   try {
-    const result = await requireRole(["admin"]);
+    const result = await requireRole(["admin", "pegawai"]);
     if (result instanceof NextResponse) return result;
 
     const body = await request.json();

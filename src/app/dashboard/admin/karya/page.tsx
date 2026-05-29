@@ -1,14 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Modal from "@/components/universal/Modal";
 import PersonLinker from "@/components/universal/PersonLinker";
 import ComboBox from "@/components/universal/ComboBox";
 import ConfirmDialog from "@/components/universal/ConfirmDialog";
 import { cachedFetch, invalidateCache } from "@/lib/fetchCache";
 import type { PersonLink } from "@/components/universal/PersonLinker";
-import { HiOutlineCheck, HiOutlineXMark, HiOutlineTrash, HiOutlineClock, HiOutlineCheckCircle, HiOutlineXCircle, HiOutlinePlus, HiOutlinePencilSquare, HiOutlinePhoto, HiOutlineEye } from "react-icons/hi2";
+import { HiOutlineCheck, HiOutlineXMark, HiOutlineTrash, HiOutlineClock, HiOutlineCheckCircle, HiOutlineXCircle, HiOutlinePlus, HiOutlinePencilSquare, HiOutlinePhoto, HiOutlineEye, HiOutlineMagnifyingGlass } from "react-icons/hi2";
 import { useRef } from "react";
+import { useNotification } from "@/context/NotificationContext";
+import TablePagination from "@/components/universal/TablePagination";
 
 interface PendingKarya {
   id: string;
@@ -54,6 +57,8 @@ const statusConfig = {
 };
 
 export default function AdminKaryaPage() {
+  const router = useRouter();
+  const { showSuccess, showError } = useNotification();
   const [pendingList, setPendingList] = useState<PendingKarya[]>([]);
   const [allKarya, setAllKarya] = useState<Karya[]>([]);
   const [dosenOptions, setDosenOptions] = useState<DosenOption[]>([]);
@@ -64,6 +69,19 @@ export default function AdminKaryaPage() {
   const [viewingKarya, setViewingKarya] = useState<PendingKarya | null>(null);
   const [catatan, setCatatan] = useState("");
   const [activeSection, setActiveSection] = useState<"pending" | "all">("pending");
+
+  // Search & Pagination states
+  const [pendingSearchQuery, setPendingSearchQuery] = useState("");
+  const [pendingPage, setPendingPage] = useState(1);
+  const [pendingPageSize, setPendingPageSize] = useState(10);
+
+  const [reviewedSearchQuery, setReviewedSearchQuery] = useState("");
+  const [reviewedPage, setReviewedPage] = useState(1);
+  const [reviewedSearchPageSize, setReviewedPageSize] = useState(10);
+
+  const [allSearchQuery, setAllSearchQuery] = useState("");
+  const [allPage, setAllPage] = useState(1);
+  const [allPageSize, setAllPageSize] = useState(10);
 
   // CRUD modal state
   const [karyaModalOpen, setKaryaModalOpen] = useState(false);
@@ -181,14 +199,22 @@ export default function AdminKaryaPage() {
   // ========== Pending actions ==========
   const handleApprove = async (id: string) => {
     showConfirm("Setujui Karya", "Setujui karya ini?", async () => {
-      const res = await fetch(`/api/karya-pending/${id}`, {
-        method: "PUT", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "approve" }),
-      });
-      if (res.ok) {
-          invalidateCache("/api/karya-pending");
-          invalidateCache("/api/karya");
-          fetchData();
+      try {
+        const res = await fetch(`/api/karya-pending/${id}`, {
+          method: "PUT", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "approve" }),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || "Gagal menyetujui karya");
+        }
+        invalidateCache("/api/karya-pending");
+        invalidateCache("/api/karya");
+        await fetchData();
+        showSuccess("Pengajuan karya disetujui!");
+        router.refresh();
+      } catch (err: any) {
+        showError(err.message || "Gagal memproses persetujuan");
       }
     });
   };
@@ -197,23 +223,39 @@ export default function AdminKaryaPage() {
 
   const handleReject = async () => {
     if (!rejectingId) return;
-    const res = await fetch(`/api/karya-pending/${rejectingId}`, {
-      method: "PUT", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "reject", catatan_admin: catatan || null }),
-    });
-    if (res.ok) { 
-        invalidateCache("/api/karya-pending");
-        setRejectModalOpen(false); 
-        fetchData(); 
+    try {
+      const res = await fetch(`/api/karya-pending/${rejectingId}`, {
+        method: "PUT", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "reject", catatan_admin: catatan || null }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Gagal menolak karya");
+      }
+      invalidateCache("/api/karya-pending");
+      setRejectModalOpen(false); 
+      await fetchData(); 
+      showSuccess("Pengajuan karya ditolak!");
+      router.refresh();
+    } catch (err: any) {
+      showError(err.message || "Gagal memproses penolakan");
     }
   };
 
   const handleDeletePending = async (id: string) => {
     showConfirm("Hapus Pengajuan", "Hapus pengajuan ini? Tindakan ini tidak dapat dibatalkan.", async () => {
-      const res = await fetch(`/api/karya-pending/${id}`, { method: "DELETE" });
-      if (res.ok) {
-          invalidateCache("/api/karya-pending");
-          setPendingList(prev => prev.filter(k => k.id !== id));
+      try {
+        const res = await fetch(`/api/karya-pending/${id}`, { method: "DELETE" });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || "Gagal menghapus pengajuan");
+        }
+        invalidateCache("/api/karya-pending");
+        setPendingList(prev => prev.filter(k => k.id !== id));
+        showSuccess("Pengajuan berhasil dihapus!");
+        router.refresh();
+      } catch (err: any) {
+        showError(err.message || "Gagal menghapus pengajuan");
       }
     }, "danger");
   };
@@ -272,43 +314,110 @@ export default function AdminKaryaPage() {
       foto_urls: fotoUrls,
     };
 
-    if (editingKaryaId) {
-      const res = await fetch(`/api/karya/${editingKaryaId}`, {
-        method: "PUT", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (res.ok) { 
+    try {
+      if (editingKaryaId) {
+        const res = await fetch(`/api/karya/${editingKaryaId}`, {
+          method: "PUT", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || "Gagal memperbarui karya");
+        }
         invalidateCache("/api/karya");
         setKaryaModalOpen(false); 
-        fetchData(); 
-      }
-    } else {
-      const res = await fetch("/api/karya", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (res.ok) { 
+        await fetchData(); 
+      } else {
+        const res = await fetch("/api/karya", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || "Gagal menyimpan karya");
+        }
         invalidateCache("/api/karya");
         setKaryaModalOpen(false); 
-        fetchData(); 
+        await fetchData(); 
       }
+      showSuccess("Karya berhasil disimpan!");
+      router.refresh();
+    } catch (err: any) {
+      showError(err.message || "Gagal menyimpan karya");
     }
   };
 
   const handleDeleteKarya = async (id: string) => {
     showConfirm("Hapus Karya", "Hapus karya ini? Tindakan ini tidak dapat dibatalkan.", async () => {
-      const res = await fetch(`/api/karya/${id}`, { method: "DELETE" });
-      if (res.ok) {
-          invalidateCache("/api/karya");
-          setAllKarya(prev => prev.filter(k => k.id !== id));
+      try {
+        const res = await fetch(`/api/karya/${id}`, { method: "DELETE" });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || "Gagal menghapus karya");
+        }
+        invalidateCache("/api/karya");
+        setAllKarya(prev => prev.filter(k => k.id !== id));
+        showSuccess("Karya berhasil dihapus!");
+        router.refresh();
+      } catch (err: any) {
+        showError(err.message || "Gagal menghapus karya");
       }
     }, "danger");
   };
 
-  if (isLoading) return <div className="text-center py-12 text-gray-400">Memuat data karya...</div>;
+  if (isLoading) return <div className="text-center py-12 text-gray-400 font-medium animate-pulse">Loading Karya...</div>;
 
   const pendingOnly = pendingList.filter(k => k.status === "pending");
+  const filteredPending = pendingOnly.filter(k => {
+    const q = pendingSearchQuery.toLowerCase();
+    return (
+      k.judul.toLowerCase().includes(q) ||
+      (k.dosen?.nama || "").toLowerCase().includes(q) ||
+      (jenisLabels[k.jenis] || k.jenis).toLowerCase().includes(q) ||
+      String(k.tahun).includes(q)
+    );
+  });
+  const totalPendingEntries = filteredPending.length;
+  const totalPendingPages = Math.ceil(totalPendingEntries / pendingPageSize);
+  const paginatedPending = filteredPending.slice(
+    (pendingPage - 1) * pendingPageSize,
+    pendingPage * pendingPageSize
+  );
+
   const reviewedList = pendingList.filter(k => k.status !== "pending");
+  const filteredReviewed = reviewedList.filter(k => {
+    const q = reviewedSearchQuery.toLowerCase();
+    return (
+      k.judul.toLowerCase().includes(q) ||
+      (k.dosen?.nama || "").toLowerCase().includes(q) ||
+      (jenisLabels[k.jenis] || k.jenis).toLowerCase().includes(q) ||
+      String(k.tahun).includes(q) ||
+      k.status.toLowerCase().includes(q)
+    );
+  });
+  const totalReviewedEntries = filteredReviewed.length;
+  const totalReviewedPages = Math.ceil(totalReviewedEntries / reviewedSearchPageSize);
+  const paginatedReviewed = filteredReviewed.slice(
+    (reviewedPage - 1) * reviewedSearchPageSize,
+    reviewedPage * reviewedSearchPageSize
+  );
+
+  const filteredAllKarya = allKarya.filter(k => {
+    const q = allSearchQuery.toLowerCase();
+    const dosenNama = dosenOptions.find(d => d.id === k.dosen_id)?.nama || k.dosen_id;
+    return (
+      k.judul.toLowerCase().includes(q) ||
+      dosenNama.toLowerCase().includes(q) ||
+      (jenisLabels[k.jenis] || k.jenis).toLowerCase().includes(q) ||
+      String(k.tahun).includes(q)
+    );
+  });
+  const totalAllKaryaEntries = filteredAllKarya.length;
+  const totalAllKaryaPages = Math.ceil(totalAllKaryaEntries / allPageSize);
+  const paginatedAllKarya = filteredAllKarya.slice(
+    (allPage - 1) * allPageSize,
+    allPage * allPageSize
+  );
 
   const sectionTabs = [
     { key: "pending" as const, label: `Pengajuan (${pendingOnly.length})` },
@@ -332,80 +441,168 @@ export default function AdminKaryaPage() {
       {/* ========== PENDING TAB ========== */}
       {activeSection === "pending" && (
         <>
-          {pendingOnly.length > 0 && (
-            <div className="mb-8">
-              <h2 className="text-lg font-bold text-amber-700 mb-3 flex items-center gap-2"><HiOutlineClock className="w-5 h-5" /> Menunggu Persetujuan</h2>
-              <div className="bg-white border border-amber-200 rounded-2xl shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm text-gray-600">
-                    <thead className="bg-amber-50 text-amber-800 font-semibold border-b border-amber-100">
-                      <tr><th className="px-6 py-4">Dosen</th><th className="px-6 py-4">Judul</th><th className="px-6 py-4">Jenis</th><th className="px-6 py-4">Tahun</th><th className="px-6 py-4">Tanggal</th><th className="px-6 py-4 text-right">Aksi</th></tr>
-                    </thead>
-                    <tbody className="divide-y divide-amber-50">
-                      {pendingOnly.map(k => (
-                        <tr key={k.id} className="hover:bg-amber-50/30 transition-colors">
+          <div className="mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
+              <h2 className="text-lg font-bold text-amber-700 flex items-center gap-2">
+                <HiOutlineClock className="w-5 h-5" /> Menunggu Persetujuan
+              </h2>
+              <div className="relative max-w-xs w-full">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                  <HiOutlineMagnifyingGlass className="w-4 h-4" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Cari pengajuan..."
+                  value={pendingSearchQuery}
+                  onChange={e => { setPendingSearchQuery(e.target.value); setPendingPage(1); }}
+                  className="w-full pl-9 pr-8 py-1.5 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-gray-900"
+                />
+                {pendingSearchQuery && (
+                  <button onClick={() => { setPendingSearchQuery(""); setPendingPage(1); }} className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-gray-400 hover:text-gray-600">
+                    <HiOutlineXMark className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="bg-white border border-amber-200 rounded-2xl shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm text-gray-600">
+                  <thead className="bg-amber-50 text-amber-800 font-semibold border-b border-amber-100">
+                    <tr><th className="px-6 py-4">Dosen</th><th className="px-6 py-4">Judul</th><th className="px-6 py-4">Jenis</th><th className="px-6 py-4">Tahun</th><th className="px-6 py-4">Tanggal</th><th className="px-6 py-4 text-right">Aksi</th></tr>
+                  </thead>
+                  <tbody className="divide-y divide-amber-50">
+                    {paginatedPending.map(k => (
+                      <tr key={k.id} className="hover:bg-amber-50/30 transition-colors">
+                        <td className="px-6 py-3 font-medium text-gray-900">{k.dosen?.nama || "—"}</td>
+                        <td className="px-6 py-3 text-gray-900 max-w-xs truncate">{k.judul}</td>
+                        <td className="px-6 py-3"><span className="px-2 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-600">{jenisLabels[k.jenis] || k.jenis}</span></td>
+                        <td className="px-6 py-3">{k.tahun}</td>
+                        <td className="px-6 py-3 text-xs text-gray-400">{new Date(k.created_at).toLocaleDateString("id-ID")}</td>
+                        <td className="px-6 py-3 text-right space-x-1">
+                          <button onClick={() => { setViewingKarya(k); setDetailModalOpen(true); }} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-primary-600 hover:bg-primary-50 transition-colors cursor-pointer" title="Lihat Detail"><HiOutlineEye className="w-5 h-5" /></button>
+                          <button onClick={() => handleApprove(k.id)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-green-600 hover:bg-green-50 transition-colors cursor-pointer" title="Setujui"><HiOutlineCheck className="w-5 h-5" /></button>
+                          <button onClick={() => openRejectModal(k.id)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-red-600 hover:bg-red-50 transition-colors cursor-pointer" title="Tolak"><HiOutlineXMark className="w-5 h-5" /></button>
+                          <button onClick={() => handleDeletePending(k.id)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:bg-gray-50 transition-colors cursor-pointer" title="Hapus"><HiOutlineTrash className="w-4 h-4" /></button>
+                        </td>
+                      </tr>
+                    ))}
+                    {filteredPending.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="px-6 py-8 text-center text-gray-400">
+                          {pendingSearchQuery ? "Tidak ada pengajuan yang cocok dengan pencarian." : "Tidak ada pengajuan yang menunggu persetujuan."}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              <TablePagination
+                currentPage={pendingPage}
+                totalPages={totalPendingPages}
+                totalEntries={totalPendingEntries}
+                pageSize={pendingPageSize}
+                onPageChange={setPendingPage}
+                onPageSizeChange={size => { setPendingPageSize(size); setPendingPage(1); }}
+              />
+            </div>
+          </div>
+
+          <div className="mt-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
+              <h2 className="text-lg font-bold text-gray-700">Riwayat Review</h2>
+              <div className="relative max-w-xs w-full">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                  <HiOutlineMagnifyingGlass className="w-4 h-4" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Cari riwayat..."
+                  value={reviewedSearchQuery}
+                  onChange={e => { setReviewedSearchQuery(e.target.value); setReviewedPage(1); }}
+                  className="w-full pl-9 pr-8 py-1.5 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-gray-900"
+                />
+                {reviewedSearchQuery && (
+                  <button onClick={() => { setReviewedSearchQuery(""); setReviewedPage(1); }} className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-gray-400 hover:text-gray-600">
+                    <HiOutlineXMark className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm text-gray-600">
+                  <thead className="bg-gray-50 text-gray-700 font-semibold border-b border-gray-100">
+                    <tr><th className="px-6 py-4">Dosen</th><th className="px-6 py-4">Judul</th><th className="px-6 py-4">Jenis</th><th className="px-6 py-4">Status</th><th className="px-6 py-4 text-right">Aksi</th></tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {paginatedReviewed.map(k => {
+                      const cfg = statusConfig[k.status];
+                      const Icon = cfg.icon;
+                      return (
+                        <tr key={k.id} className="hover:bg-gray-50/50 transition-colors">
                           <td className="px-6 py-3 font-medium text-gray-900">{k.dosen?.nama || "—"}</td>
                           <td className="px-6 py-3 text-gray-900 max-w-xs truncate">{k.judul}</td>
                           <td className="px-6 py-3"><span className="px-2 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-600">{jenisLabels[k.jenis] || k.jenis}</span></td>
-                          <td className="px-6 py-3">{k.tahun}</td>
-                          <td className="px-6 py-3 text-xs text-gray-400">{new Date(k.created_at).toLocaleDateString("id-ID")}</td>
-                          <td className="px-6 py-3 text-right space-x-1">
-                            <button onClick={() => { setViewingKarya(k); setDetailModalOpen(true); }} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-primary-600 hover:bg-primary-50 transition-colors" title="Lihat Detail"><HiOutlineEye className="w-5 h-5" /></button>
-                            <button onClick={() => handleApprove(k.id)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-green-600 hover:bg-green-50 transition-colors" title="Setujui"><HiOutlineCheck className="w-5 h-5" /></button>
-                            <button onClick={() => openRejectModal(k.id)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-red-600 hover:bg-red-50 transition-colors" title="Tolak"><HiOutlineXMark className="w-5 h-5" /></button>
-                            <button onClick={() => handleDeletePending(k.id)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:bg-gray-50 transition-colors" title="Hapus"><HiOutlineTrash className="w-4 h-4" /></button>
-                          </td>
+                          <td className="px-6 py-3"><span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium ${cfg.cls}`}><Icon className="w-3.5 h-3.5" />{cfg.label}</span></td>
+                          <td className="px-6 py-3 text-right"><button onClick={() => handleDeletePending(k.id)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:bg-gray-50 transition-colors cursor-pointer" title="Hapus"><HiOutlineTrash className="w-4 h-4" /></button></td>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      );
+                    })}
+                    {filteredReviewed.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-8 text-center text-gray-400">
+                          {reviewedSearchQuery ? "Tidak ada riwayat review yang cocok dengan pencarian." : "Belum ada riwayat review."}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
+              <TablePagination
+                currentPage={reviewedPage}
+                totalPages={totalReviewedPages}
+                totalEntries={totalReviewedEntries}
+                pageSize={reviewedSearchPageSize}
+                onPageChange={setReviewedPage}
+                onPageSizeChange={size => { setReviewedPageSize(size); setReviewedPage(1); }}
+              />
             </div>
-          )}
-
-          {pendingOnly.length === 0 && (
-            <div className="text-center py-12 text-gray-400 bg-gray-50 rounded-2xl border border-gray-100">Tidak ada pengajuan yang menunggu persetujuan.</div>
-          )}
-
-          {reviewedList.length > 0 && (
-            <div className="mt-8">
-              <h2 className="text-lg font-bold text-gray-700 mb-3">Riwayat Review</h2>
-              <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm text-gray-600">
-                    <thead className="bg-gray-50 text-gray-700 font-semibold border-b border-gray-100">
-                      <tr><th className="px-6 py-4">Dosen</th><th className="px-6 py-4">Judul</th><th className="px-6 py-4">Jenis</th><th className="px-6 py-4">Status</th><th className="px-6 py-4 text-right">Aksi</th></tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                      {reviewedList.map(k => {
-                        const cfg = statusConfig[k.status];
-                        const Icon = cfg.icon;
-                        return (
-                          <tr key={k.id} className="hover:bg-gray-50/50 transition-colors">
-                            <td className="px-6 py-3 font-medium text-gray-900">{k.dosen?.nama || "—"}</td>
-                            <td className="px-6 py-3 text-gray-900 max-w-xs truncate">{k.judul}</td>
-                            <td className="px-6 py-3"><span className="px-2 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-600">{jenisLabels[k.jenis] || k.jenis}</span></td>
-                            <td className="px-6 py-3"><span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium ${cfg.cls}`}><Icon className="w-3.5 h-3.5" />{cfg.label}</span></td>
-                            <td className="px-6 py-3 text-right"><button onClick={() => handleDeletePending(k.id)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:bg-gray-50 transition-colors" title="Hapus"><HiOutlineTrash className="w-4 h-4" /></button></td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
+          </div>
         </>
       )}
 
       {/* ========== ALL KARYA TAB (with full CRUD) ========== */}
       {activeSection === "all" && (
         <>
-          <div className="flex justify-end mb-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+            <div className="relative w-full sm:w-80">
+              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400">
+                <HiOutlineMagnifyingGlass className="w-5 h-5" />
+              </span>
+              <input
+                type="text"
+                placeholder="Cari karya (judul, dosen, jenis)..."
+                value={allSearchQuery}
+                onChange={(e) => {
+                  setAllSearchQuery(e.target.value);
+                  setAllPage(1);
+                }}
+                className="w-full pl-10 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+              {allSearchQuery && (
+                <button
+                  onClick={() => {
+                    setAllSearchQuery("");
+                    setAllPage(1);
+                  }}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                >
+                  <HiOutlineXMark className="w-4 h-4" />
+                </button>
+              )}
+            </div>
             <button onClick={handleOpenAddKarya}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm">
+              className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm cursor-pointer whitespace-nowrap">
               <HiOutlinePlus className="w-5 h-5" /> Tambah Karya
             </button>
           </div>
@@ -416,22 +613,36 @@ export default function AdminKaryaPage() {
                   <tr><th className="px-6 py-4">Dosen</th><th className="px-6 py-4">Judul</th><th className="px-6 py-4">Jenis</th><th className="px-6 py-4">Tahun</th><th className="px-6 py-4 text-right">Aksi</th></tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {allKarya.map(k => (
+                  {paginatedAllKarya.map(k => (
                     <tr key={k.id} className="hover:bg-gray-50/50 transition-colors">
                       <td className="px-6 py-3 font-medium text-gray-900">{dosenOptions.find(d => d.id === k.dosen_id)?.nama || k.dosen_id}</td>
                       <td className="px-6 py-3 text-gray-900 max-w-xs truncate">{k.judul}</td>
                       <td className="px-6 py-3"><span className="px-2 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-600">{jenisLabels[k.jenis] || k.jenis}</span></td>
                       <td className="px-6 py-3">{k.tahun}</td>
                       <td className="px-6 py-3 text-right space-x-1">
-                        <button onClick={() => handleOpenEditKarya(k)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-primary-600 hover:bg-primary-50 transition-colors" title="Edit"><HiOutlinePencilSquare className="w-4 h-4" /></button>
-                        <button onClick={() => handleDeleteKarya(k.id)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-red-600 hover:bg-red-50 transition-colors" title="Hapus"><HiOutlineTrash className="w-4 h-4" /></button>
+                        <button onClick={() => handleOpenEditKarya(k)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-primary-600 hover:bg-primary-50 transition-colors cursor-pointer" title="Edit"><HiOutlinePencilSquare className="w-4 h-4" /></button>
+                        <button onClick={() => handleDeleteKarya(k.id)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-red-600 hover:bg-red-50 transition-colors cursor-pointer" title="Hapus"><HiOutlineTrash className="w-4 h-4" /></button>
                       </td>
                     </tr>
                   ))}
-                  {allKarya.length === 0 && <tr><td colSpan={5} className="px-6 py-8 text-center text-gray-400">Belum ada data karya.</td></tr>}
+                  {filteredAllKarya.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-8 text-center text-gray-400">
+                        {allSearchQuery ? "Tidak ada karya yang cocok dengan pencarian." : "Belum ada data karya."}
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
+            <TablePagination
+              currentPage={allPage}
+              totalPages={totalAllKaryaPages}
+              totalEntries={totalAllKaryaEntries}
+              pageSize={allPageSize}
+              onPageChange={setAllPage}
+              onPageSizeChange={size => { setAllPageSize(size); setAllPage(1); }}
+            />
           </div>
         </>
       )}
@@ -469,10 +680,19 @@ export default function AdminKaryaPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
-              <select required value={karyaForm.jenis || "publikasi"} onChange={e => setKaryaForm({ ...karyaForm, jenis: e.target.value })} className={inputCls}>
-                <option value="publikasi">Publikasi</option><option value="penelitian">Penelitian</option><option value="pengabdian">Pengabdian</option>
-                <option value="bukuAjar">Buku Ajar</option><option value="hki">HKI</option><option value="sertifikasi">Sertifikasi</option>
-              </select>
+              <ComboBox
+                options={[
+                  { id: "publikasi", nama: "Publikasi" },
+                  { id: "penelitian", nama: "Penelitian" },
+                  { id: "pengabdian", nama: "Pengabdian" },
+                  { id: "bukuAjar", nama: "Buku Ajar" },
+                  { id: "hki", nama: "HKI" },
+                  { id: "sertifikasi", nama: "Sertifikasi" }
+                ]}
+                value={String(karyaForm.jenis || "publikasi")}
+                onChange={val => setKaryaForm({ ...karyaForm, jenis: val })}
+                placeholder="Pilih Kategori..."
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Tahun</label>

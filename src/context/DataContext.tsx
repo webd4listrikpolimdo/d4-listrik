@@ -1,20 +1,23 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useRef } from "react";
-import { Dosen } from "@/data/dosen";
-import { GaleriItem } from "@/data/galeri";
+import { Dosen } from "@/types/dosen";
+import { GaleriItem } from "@/types/galeri";
+import { Pegawai } from "@/types/pegawai";
 import { cachedFetch, invalidateCache } from "@/lib/fetchCache";
 
 interface DataContextType {
   dosenList: Dosen[];
   galeriList: GaleriItem[];
+  pegawaiList: Pegawai[];
   isLoading: boolean;
   isDosenLoaded: boolean;
   isGaleriLoaded: boolean;
+  isPegawaiLoaded: boolean;
 
   // Dosen Actions
   addDosen: (dosen: Dosen, password?: string) => Promise<void>;
-  updateDosen: (id: string, updatedDosen: Dosen) => Promise<void>;
+  updateDosen: (id: string, updatedDosen: Dosen, password?: string) => Promise<void>;
   deleteDosen: (id: string) => Promise<void>;
 
   // Galeri Actions
@@ -22,13 +25,20 @@ interface DataContextType {
   updateGaleri: (id: string, updatedItem: GaleriItem) => Promise<void>;
   deleteGaleri: (id: string) => Promise<void>;
 
+  // Pegawai Actions
+  addPegawai: (pegawai: Omit<Pegawai, "id">, password?: string) => Promise<void>;
+  updatePegawai: (id: string, updatedPegawai: Partial<Pegawai>, password?: string) => Promise<void>;
+  deletePegawai: (id: string) => Promise<void>;
+
   // Lazy loaders — only fetch when first consumer needs the data
   ensureDosenLoaded: () => void;
   ensureGaleriLoaded: () => void;
+  ensurePegawaiLoaded: () => void;
 
   // Force refresh
   refreshDosen: () => Promise<void>;
   refreshGaleri: () => Promise<void>;
+  refreshPegawai: () => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -71,6 +81,7 @@ function mapKarya(k: any) {
     jenis: k.jenis,
     judul: k.judul,
     tahun: k.tahun,
+    dosen_id: k.dosen_id,
     deskripsi: k.deskripsi || undefined,
     metadata: k.metadata || undefined,
     ...(k.metadata || {}),
@@ -89,18 +100,22 @@ function transformGaleriFromApi(raw: any): GaleriItem {
     kategori: raw.kategori,
     foto: raw.foto_urls || [],
     warna: "from-blue-500 to-indigo-600", // Default gradient fallback
+    updated_at: raw.updated_at || undefined,
   };
 }
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
   const [dosenList, setDosenList] = useState<Dosen[]>([]);
   const [galeriList, setGaleriList] = useState<GaleriItem[]>([]);
+  const [pegawaiList, setPegawaiList] = useState<Pegawai[]>([]);
   const [isDosenLoaded, setIsDosenLoaded] = useState(false);
   const [isGaleriLoaded, setIsGaleriLoaded] = useState(false);
+  const [isPegawaiLoaded, setIsPegawaiLoaded] = useState(false);
 
   // Refs to prevent duplicate concurrent fetches
   const dosenFetchRef = useRef<Promise<void> | null>(null);
   const galeriFetchRef = useRef<Promise<void> | null>(null);
+  const pegawaiFetchRef = useRef<Promise<void> | null>(null);
 
   const refreshDosen = useCallback(async () => {
     try {
@@ -180,6 +195,16 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const refreshPegawai = useCallback(async () => {
+    try {
+      invalidateCache("/api/pegawai");
+      const data = await cachedFetch<any[]>("/api/pegawai");
+      setPegawaiList(data || []);
+    } catch (e) {
+      console.error("Failed to fetch pegawai", e);
+    }
+  }, []);
+
   // Lazy loaders: only fetch when a consumer first needs the data
   const ensureDosenLoaded = useCallback(() => {
     if (isDosenLoaded || dosenFetchRef.current) return;
@@ -199,9 +224,19 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     galeriFetchRef.current = promise;
   }, [isGaleriLoaded, refreshGaleri]);
 
+  const ensurePegawaiLoaded = useCallback(() => {
+    if (isPegawaiLoaded || pegawaiFetchRef.current) return;
+    const promise = refreshPegawai().then(() => {
+      setIsPegawaiLoaded(true);
+      pegawaiFetchRef.current = null;
+    });
+    pegawaiFetchRef.current = promise;
+  }, [isPegawaiLoaded, refreshPegawai]);
+
   // isLoading is true only when data has been requested but hasn't arrived yet
   const isLoading = (!isDosenLoaded && dosenFetchRef.current !== null) ||
-                    (!isGaleriLoaded && galeriFetchRef.current !== null);
+                    (!isGaleriLoaded && galeriFetchRef.current !== null) ||
+                    (!isPegawaiLoaded && pegawaiFetchRef.current !== null);
 
   // --- Dosen Actions ---
   const addDosen = async (dosen: Dosen, password?: string) => {
@@ -229,7 +264,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     await refreshDosen();
   };
 
-  const updateDosen = async (id: string, updatedDosen: Dosen) => {
+  const updateDosen = async (id: string, updatedDosen: Dosen, password?: string) => {
     const res = await fetch(`/api/dosen/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -243,6 +278,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         bidang_keahlian: updatedDosen.bidangKeahlian || [],
         program_studi: updatedDosen.programStudi || "D4 Teknik Listrik",
         pendidikan_terakhir: updatedDosen.pendidikanTerakhir || null,
+        password: password || null,
       }),
     });
     if (!res.ok) {
@@ -309,14 +345,67 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     await refreshGaleri();
   };
 
+  // --- Pegawai Actions ---
+  const addPegawai = async (pegawai: Omit<Pegawai, "id">, password?: string) => {
+    const res = await fetch("/api/pegawai", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nama: pegawai.nama,
+        nip: pegawai.nip,
+        foto_url: pegawai.foto_url || null,
+        email: pegawai.email || null,
+        password: password || null,
+        telepon: pegawai.telepon || null,
+        pendidikan_terakhir: pegawai.pendidikan_terakhir || null,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || "Failed to add pegawai");
+    }
+    await refreshPegawai();
+  };
+
+  const updatePegawai = async (id: string, updatedPegawai: Partial<Pegawai>, password?: string) => {
+    const res = await fetch(`/api/pegawai/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nama: updatedPegawai.nama,
+        nip: updatedPegawai.nip,
+        foto_url: updatedPegawai.foto_url || null,
+        email: updatedPegawai.email || null,
+        telepon: updatedPegawai.telepon || null,
+        pendidikan_terakhir: updatedPegawai.pendidikan_terakhir || null,
+        password: password || null,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || "Failed to update pegawai");
+    }
+    await refreshPegawai();
+  };
+
+  const deletePegawai = async (id: string) => {
+    const res = await fetch(`/api/pegawai/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || "Failed to delete pegawai");
+    }
+    await refreshPegawai();
+  };
+
   return (
     <DataContext.Provider value={{
-      dosenList, galeriList, isLoading,
-      isDosenLoaded, isGaleriLoaded,
+      dosenList, galeriList, pegawaiList, isLoading,
+      isDosenLoaded, isGaleriLoaded, isPegawaiLoaded,
       addDosen, updateDosen, deleteDosen,
       addGaleri, updateGaleri, deleteGaleri,
-      ensureDosenLoaded, ensureGaleriLoaded,
-      refreshDosen, refreshGaleri,
+      addPegawai, updatePegawai, deletePegawai,
+      ensureDosenLoaded, ensureGaleriLoaded, ensurePegawaiLoaded,
+      refreshDosen, refreshGaleri, refreshPegawai,
     }}>
       {children}
     </DataContext.Provider>

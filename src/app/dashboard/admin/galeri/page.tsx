@@ -1,12 +1,16 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useData } from "@/context/DataContext";
-import { GaleriItem } from "@/data/galeri";
+import { GaleriItem } from "@/types/galeri";
 import Modal from "@/components/universal/Modal";
 import ConfirmDialog from "@/components/universal/ConfirmDialog";
-import { HiOutlinePlus, HiOutlinePencilSquare, HiOutlineTrash, HiOutlineArrowUpTray, HiOutlineXMark } from "react-icons/hi2";
+import { HiOutlinePlus, HiOutlinePencilSquare, HiOutlineTrash, HiOutlineArrowUpTray, HiOutlineXMark, HiOutlineMagnifyingGlass } from "react-icons/hi2";
 import Image from "next/image";
+import ComboBox from "@/components/universal/ComboBox";
+import { useNotification } from "@/context/NotificationContext";
+import TablePagination from "@/components/universal/TablePagination";
 
 const jenisLabels: Record<string, string> = {
   publikasi: "Publikasi",
@@ -16,8 +20,11 @@ const jenisLabels: Record<string, string> = {
 };
 
 export default function AdminGaleriPage() {
-  const { galeriList, addGaleri, updateGaleri, deleteGaleri, ensureGaleriLoaded } = useData();
+  const router = useRouter();
+  const { showSuccess, showError } = useNotification();
+  const { galeriList, addGaleri, updateGaleri, deleteGaleri, ensureGaleriLoaded, isGaleriLoaded } = useData();
   const [karyaList, setKaryaList] = useState<any[]>([]);
+  const [isKaryaLoading, setIsKaryaLoading] = useState(true);
 
   const fetchKarya = async () => {
     try {
@@ -28,6 +35,8 @@ export default function AdminGaleriPage() {
       }
     } catch (err) {
       console.error("Failed to fetch karya", err);
+    } finally {
+      setIsKaryaLoading(false);
     }
   };
 
@@ -44,6 +53,11 @@ export default function AdminGaleriPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  // Search & Pagination states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   const tridharmaJenis = ["publikasi", "penelitian", "pengabdian", "bukuAjar"];
   const virtualItems: GaleriItem[] = karyaList
     .filter((k) => tridharmaJenis.includes(k.jenis))
@@ -58,9 +72,27 @@ export default function AdminGaleriPage() {
       subLabel: jenisLabels[k.jenis] || k.jenis,
     }));
 
-  const mergedList = [...galeriList, ...virtualItems].sort(
-    (a, b) => new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime()
-  );
+  const mergedList = [...galeriList, ...virtualItems].sort((a, b) => {
+    const dateA = a.updated_at ? new Date(a.updated_at).getTime() : new Date(a.tanggal).getTime();
+    const dateB = b.updated_at ? new Date(b.updated_at).getTime() : new Date(b.tanggal).getTime();
+    return dateB - dateA;
+  });
+
+  const filteredList = mergedList.filter((item) => {
+    const q = searchQuery.toLowerCase();
+    const cat = item.kategori === "tridharma" ? "tridharma" : "fasilitas";
+    return (
+      item.judul.toLowerCase().includes(q) ||
+      (item.subLabel || "").toLowerCase().includes(q) ||
+      (item.deskripsi || "").toLowerCase().includes(q) ||
+      cat.includes(q) ||
+      item.tanggal.includes(q)
+    );
+  });
+
+  const totalEntries = filteredList.length;
+  const totalPages = Math.ceil(totalEntries / pageSize);
+  const paginatedList = filteredList.slice((page - 1) * pageSize, page * pageSize);
 
   const handleOpenAdd = () => {
     setEditingId(null);
@@ -87,16 +119,18 @@ export default function AdminGaleriPage() {
           const res = await fetch(`/api/karya/${karyaId}`, { method: "DELETE" });
           if (!res.ok) {
             const err = await res.json();
-            alert(err.error || "Gagal menghapus data Tridarma");
+            showError(err.error || "Gagal menghapus data Tridarma");
             return;
           }
           await fetchKarya();
         } else {
           await deleteGaleri(deletingId);
         }
+        showSuccess("Item berhasil dihapus!");
+        router.refresh();
       } catch (err: any) {
         console.error(err);
-        alert(err.message || "Gagal menghapus");
+        showError(err.message || "Gagal menghapus");
       }
     }
     setConfirmOpen(false);
@@ -122,7 +156,7 @@ export default function AdminGaleriPage() {
           });
           if (!res.ok) {
             const err = await res.json();
-            alert(err.error || "Gagal mengubah data Tridarma");
+            showError(err.error || "Gagal mengubah data Tridarma");
             return;
           }
           await fetchKarya();
@@ -133,9 +167,11 @@ export default function AdminGaleriPage() {
         await addGaleri(formData as GaleriItem);
       }
       setIsModalOpen(false);
+      showSuccess("Item berhasil disimpan!");
+      router.refresh();
     } catch (err: any) {
       console.error(err);
-      alert(err.message || "Terjadi kesalahan");
+      showError(err.message || "Terjadi kesalahan");
     }
   };
 
@@ -181,18 +217,37 @@ export default function AdminGaleriPage() {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Manajemen Galeri</h1>
           <p className="text-gray-500 text-sm">Kelola dokumentasi fasilitas dan tridharma.</p>
         </div>
-        <button
-          onClick={handleOpenAdd}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-xl text-sm font-medium hover:bg-sky-700 transition-colors shadow-sm"
-        >
-          <HiOutlinePlus className="w-5 h-5" />
-          Tambah Galeri
-        </button>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="relative max-w-xs w-full">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+              <HiOutlineMagnifyingGlass className="w-4 h-4" />
+            </div>
+            <input
+              type="text"
+              placeholder="Cari galeri..."
+              value={searchQuery}
+              onChange={e => { setSearchQuery(e.target.value); setPage(1); }}
+              className="w-full pl-9 pr-8 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-gray-900"
+            />
+            {searchQuery && (
+              <button onClick={() => { setSearchQuery(""); setPage(1); }} className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-gray-400 hover:text-gray-600">
+                <HiOutlineXMark className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+          <button
+            onClick={handleOpenAdd}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-xl text-sm font-medium hover:bg-sky-700 transition-colors shadow-sm cursor-pointer justify-center"
+          >
+            <HiOutlinePlus className="w-5 h-5" />
+            Tambah Galeri
+          </button>
+        </div>
       </div>
 
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
@@ -207,48 +262,66 @@ export default function AdminGaleriPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {mergedList.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="px-6 py-4 font-medium text-gray-900">
-                    <div>{item.judul}</div>
-                    {item.subLabel && (
-                      <span className="inline-flex items-center mt-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
-                        {item.subLabel}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 capitalize">
-                    {item.kategori === "tridharma" ? "Tridharma" : "Fasilitas"}
-                  </td>
-                  <td className="px-6 py-4">{item.tanggal}</td>
-                  <td className="px-6 py-4 text-right space-x-2">
-                    <button
-                      onClick={() => handleOpenEdit(item)}
-                      className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-sky-600 hover:bg-sky-50 transition-colors"
-                      title="Edit"
-                    >
-                      <HiOutlinePencilSquare className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
-                      title="Hapus"
-                    >
-                      <HiOutlineTrash className="w-5 h-5" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {mergedList.length === 0 && (
+              {!isGaleriLoaded || isKaryaLoading ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-8 text-center text-gray-400">
-                    Belum ada data galeri.
+                  <td colSpan={4} className="px-6 py-8 text-center text-gray-500 font-medium animate-pulse">
+                    Loading Galeri...
                   </td>
                 </tr>
+              ) : (
+                <>
+                  {paginatedList.map((item) => (
+                    <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="px-6 py-4 font-medium text-gray-900">
+                        <div>{item.judul}</div>
+                        {item.subLabel && (
+                          <span className="inline-flex items-center mt-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                            {item.subLabel}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 capitalize">
+                        {item.kategori === "tridharma" ? "Tridharma" : "Fasilitas"}
+                      </td>
+                      <td className="px-6 py-4">{item.tanggal}</td>
+                      <td className="px-6 py-4 text-right space-x-2">
+                        <button
+                          onClick={() => handleOpenEdit(item)}
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-sky-600 hover:bg-sky-50 transition-colors cursor-pointer"
+                          title="Edit"
+                        >
+                          <HiOutlinePencilSquare className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                          title="Hapus"
+                        >
+                          <HiOutlineTrash className="w-5 h-5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredList.length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-8 text-center text-gray-400">
+                        Tidak ada data galeri.
+                      </td>
+                    </tr>
+                  )}
+                </>
               )}
             </tbody>
           </table>
         </div>
+        <TablePagination
+          currentPage={page}
+          totalPages={totalPages}
+          totalEntries={totalEntries}
+          pageSize={pageSize}
+          onPageChange={setPage}
+          onPageSizeChange={size => { setPageSize(size); setPage(1); }}
+        />
       </div>
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingId ? "Edit Galeri" : "Tambah Galeri Baru"}>
@@ -276,20 +349,16 @@ export default function AdminGaleriPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
-              <select
-                required
-                disabled={!!editingId?.startsWith("karya-")}
+              <ComboBox
+                options={[
+                  { id: "fasilitas", nama: "Fasilitas" },
+                  { id: "tridharma", nama: formData.subLabel ? `Tridharma (${formData.subLabel})` : "Tridharma Perguruan Tinggi" }
+                ]}
                 value={formData.kategori || "fasilitas"}
-                onChange={(e) => setFormData({ ...formData, kategori: e.target.value as "fasilitas" | "tridharma" })}
-                className={`w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 ${
-                  editingId?.startsWith("karya-") ? "bg-gray-100 text-gray-500 cursor-not-allowed" : "bg-gray-50"
-                }`}
-              >
-                <option value="fasilitas">Fasilitas</option>
-                <option value="tridharma">
-                  {formData.subLabel ? `Tridharma (${formData.subLabel})` : "Tridharma Perguruan Tinggi"}
-                </option>
-              </select>
+                onChange={(val) => setFormData({ ...formData, kategori: val as "fasilitas" | "tridharma" })}
+                placeholder="Pilih Kategori..."
+                disabled={!!editingId?.startsWith("karya-")}
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Kegiatan</label>

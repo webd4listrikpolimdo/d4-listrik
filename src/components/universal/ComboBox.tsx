@@ -15,6 +15,7 @@ interface ComboBoxProps {
   placeholder?: string;
   className?: string;
   customOption?: ComboOption;
+  disabled?: boolean;
 }
 
 export default function ComboBox({
@@ -24,6 +25,7 @@ export default function ComboBox({
   placeholder = "Pilih...",
   className = "",
   customOption,
+  disabled = false,
 }: ComboBoxProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -146,8 +148,9 @@ export default function ComboBox({
   return (
     <div ref={containerRef} className={`relative w-full ${className}`}>
       <div
-        className="relative w-full cursor-text"
+        className={`relative w-full ${disabled ? "cursor-not-allowed opacity-60" : "cursor-text"}`}
         onClick={() => {
+          if (disabled) return;
           setIsOpen(true);
           inputRef.current?.focus();
         }}
@@ -155,18 +158,24 @@ export default function ComboBox({
         <input
           ref={inputRef}
           type="text"
-          className="w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 bg-white placeholder-gray-400 transition-all"
+          disabled={disabled}
+          className={`w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 placeholder-gray-400 transition-all ${
+            disabled ? "bg-gray-100 text-gray-500 cursor-not-allowed" : "bg-white"
+          }`}
           placeholder={selectedOption ? selectedOption.nama : placeholder}
           value={query}
           onChange={(e) => {
+            if (disabled) return;
             setQuery(e.target.value);
             if (!isOpen) setIsOpen(true);
           }}
-          onFocus={() => setIsOpen(true)}
+          onFocus={() => {
+            if (!disabled) setIsOpen(true);
+          }}
           onKeyDown={handleKeyDown}
         />
         <div className="absolute inset-y-0 right-0 flex items-center pr-2 gap-0.5">
-          {value && (
+          {value && !disabled && (
             <button
               type="button"
               onClick={handleClear}
@@ -178,8 +187,12 @@ export default function ComboBox({
           )}
           <button
             type="button"
-            className="p-1 rounded-md text-gray-400 hover:text-gray-600 transition-colors"
+            disabled={disabled}
+            className={`p-1 rounded-md text-gray-400 hover:text-gray-600 transition-colors ${
+              disabled ? "cursor-not-allowed" : ""
+            }`}
             onClick={(e) => {
+              if (disabled) return;
               e.stopPropagation();
               setIsOpen((prev) => !prev);
               if (!isOpen) inputRef.current?.focus();

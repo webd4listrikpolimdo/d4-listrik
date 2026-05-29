@@ -1,4 +1,4 @@
-import { Dosen, getTotalKarya } from "@/data/dosen";
+import { Dosen, getTotalKarya } from "@/types/dosen";
 import KaryaTabs from "./KaryaTabs";
 import Link from "next/link";
 import { HiBriefcase, HiTag, HiEnvelope, HiPhone, HiDocumentText, HiBookOpen } from "react-icons/hi2";
@@ -33,13 +33,13 @@ export default function DosenProfile({ dosen, index }: { dosen: Dosen; index: nu
     <div className="animate-fade-in-up">
       {/* Back button */}
       <Link
-        href="/dosen"
+        href="/staf"
         className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-primary-600 font-medium mb-8 transition-colors"
       >
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
         </svg>
-        Kembali ke Daftar Dosen
+        Kembali ke Daftar Staf
       </Link>
 
       {/* Profile Card */}

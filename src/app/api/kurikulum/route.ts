@@ -9,8 +9,8 @@ export async function GET() {
 
     const [kurikulumRes, mataKuliahRes, cplRes] = await Promise.all([
       supabase.from("kurikulum_aktif").select("*").eq("id", 1).single(),
-      supabase.from("mata_kuliah").select("*").order("semester").order("kode"),
-      supabase.from("cpl").select("*").order("kode"),
+      supabase.from("mata_kuliah").select("*").order("updated_at", { ascending: false }),
+      supabase.from("cpl").select("*").order("updated_at", { ascending: false }),
     ]);
 
     if (kurikulumRes.error) {
@@ -33,10 +33,10 @@ export async function GET() {
   }
 }
 
-// PUT /api/kurikulum — Admin only: Update kurikulum_aktif info
+// PUT /api/kurikulum — Admin & Pegawai: Update kurikulum_aktif info
 export async function PUT(request: NextRequest) {
   try {
-    const result = await requireRole(["admin"]);
+    const result = await requireRole(["admin", "pegawai"]);
     if (result instanceof NextResponse) return result;
 
     const body = await request.json();
@@ -50,6 +50,12 @@ export async function PUT(request: NextRequest) {
     if (berlaku_sejak !== undefined) updateData.berlaku_sejak = berlaku_sejak;
     if (file_url !== undefined) updateData.file_url = file_url;
 
+    const { data: currentKurikulum } = await supabase
+      .from("kurikulum_aktif")
+      .select("file_url")
+      .eq("id", 1)
+      .single();
+
     const { data, error } = await supabase
       .from("kurikulum_aktif")
       .update(updateData)
@@ -59,6 +65,16 @@ export async function PUT(request: NextRequest) {
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    if (currentKurikulum?.file_url && currentKurikulum.file_url !== data.file_url) {
+      const parts = currentKurikulum.file_url.split("/storage/v1/object/public/kurikulum/");
+      if (parts.length > 1) {
+        const fileName = parts[1];
+        const { createAdminClient } = await import("@/lib/supabase/admin");
+        const adminSupabase = createAdminClient();
+        await adminSupabase.storage.from("kurikulum").remove([fileName]);
+      }
     }
 
     return NextResponse.json(data);

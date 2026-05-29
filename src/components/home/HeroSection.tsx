@@ -1,12 +1,37 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { cachedFetch } from "@/lib/fetchCache";
+
+interface ProdiInfoData {
+  nama: string;
+  nama_alternatif: string | null;
+  nama_kampus: string;
+  hero_bg_url: string | null;
+}
 
 export default function HeroSection() {
+  const [prodiInfo, setProdiInfo] = useState<ProdiInfoData | null>(null);
+
+  useEffect(() => {
+    const fetchHeroConfig = async () => {
+      try {
+        const config = await cachedFetch<any>("/api/config?section=all");
+        if (config?.prodi_info) setProdiInfo(config.prodi_info);
+      } catch (e) {
+        console.error("Failed to load hero config", e);
+      }
+    };
+    fetchHeroConfig();
+  }, []);
+
   return (
-    <section className="relative min-h-[85vh] flex items-center bg-primary-950 overflow-hidden">
+    <section className="relative min-h-screen flex items-center bg-primary-950 overflow-hidden">
       {/* Background Image with Dark Overlay */}
       <div className="absolute inset-0 z-0">
         <img
-          src="/images/hero-bg.jpg"
+          src={prodiInfo?.hero_bg_url || "/images/hero-bg.jpg"}
           alt="Gedung Politeknik Negeri Manado"
           className="w-full h-full object-cover object-center opacity-40"
         />
@@ -31,24 +56,19 @@ export default function HeroSection() {
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20">
         <div className="max-w-3xl">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/10 text-primary-200 text-xs font-medium mb-6 animate-fade-in-up">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Terakreditasi Unggul
-          </div>
 
           {/* Heading */}
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight animate-fade-in-up delay-100">
             Program Studi
             <br />
             <span className="bg-gradient-to-r from-accent-400 to-accent-500 bg-clip-text text-transparent">
-              D4 Teknik Listrik
+              {prodiInfo?.nama || ""}
             </span>
           </h1>
 
           <p className="mt-6 text-lg sm:text-xl text-primary-200 leading-relaxed max-w-2xl animate-fade-in-up delay-200">
-            Mencetak tenaga ahli profesional di bidang teknik ketenagalistrikan yang kompeten,
-            inovatif, dan siap bersaing di era industri modern.
+            {prodiInfo?.nama_alternatif || ""}
+            {prodiInfo?.nama_kampus ? ` — ${prodiInfo.nama_kampus}` : ""}
           </p>
 
           {/* CTA Buttons */}
