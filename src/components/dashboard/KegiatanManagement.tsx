@@ -181,6 +181,7 @@ export default function KegiatanManagement() {
             ...prev,
             foto_urls: [...prev.foto_urls, data.url],
           }));
+          showSuccess(`Foto "${file.name}" berhasil diupload!`);
         } else {
           const data = await res.json();
           showError(data.error || "Gagal mengupload foto");
@@ -871,14 +872,14 @@ export default function KegiatanManagement() {
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="px-4 py-2 rounded-xl text-sm font-medium text-gray-650 bg-gray-100 hover:bg-gray-200 cursor-pointer"
+              className="px-4 py-2 rounded-xl text-sm font-medium text-gray-650 bg-gray-100 hover:bg-gray-200 cursor-pointer disabled:opacity-50"
               disabled={isSubmitting}
             >
               Batal
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 transition-colors flex items-center gap-1.5 cursor-pointer"
+              className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               disabled={isSubmitting}
             >
               {isSubmitting ? "Menyimpan..." : editingId ? "Simpan Perubahan" : isAdmin ? "Simpan Kegiatan" : "Ajukan Kegiatan"}
@@ -948,7 +949,7 @@ export default function KegiatanManagement() {
               <button
                 type="button"
                 onClick={() => setIsReviewOpen(false)}
-                className="px-4 py-2 rounded-xl text-sm font-medium text-gray-650 bg-gray-100 hover:bg-gray-200"
+                className="px-4 py-2 rounded-xl text-sm font-medium text-gray-650 bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
                 disabled={isSubmitting}
               >
                 Batal
@@ -956,7 +957,7 @@ export default function KegiatanManagement() {
               <button
                 type="button"
                 onClick={() => handleReviewAction("reject")}
-                className="px-4 py-2 rounded-xl text-sm font-medium text-red-650 bg-red-50 hover:bg-red-100 transition-colors"
+                className="px-4 py-2 rounded-xl text-sm font-medium text-red-650 bg-red-50 hover:bg-red-100 transition-colors disabled:opacity-50"
                 disabled={isSubmitting}
               >
                 Tolak Pengajuan
@@ -964,7 +965,7 @@ export default function KegiatanManagement() {
               <button
                 type="button"
                 onClick={() => handleReviewAction("approve")}
-                className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition-colors flex items-center gap-1 cursor-pointer"
+                className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
                 disabled={isSubmitting}
               >
                 <CheckIcon className="w-4 h-4" /> Setujui & Publikasikan

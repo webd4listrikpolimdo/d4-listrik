@@ -59,7 +59,7 @@ export default function GaleriPage() {
         const virtualFasilitas: GaleriItem[] = (fasList || []).map((f) => {
           const photos = Array.isArray(f.foto_urls) && f.foto_urls.length > 0
             ? f.foto_urls
-            : ["/images/hero-bg.jpg"]; // Neat default fallback image from public directory
+            : ["/images/default.svg"];
           
           return {
             id: `fasilitas-${f.id}`,

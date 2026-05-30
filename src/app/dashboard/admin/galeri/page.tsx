@@ -49,6 +49,7 @@ export default function AdminGaleriPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<GaleriItem>>({});
   const [isUploading, setIsUploading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -139,6 +140,8 @@ export default function AdminGaleriPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       if (editingId) {
         if (editingId.startsWith("karya-")) {
@@ -172,6 +175,8 @@ export default function AdminGaleriPage() {
     } catch (err: any) {
       console.error(err);
       showError(err.message || "Terjadi kesalahan");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -182,6 +187,7 @@ export default function AdminGaleriPage() {
     try {
       const fd = new FormData();
       fd.append("file", file);
+      let uploadSuccess = false;
       if (editingId) {
         if (editingId.startsWith("karya-")) {
           const karyaId = editingId.replace("karya-", "");
@@ -191,6 +197,7 @@ export default function AdminGaleriPage() {
           if (res.ok) {
             const data = await res.json();
             setFormData(prev => ({ ...prev, foto: [...(prev.foto || []), data.url] }));
+            uploadSuccess = true;
           }
         } else {
           fd.append("galeri_id", editingId);
@@ -198,6 +205,7 @@ export default function AdminGaleriPage() {
           if (res.ok) {
             const data = await res.json();
             setFormData(prev => ({ ...prev, foto: [...(prev.foto || []), data.url] }));
+            uploadSuccess = true;
           }
         }
       } else {
@@ -205,10 +213,21 @@ export default function AdminGaleriPage() {
         if (res.ok) {
           const data = await res.json();
           setFormData(prev => ({ ...prev, foto: [...(prev.foto || []), data.url] }));
+          uploadSuccess = true;
         }
       }
-    } catch (err) { console.error("Upload failed", err); }
-    finally { setIsUploading(false); if (imageInputRef.current) imageInputRef.current.value = ""; }
+      if (uploadSuccess) {
+        showSuccess(`Foto "${file.name}" berhasil diupload!`);
+      } else {
+        showError("Gagal mengupload foto.");
+      }
+    } catch (err) {
+      console.error("Upload failed", err);
+      showError("Gagal mengupload foto.");
+    } finally {
+      setIsUploading(false);
+      if (imageInputRef.current) imageInputRef.current.value = "";
+    }
   };
 
   const handleRemoveImage = (index: number) => {
@@ -403,15 +422,17 @@ export default function AdminGaleriPage() {
             <button
               type="button"
               onClick={() => setIsModalOpen(false)}
-              className="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors"
+              disabled={isSubmitting}
+              className="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50"
             >
               Batal
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 transition-colors"
+              disabled={isSubmitting}
+              className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 transition-colors disabled:opacity-50"
             >
-              Simpan Data
+              {isSubmitting ? "Menyimpan..." : "Simpan Data"}
             </button>
           </div>
         </form>

@@ -168,7 +168,7 @@ export default function GaleriDetailPage() {
           setOriginalFasilitas(f);
           const photos = Array.isArray(f.foto_urls) && f.foto_urls.length > 0
             ? f.foto_urls
-            : ["/images/hero-bg.jpg"];
+            : ["/images/default.svg"];
           setFasilitasItem({
             id: `fasilitas-${f.id}`,
             judul: f.nama,

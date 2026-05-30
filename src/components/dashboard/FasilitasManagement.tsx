@@ -113,7 +113,8 @@ export default function FasilitasManagement() {
         const file = files[i];
         const fd = new FormData();
         fd.append("file", file);
-        // Upload to general /api/upload/galeri without linking yet (will save urls array in DB on submit)
+        fd.append("folder", "fasilitas");
+        // Upload to /api/upload/galeri with fasilitas folder
         const res = await fetch("/api/upload/galeri", {
           method: "POST",
           body: fd,
@@ -125,10 +126,14 @@ export default function FasilitasManagement() {
             ...prev,
             foto_urls: [...prev.foto_urls, data.url],
           }));
+          showSuccess(`Foto "${file.name}" berhasil diupload!`);
+        } else {
+          showError(`Gagal mengupload "${file.name}".`);
         }
       }
     } catch (err) {
       console.error("Upload failed", err);
+      showError("Terjadi kesalahan saat mengupload foto.");
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -144,6 +149,7 @@ export default function FasilitasManagement() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setIsSubmitting(true);
 
     try {
@@ -234,7 +240,7 @@ export default function FasilitasManagement() {
               {/* Cover Photo */}
               <div className="relative aspect-video w-full bg-gray-100 overflow-hidden">
                 <img
-                  src={item.foto_urls?.[0] || "/images/hero-bg.jpg"}
+                  src={item.foto_urls?.[0] || "/images/default.svg"}
                   alt={item.nama}
                   className="w-full h-full object-cover"
                 />
@@ -410,14 +416,14 @@ export default function FasilitasManagement() {
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200"
+              className="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
               disabled={isSubmitting}
             >
               Batal
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 transition-colors flex items-center gap-1.5"
+              className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 transition-colors flex items-center gap-1.5 disabled:opacity-50"
               disabled={isSubmitting}
             >
               {isSubmitting ? "Menyimpan..." : "Simpan Fasilitas"}

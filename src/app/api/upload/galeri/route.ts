@@ -11,6 +11,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
     const galeriId = formData.get("galeri_id") as string | null;
+    const folder = formData.get("folder") as string | null;
 
     if (!file) {
       return NextResponse.json(
@@ -31,7 +32,8 @@ export async function POST(request: NextRequest) {
     const adminSupabase = createAdminClient();
     const ext = file.name.split(".").pop();
     const prefix = galeriId || "gallery";
-    const fileName = `${prefix}-${Date.now()}.${ext}`;
+    const baseName = `${prefix}-${Date.now()}.${ext}`;
+    const fileName = folder ? `${folder}/${baseName}` : baseName;
 
     // Convert File to Buffer for Node.js compatibility
     const arrayBuffer = await file.arrayBuffer();

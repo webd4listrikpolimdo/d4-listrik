@@ -28,6 +28,8 @@ export default function ConfigManagement() {
   const [activeTab, setActiveTab] = useState<"prodi" | "visimisi" | "sambutan" | "footer">("prodi");
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmittingKajur, setIsSubmittingKajur] = useState(false);
+  const [isSubmittingKaprodi, setIsSubmittingKaprodi] = useState(false);
 
   // DB Config states
   const [prodiInfo, setProdiInfo] = useState({ nama_prodi: "", nama_prodi_alt: "", kampus: "", deskripsi: "", hero_bg_url: "" });
@@ -196,6 +198,9 @@ export default function ConfigManagement() {
       if (res.ok) {
         const data = await res.json();
         setLogo({ logo_url: data.url });
+        showSuccess("Logo berhasil diupload!");
+      } else {
+        showError("Gagal mengupload logo.");
       }
     } catch (err) {
       console.error("Upload logo failed", err);
@@ -222,6 +227,7 @@ export default function ConfigManagement() {
       if (res.ok) {
         const data = await res.json();
         setProdiInfo((prev) => ({ ...prev, hero_bg_url: data.url }));
+        showSuccess("Foto latar hero berhasil diupload!");
       } else {
         showError("Gagal mengunggah foto latar.");
       }
@@ -237,7 +243,7 @@ export default function ConfigManagement() {
   // Save Sambutan Kajur
   const handleSaveSambutanKajur = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    setIsSubmittingKajur(true);
     try {
       const res = await fetch("/api/config", {
         method: "PUT",
@@ -255,14 +261,14 @@ export default function ConfigManagement() {
       console.error(err);
       showError("Gagal menyimpan Sambutan Ketua Jurusan.");
     } finally {
-      setIsSubmitting(false);
+      setIsSubmittingKajur(false);
     }
   };
 
   // Save Sambutan Kaprodi
   const handleSaveSambutanKaprodi = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    setIsSubmittingKaprodi(true);
     try {
       const res = await fetch("/api/config", {
         method: "PUT",
@@ -280,7 +286,7 @@ export default function ConfigManagement() {
       console.error(err);
       showError("Gagal menyimpan Sambutan Ketua Program Studi.");
     } finally {
-      setIsSubmitting(false);
+      setIsSubmittingKaprodi(false);
     }
   };
 
@@ -897,10 +903,10 @@ export default function ConfigManagement() {
             <div className="flex justify-end pt-4 border-t border-gray-50">
               <button
                 type="submit"
-                disabled={isSubmitting}
-                className="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-xs sm:text-sm font-semibold shadow-md cursor-pointer transition-colors"
+                disabled={isSubmittingKajur}
+                className="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-xs sm:text-sm font-semibold shadow-md cursor-pointer transition-colors disabled:opacity-50"
               >
-                {isSubmitting ? "Menyimpan..." : "Simpan Sambutan Kajur"}
+                {isSubmittingKajur ? "Menyimpan..." : "Simpan Sambutan Kajur"}
               </button>
             </div>
           </form>
@@ -933,10 +939,10 @@ export default function ConfigManagement() {
             <div className="flex justify-end pt-4 border-t border-gray-50">
               <button
                 type="submit"
-                disabled={isSubmitting}
-                className="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-xs sm:text-sm font-semibold shadow-md cursor-pointer transition-colors"
+                disabled={isSubmittingKaprodi}
+                className="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-xs sm:text-sm font-semibold shadow-md cursor-pointer transition-colors disabled:opacity-50"
               >
-                {isSubmitting ? "Menyimpan..." : "Simpan Sambutan Kaprodi"}
+                {isSubmittingKaprodi ? "Menyimpan..." : "Simpan Sambutan Kaprodi"}
               </button>
             </div>
           </form>
@@ -1016,7 +1022,7 @@ export default function ConfigManagement() {
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200"
+                className="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
                 disabled={isSubmitting}
               >
                 Batal
@@ -1024,7 +1030,7 @@ export default function ConfigManagement() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 transition-colors flex items-center gap-1.5"
+                className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 transition-colors flex items-center gap-1.5 disabled:opacity-50"
               >
                 {isSubmitting ? "Menyimpan..." : "Simpan"}
               </button>

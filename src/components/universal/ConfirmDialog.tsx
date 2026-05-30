@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { HiXMark, HiOutlineExclamationTriangle, HiOutlineQuestionMarkCircle } from "react-icons/hi2";
 
 interface ConfirmDialogProps {
   isOpen: boolean;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
   onCancel: () => void;
   title?: string;
   message: string;
@@ -25,15 +25,22 @@ export default function ConfirmDialog({
   cancelLabel = "Batal",
   variant = "default",
 }: ConfirmDialogProps) {
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // Reset processing state when dialog closes
+  useEffect(() => {
+    if (!isOpen) setIsProcessing(false);
+  }, [isOpen]);
+
   // Close on Escape key
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onCancel();
+      if (e.key === "Escape" && !isProcessing) onCancel();
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onCancel]);
+  }, [isOpen, onCancel, isProcessing]);
 
   // Prevent body scroll when open
   useEffect(() => {
@@ -51,12 +58,22 @@ export default function ConfirmDialog({
 
   const isDanger = variant === "danger";
 
+  const handleConfirmClick = async () => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+    try {
+      await onConfirm();
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in"
-        onClick={onCancel}
+        onClick={isProcessing ? undefined : onCancel}
       />
 
       {/* Dialog */}
@@ -78,7 +95,8 @@ export default function ConfirmDialog({
           <button
             type="button"
             onClick={onCancel}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            disabled={isProcessing}
+            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50"
             title="Tutup"
           >
             <HiXMark className="w-5 h-5" />
@@ -95,20 +113,22 @@ export default function ConfirmDialog({
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors"
+            disabled={isProcessing}
+            className="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50"
           >
             {cancelLabel}
           </button>
           <button
             type="button"
-            onClick={onConfirm}
-            className={`px-4 py-2 rounded-xl text-sm font-medium text-white transition-colors ${
+            onClick={handleConfirmClick}
+            disabled={isProcessing}
+            className={`px-4 py-2 rounded-xl text-sm font-medium text-white transition-colors disabled:opacity-50 ${
               isDanger
                 ? "bg-red-600 hover:bg-red-700"
                 : "bg-primary-600 hover:bg-primary-700"
             }`}
           >
-            {confirmLabel}
+            {isProcessing ? "Memproses..." : confirmLabel}
           </button>
         </div>
       </div>
