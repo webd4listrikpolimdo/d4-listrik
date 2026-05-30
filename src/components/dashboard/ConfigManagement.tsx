@@ -28,6 +28,9 @@ export default function ConfigManagement() {
   const [activeTab, setActiveTab] = useState<"prodi" | "visimisi" | "sambutan" | "footer">("prodi");
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmittingProdiInfo, setIsSubmittingProdiInfo] = useState(false);
+  const [isSubmittingLogo, setIsSubmittingLogo] = useState(false);
+  const [isSubmittingHeroBg, setIsSubmittingHeroBg] = useState(false);
   const [isSubmittingKajur, setIsSubmittingKajur] = useState(false);
   const [isSubmittingKaprodi, setIsSubmittingKaprodi] = useState(false);
 
@@ -140,10 +143,10 @@ export default function ConfigManagement() {
     fetchData();
   }, []);
 
-  // Save prodi info & logo
-  const handleSaveProdi = async (e: React.FormEvent) => {
+  // Save prodi info
+  const handleSaveProdiInfo = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    setIsSubmittingProdiInfo(true);
     try {
       const mappedProdiInfo = {
         nama: prodiInfo.nama_prodi,
@@ -152,32 +155,93 @@ export default function ConfigManagement() {
         deskripsi: prodiInfo.deskripsi,
         hero_bg_url: prodiInfo.hero_bg_url || null,
       };
-      const mappedLogo = {
-        file_url: logo.logo_url || "",
-        alt_text: "Logo",
-      };
 
-      const p1 = fetch("/api/config", {
+      const res = await fetch("/api/config", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ section: "prodi_info", data: mappedProdiInfo }),
       });
-      const p2 = fetch("/api/config", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ section: "logo", data: mappedLogo }),
-      });
 
-      await Promise.all([p1, p2]);
+      if (!res.ok) {
+        throw new Error("Gagal menyimpan informasi prodi");
+      }
+
       invalidateCache("/api/config");
       await fetchData();
-      showSuccess("Informasi Prodi, Logo, & Foto Latar berhasil disimpan!");
+      showSuccess("Informasi Umum Prodi berhasil disimpan!");
       router.refresh();
     } catch (err) {
       console.error(err);
       showError("Gagal menyimpan data.");
     } finally {
-      setIsSubmitting(false);
+      setIsSubmittingProdiInfo(false);
+    }
+  };
+
+  // Save Logo
+  const handleSaveLogo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmittingLogo(true);
+    try {
+      const mappedLogo = {
+        file_url: logo.logo_url || "",
+        alt_text: "Logo",
+      };
+
+      const res = await fetch("/api/config", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ section: "logo", data: mappedLogo }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Gagal menyimpan logo");
+      }
+
+      invalidateCache("/api/config");
+      await fetchData();
+      showSuccess("Logo Program Studi berhasil disimpan!");
+      router.refresh();
+    } catch (err) {
+      console.error(err);
+      showError("Gagal menyimpan data.");
+    } finally {
+      setIsSubmittingLogo(false);
+    }
+  };
+
+  // Save Hero Background
+  const handleSaveHeroBg = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmittingHeroBg(true);
+    try {
+      const mappedProdiInfo = {
+        nama: prodiInfo.nama_prodi,
+        nama_alternatif: prodiInfo.nama_prodi_alt,
+        nama_kampus: prodiInfo.kampus,
+        deskripsi: prodiInfo.deskripsi,
+        hero_bg_url: prodiInfo.hero_bg_url || null,
+      };
+
+      const res = await fetch("/api/config", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ section: "prodi_info", data: mappedProdiInfo }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Gagal menyimpan foto latar hero");
+      }
+
+      invalidateCache("/api/config");
+      await fetchData();
+      showSuccess("Foto Latar Hero berhasil disimpan!");
+      router.refresh();
+    } catch (err) {
+      console.error(err);
+      showError("Gagal menyimpan data.");
+    } finally {
+      setIsSubmittingHeroBg(false);
     }
   };
 
@@ -186,7 +250,7 @@ export default function ConfigManagement() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setIsSubmitting(true);
+    setIsSubmittingLogo(true);
     try {
       const fd = new FormData();
       fd.append("file", file);
@@ -198,14 +262,14 @@ export default function ConfigManagement() {
       if (res.ok) {
         const data = await res.json();
         setLogo({ logo_url: data.url });
-        showSuccess("Logo berhasil diupload!");
+        showSuccess("Logo berhasil diupload! Klik 'Simpan Perubahan' untuk menyimpan secara permanen.");
       } else {
         showError("Gagal mengupload logo.");
       }
     } catch (err) {
       console.error("Upload logo failed", err);
     } finally {
-      setIsSubmitting(false);
+      setIsSubmittingLogo(false);
       if (logoInputRef.current) logoInputRef.current.value = "";
     }
   };
@@ -215,7 +279,7 @@ export default function ConfigManagement() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setIsSubmitting(true);
+    setIsSubmittingHeroBg(true);
     try {
       const fd = new FormData();
       fd.append("file", file);
@@ -227,7 +291,7 @@ export default function ConfigManagement() {
       if (res.ok) {
         const data = await res.json();
         setProdiInfo((prev) => ({ ...prev, hero_bg_url: data.url }));
-        showSuccess("Foto latar hero berhasil diupload!");
+        showSuccess("Foto latar hero berhasil diupload! Klik 'Simpan Perubahan' untuk menyimpan secara permanen.");
       } else {
         showError("Gagal mengunggah foto latar.");
       }
@@ -235,7 +299,7 @@ export default function ConfigManagement() {
       console.error("Upload hero background failed", err);
       showError("Terjadi kesalahan saat mengunggah.");
     } finally {
-      setIsSubmitting(false);
+      setIsSubmittingHeroBg(false);
       if (heroBgInputRef.current) heroBgInputRef.current.value = "";
     }
   };
@@ -526,10 +590,10 @@ export default function ConfigManagement() {
 
       {/* PRODI TAB */}
       {activeTab === "prodi" && (
-        <form onSubmit={handleSaveProdi} className="space-y-6 max-w-5xl">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-            {/* COLUMN 1: Informasi Umum Prodi */}
-            <div className="bg-white border border-gray-100 rounded-2xl p-6 space-y-4 shadow-sm">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch max-w-5xl">
+          {/* COLUMN 1: Informasi Umum Prodi */}
+          <form onSubmit={handleSaveProdiInfo} className="bg-white border border-gray-100 rounded-2xl p-6 space-y-4 shadow-sm flex flex-col justify-between h-full">
+            <div className="space-y-4">
               <h3 className="font-bold text-primary-950 text-base border-b border-gray-50 pb-2">Informasi Umum Prodi</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -577,109 +641,129 @@ export default function ConfigManagement() {
               </div>
             </div>
 
-            {/* COLUMN 2: Logo and Hero Background Stack */}
-            <div className="space-y-6">
-              {/* Logo Program Studi */}
-              <div className="bg-white border border-gray-100 rounded-2xl p-6 space-y-4 shadow-sm">
-                <h3 className="font-bold text-primary-950 text-base border-b border-gray-50 pb-2">Logo Program Studi</h3>
-                <div className="flex items-center gap-6">
-                  <div className="w-20 h-20 rounded-xl border border-gray-100 flex items-center justify-center bg-gray-50 p-2 shrink-0">
-                    {logo.logo_url ? (
-                      <img src={logo.logo_url} alt="Logo Prodi" className="max-w-full max-h-full object-contain" />
-                    ) : (
-                      <GlobeIcon className="w-8 h-8 text-gray-400" />
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <input
-                      ref={logoInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleLogoUpload}
-                      className="hidden"
-                      id="logo-upload"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => logoInputRef.current?.click()}
-                      disabled={isSubmitting}
-                      className="inline-flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 rounded-xl text-xs font-semibold cursor-pointer"
-                    >
-                      <UploadIcon className="w-4 h-4" /> Ganti Logo
-                    </button>
-                    {logo.logo_url && (
-                      <button
-                        type="button"
-                        onClick={() => setLogo({ logo_url: "" })}
-                        disabled={isSubmitting}
-                        className="inline-flex items-center gap-2 px-4 py-2 border border-red-200 text-red-700 bg-white hover:bg-red-50 rounded-xl text-xs font-semibold cursor-pointer"
-                      >
-                        <TrashIcon className="w-4 h-4" /> Hapus Logo
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Foto Latar Hero (Home Background) */}
-              <div className="bg-white border border-gray-100 rounded-2xl p-6 space-y-4 shadow-sm">
-                <h3 className="font-bold text-primary-950 text-base border-b border-gray-50 pb-2">Foto Latar Hero (Home Background)</h3>
-                <div className="flex flex-col gap-4">
-                  <div className="w-full h-48 rounded-xl border border-gray-100 flex items-center justify-center bg-gray-50 overflow-hidden relative">
-                    {prodiInfo.hero_bg_url ? (
-                      <img src={prodiInfo.hero_bg_url} alt="Hero Background" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="text-center w-full h-full relative flex items-center justify-center">
-                        <img src="/images/hero-bg.jpg" alt="Default Hero Background" className="w-full h-full object-cover opacity-50 absolute inset-0" />
-                        <div className="relative z-10 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-lg text-xs font-medium text-gray-600 shadow-sm border border-gray-100">
-                          Menggunakan Gambar Default (public/images/hero-bg.jpg)
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <input
-                      ref={heroBgInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleHeroBgUpload}
-                      className="hidden"
-                      id="hero-bg-upload"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => heroBgInputRef.current?.click()}
-                      disabled={isSubmitting}
-                      className="inline-flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 rounded-xl text-xs font-semibold cursor-pointer"
-                    >
-                      <UploadIcon className="w-4 h-4" /> Unggah Foto Latar
-                    </button>
-                    {prodiInfo.hero_bg_url && (
-                      <button
-                        type="button"
-                        onClick={() => setProdiInfo({ ...prodiInfo, hero_bg_url: "" })}
-                        disabled={isSubmitting}
-                        className="inline-flex items-center gap-2 px-4 py-2 border border-red-200 text-red-700 bg-white hover:bg-red-50 rounded-xl text-xs font-semibold cursor-pointer"
-                      >
-                        <TrashIcon className="w-4 h-4" /> Hapus Foto Latar
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
+            <div className="flex justify-end pt-4 border-t border-gray-50 mt-4">
+              <button
+                type="submit"
+                disabled={isSubmittingProdiInfo}
+                className="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-semibold shadow-sm cursor-pointer disabled:opacity-50"
+              >
+                {isSubmittingProdiInfo ? "Menyimpan..." : "Simpan Perubahan"}
+              </button>
             </div>
-          </div>
+          </form>
 
-          <div className="flex justify-end pt-4 border-t border-gray-50">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-semibold shadow-md cursor-pointer disabled:opacity-50"
-            >
-              {isSubmitting ? "Menyimpan..." : "Simpan Perubahan"}
-            </button>
+          {/* COLUMN 2: Logo and Hero Background Stack */}
+          <div className="space-y-6">
+            {/* Logo Program Studi */}
+            <form onSubmit={handleSaveLogo} className="bg-white border border-gray-100 rounded-2xl p-6 space-y-4 shadow-sm">
+              <h3 className="font-bold text-primary-950 text-base border-b border-gray-50 pb-2">Logo Program Studi</h3>
+              <div className="flex items-center gap-6">
+                <div className="w-20 h-20 rounded-xl border border-gray-100 flex items-center justify-center bg-gray-50 p-2 shrink-0">
+                  {logo.logo_url ? (
+                    <img src={logo.logo_url} alt="Logo Prodi" className="max-w-full max-h-full object-contain" />
+                  ) : (
+                    <GlobeIcon className="w-8 h-8 text-gray-400" />
+                  )}
+                </div>
+                <div className="flex items-center gap-3">
+                  <input
+                    ref={logoInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                    className="hidden"
+                    id="logo-upload"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => logoInputRef.current?.click()}
+                    disabled={isSubmittingLogo}
+                    className="inline-flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 rounded-xl text-xs font-semibold cursor-pointer disabled:opacity-50"
+                  >
+                    <UploadIcon className="w-4 h-4" /> Ganti Logo
+                  </button>
+                  {logo.logo_url && (
+                    <button
+                      type="button"
+                      onClick={() => setLogo({ logo_url: "" })}
+                      disabled={isSubmittingLogo}
+                      className="inline-flex items-center gap-2 px-4 py-2 border border-red-200 text-red-700 bg-white hover:bg-red-50 rounded-xl text-xs font-semibold cursor-pointer disabled:opacity-50"
+                    >
+                      <TrashIcon className="w-4 h-4" /> Hapus Logo
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-4 border-t border-gray-50 mt-2">
+                <button
+                  type="submit"
+                  disabled={isSubmittingLogo}
+                  className="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-semibold shadow-sm cursor-pointer disabled:opacity-50"
+                >
+                  {isSubmittingLogo ? "Menyimpan..." : "Simpan Perubahan"}
+                </button>
+              </div>
+            </form>
+
+            {/* Foto Latar Hero (Home Background) */}
+            <form onSubmit={handleSaveHeroBg} className="bg-white border border-gray-100 rounded-2xl p-6 space-y-4 shadow-sm">
+              <h3 className="font-bold text-primary-950 text-base border-b border-gray-50 pb-2">Foto Latar Hero (Home Background)</h3>
+              <div className="flex flex-col gap-4">
+                <div className="w-full h-48 rounded-xl border border-gray-100 flex items-center justify-center bg-gray-50 overflow-hidden relative">
+                  {prodiInfo.hero_bg_url ? (
+                    <img src={prodiInfo.hero_bg_url} alt="Hero Background" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="text-center w-full h-full relative flex items-center justify-center">
+                      <img src="/images/hero-bg.jpg" alt="Default Hero Background" className="w-full h-full object-cover opacity-50 absolute inset-0" />
+                      <div className="relative z-10 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-lg text-xs font-medium text-gray-600 shadow-sm border border-gray-100">
+                        Menggunakan Gambar Default (public/images/hero-bg.jpg)
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-3">
+                  <input
+                    ref={heroBgInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleHeroBgUpload}
+                    className="hidden"
+                    id="hero-bg-upload"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => heroBgInputRef.current?.click()}
+                    disabled={isSubmittingHeroBg}
+                    className="inline-flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 rounded-xl text-xs font-semibold cursor-pointer disabled:opacity-50"
+                  >
+                    <UploadIcon className="w-4 h-4" /> Unggah Foto Latar
+                  </button>
+                  {prodiInfo.hero_bg_url && (
+                    <button
+                      type="button"
+                      onClick={() => setProdiInfo({ ...prodiInfo, hero_bg_url: "" })}
+                      disabled={isSubmittingHeroBg}
+                      className="inline-flex items-center gap-2 px-4 py-2 border border-red-200 text-red-700 bg-white hover:bg-red-50 rounded-xl text-xs font-semibold cursor-pointer disabled:opacity-50"
+                    >
+                      <TrashIcon className="w-4 h-4" /> Hapus Foto Latar
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-4 border-t border-gray-50 mt-2">
+                <button
+                  type="submit"
+                  disabled={isSubmittingHeroBg}
+                  className="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-semibold shadow-sm cursor-pointer disabled:opacity-50"
+                >
+                  {isSubmittingHeroBg ? "Menyimpan..." : "Simpan Perubahan"}
+                </button>
+              </div>
+            </form>
           </div>
-        </form>
+        </div>
       )}
 
 
