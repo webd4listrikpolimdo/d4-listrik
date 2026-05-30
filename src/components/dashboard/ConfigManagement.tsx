@@ -689,183 +689,185 @@ export default function ConfigManagement() {
               <p className="text-gray-500 text-xs mt-1">Kelola poin visi, misi, dan tujuan program studi yang tampil pada halaman profil.</p>
             </div>
 
-            {/* TABEL VISI */}
-            <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm space-y-4">
-              <div className="flex justify-between items-center border-b border-gray-50 pb-3">
-                <div>
-                  <h4 className="font-bold text-primary-950 text-base">Visi Program Studi</h4>
-                  <p className="text-gray-500 text-xs mt-0.5">Visi utama program studi.</p>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+              {/* TABEL VISI */}
+              <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm space-y-4">
+                <div className="flex justify-between items-center border-b border-gray-50 pb-3">
+                  <div>
+                    <h4 className="font-bold text-primary-950 text-base">Visi Program Studi</h4>
+                    <p className="text-gray-500 text-xs mt-0.5">Visi utama program studi.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenVisiMisiAddType("visi")}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-xs font-semibold cursor-pointer shadow-sm"
+                  >
+                    <PlusIcon className="w-3.5 h-3.5" /> Tambah Visi
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleOpenVisiMisiAddType("visi")}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-xs font-semibold cursor-pointer shadow-sm"
-                >
-                  <PlusIcon className="w-3.5 h-3.5" /> Tambah Visi
-                </button>
-              </div>
 
-              <div className="overflow-hidden border border-gray-100 rounded-xl">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-primary-50/30">
-                      <th className="text-left px-4 py-2.5 font-bold text-primary-900 w-16">No</th>
-                      <th className="text-left px-4 py-2.5 font-bold text-primary-900">Konten / Uraian</th>
-                      <th className="text-right px-4 py-2.5 font-bold text-primary-900 w-24">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {visiItems.map((item, idx) => (
-                      <tr key={item.id} className="border-t border-gray-50 hover:bg-gray-50/20">
-                        <td className="px-4 py-3 text-gray-500 font-medium">{idx + 1}</td>
-                        <td className="px-4 py-3 text-gray-700 leading-relaxed text-xs sm:text-sm">{item.konten}</td>
-                        <td className="px-4 py-3 text-right space-x-1">
-                          <button
-                            type="button"
-                            onClick={() => handleOpenVisiMisiEdit(item)}
-                            className="inline-flex items-center justify-center p-1.5 rounded-lg text-primary-600 hover:bg-primary-50 cursor-pointer"
-                          >
-                            <EditIcon className="w-4 h-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleOpenDelete(item.id, "visi_misi_tujuan")}
-                            className="inline-flex items-center justify-center p-1.5 rounded-lg text-red-600 hover:bg-red-50 cursor-pointer"
-                          >
-                            <TrashIcon className="w-4 h-4" />
-                          </button>
-                        </td>
+                <div className="overflow-hidden border border-gray-100 rounded-xl">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-primary-50/30">
+                        <th className="text-left px-4 py-2.5 font-bold text-primary-900 w-16">No</th>
+                        <th className="text-left px-4 py-2.5 font-bold text-primary-900">Konten / Uraian</th>
+                        <th className="text-right px-4 py-2.5 font-bold text-primary-900 w-24">Aksi</th>
                       </tr>
-                    ))}
-                    {visiItems.length === 0 && (
-                      <tr>
-                        <td colSpan={3} className="px-4 py-6 text-center text-gray-400 text-xs">
-                          Belum ada data visi.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* TABEL MISI */}
-            <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm space-y-4">
-              <div className="flex justify-between items-center border-b border-gray-50 pb-3">
-                <div>
-                  <h4 className="font-bold text-primary-950 text-base">Misi Program Studi</h4>
-                  <p className="text-gray-500 text-xs mt-0.5">Daftar misi program studi.</p>
+                    </thead>
+                    <tbody>
+                      {visiItems.map((item, idx) => (
+                        <tr key={item.id} className="border-t border-gray-50 hover:bg-gray-50/20">
+                          <td className="px-4 py-3 text-gray-500 font-medium">{idx + 1}</td>
+                          <td className="px-4 py-3 text-gray-700 leading-relaxed text-xs sm:text-sm">{item.konten}</td>
+                          <td className="px-4 py-3 text-right space-x-1">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenVisiMisiEdit(item)}
+                              className="inline-flex items-center justify-center p-1.5 rounded-lg text-primary-600 hover:bg-primary-50 cursor-pointer"
+                            >
+                              <EditIcon className="w-4 h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenDelete(item.id, "visi_misi_tujuan")}
+                              className="inline-flex items-center justify-center p-1.5 rounded-lg text-red-600 hover:bg-red-50 cursor-pointer"
+                            >
+                              <TrashIcon className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {visiItems.length === 0 && (
+                        <tr>
+                          <td colSpan={3} className="px-4 py-6 text-center text-gray-400 text-xs">
+                            Belum ada data visi.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleOpenVisiMisiAddType("misi")}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-xs font-semibold cursor-pointer shadow-sm"
-                >
-                  <PlusIcon className="w-3.5 h-3.5" /> Tambah Misi
-                </button>
               </div>
 
-              <div className="overflow-hidden border border-gray-100 rounded-xl">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-primary-50/30">
-                      <th className="text-left px-4 py-2.5 font-bold text-primary-900 w-16">No</th>
-                      <th className="text-left px-4 py-2.5 font-bold text-primary-900">Konten / Uraian</th>
-                      <th className="text-right px-4 py-2.5 font-bold text-primary-900 w-24">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {misiItems.map((item, idx) => (
-                      <tr key={item.id} className="border-t border-gray-50 hover:bg-gray-50/20">
-                        <td className="px-4 py-3 text-gray-500 font-medium">{idx + 1}</td>
-                        <td className="px-4 py-3 text-gray-700 leading-relaxed text-xs sm:text-sm">{item.konten}</td>
-                        <td className="px-4 py-3 text-right space-x-1">
-                          <button
-                            type="button"
-                            onClick={() => handleOpenVisiMisiEdit(item)}
-                            className="inline-flex items-center justify-center p-1.5 rounded-lg text-primary-600 hover:bg-primary-50 cursor-pointer"
-                          >
-                            <EditIcon className="w-4 h-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleOpenDelete(item.id, "visi_misi_tujuan")}
-                            className="inline-flex items-center justify-center p-1.5 rounded-lg text-red-600 hover:bg-red-50 cursor-pointer"
-                          >
-                            <TrashIcon className="w-4 h-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                    {misiItems.length === 0 && (
-                      <tr>
-                        <td colSpan={3} className="px-4 py-6 text-center text-gray-400 text-xs">
-                          Belum ada data misi.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* TABEL TUJUAN */}
-            <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm space-y-4">
-              <div className="flex justify-between items-center border-b border-gray-50 pb-3">
-                <div>
-                  <h4 className="font-bold text-primary-950 text-base">Tujuan Program Studi</h4>
-                  <p className="text-gray-500 text-xs mt-0.5">Daftar tujuan program studi.</p>
+              {/* TABEL MISI */}
+              <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm space-y-4">
+                <div className="flex justify-between items-center border-b border-gray-50 pb-3">
+                  <div>
+                    <h4 className="font-bold text-primary-950 text-base">Misi Program Studi</h4>
+                    <p className="text-gray-500 text-xs mt-0.5">Daftar misi program studi.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenVisiMisiAddType("misi")}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-xs font-semibold cursor-pointer shadow-sm"
+                  >
+                    <PlusIcon className="w-3.5 h-3.5" /> Tambah Misi
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleOpenVisiMisiAddType("tujuan")}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-xs font-semibold cursor-pointer shadow-sm"
-                >
-                  <PlusIcon className="w-3.5 h-3.5" /> Tambah Tujuan
-                </button>
+
+                <div className="overflow-hidden border border-gray-100 rounded-xl">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-primary-50/30">
+                        <th className="text-left px-4 py-2.5 font-bold text-primary-900 w-16">No</th>
+                        <th className="text-left px-4 py-2.5 font-bold text-primary-900">Konten / Uraian</th>
+                        <th className="text-right px-4 py-2.5 font-bold text-primary-900 w-24">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {misiItems.map((item, idx) => (
+                        <tr key={item.id} className="border-t border-gray-50 hover:bg-gray-50/20">
+                          <td className="px-4 py-3 text-gray-500 font-medium">{idx + 1}</td>
+                          <td className="px-4 py-3 text-gray-700 leading-relaxed text-xs sm:text-sm">{item.konten}</td>
+                          <td className="px-4 py-3 text-right space-x-1">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenVisiMisiEdit(item)}
+                              className="inline-flex items-center justify-center p-1.5 rounded-lg text-primary-600 hover:bg-primary-50 cursor-pointer"
+                            >
+                              <EditIcon className="w-4 h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenDelete(item.id, "visi_misi_tujuan")}
+                              className="inline-flex items-center justify-center p-1.5 rounded-lg text-red-600 hover:bg-red-50 cursor-pointer"
+                            >
+                              <TrashIcon className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {misiItems.length === 0 && (
+                        <tr>
+                          <td colSpan={3} className="px-4 py-6 text-center text-gray-400 text-xs">
+                            Belum ada data misi.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
-              <div className="overflow-hidden border border-gray-100 rounded-xl">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-primary-50/30">
-                      <th className="text-left px-4 py-2.5 font-bold text-primary-900 w-16">No</th>
-                      <th className="text-left px-4 py-2.5 font-bold text-primary-900">Konten / Uraian</th>
-                      <th className="text-right px-4 py-2.5 font-bold text-primary-900 w-24">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tujuanItems.map((item, idx) => (
-                      <tr key={item.id} className="border-t border-gray-50 hover:bg-gray-50/20">
-                        <td className="px-4 py-3 text-gray-500 font-medium">{idx + 1}</td>
-                        <td className="px-4 py-3 text-gray-700 leading-relaxed text-xs sm:text-sm">{item.konten}</td>
-                        <td className="px-4 py-3 text-right space-x-1">
-                          <button
-                            type="button"
-                            onClick={() => handleOpenVisiMisiEdit(item)}
-                            className="inline-flex items-center justify-center p-1.5 rounded-lg text-primary-600 hover:bg-primary-50 cursor-pointer"
-                          >
-                            <EditIcon className="w-4 h-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleOpenDelete(item.id, "visi_misi_tujuan")}
-                            className="inline-flex items-center justify-center p-1.5 rounded-lg text-red-600 hover:bg-red-50 cursor-pointer"
-                          >
-                            <TrashIcon className="w-4 h-4" />
-                          </button>
-                        </td>
+              {/* TABEL TUJUAN */}
+              <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm space-y-4">
+                <div className="flex justify-between items-center border-b border-gray-50 pb-3">
+                  <div>
+                    <h4 className="font-bold text-primary-950 text-base">Tujuan Program Studi</h4>
+                    <p className="text-gray-500 text-xs mt-0.5">Daftar tujuan program studi.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenVisiMisiAddType("tujuan")}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-xs font-semibold cursor-pointer shadow-sm"
+                  >
+                    <PlusIcon className="w-3.5 h-3.5" /> Tambah Tujuan
+                  </button>
+                </div>
+
+                <div className="overflow-hidden border border-gray-100 rounded-xl">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-primary-50/30">
+                        <th className="text-left px-4 py-2.5 font-bold text-primary-900 w-16">No</th>
+                        <th className="text-left px-4 py-2.5 font-bold text-primary-900">Konten / Uraian</th>
+                        <th className="text-right px-4 py-2.5 font-bold text-primary-900 w-24">Aksi</th>
                       </tr>
-                    ))}
-                    {tujuanItems.length === 0 && (
-                      <tr>
-                        <td colSpan={3} className="px-4 py-6 text-center text-gray-400 text-xs">
-                          Belum ada data tujuan.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {tujuanItems.map((item, idx) => (
+                        <tr key={item.id} className="border-t border-gray-50 hover:bg-gray-50/20">
+                          <td className="px-4 py-3 text-gray-500 font-medium">{idx + 1}</td>
+                          <td className="px-4 py-3 text-gray-700 leading-relaxed text-xs sm:text-sm">{item.konten}</td>
+                          <td className="px-4 py-3 text-right space-x-1">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenVisiMisiEdit(item)}
+                              className="inline-flex items-center justify-center p-1.5 rounded-lg text-primary-600 hover:bg-primary-50 cursor-pointer"
+                            >
+                              <EditIcon className="w-4 h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenDelete(item.id, "visi_misi_tujuan")}
+                              className="inline-flex items-center justify-center p-1.5 rounded-lg text-red-600 hover:bg-red-50 cursor-pointer"
+                            >
+                              <TrashIcon className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {tujuanItems.length === 0 && (
+                        <tr>
+                          <td colSpan={3} className="px-4 py-6 text-center text-gray-400 text-xs">
+                            Belum ada data tujuan.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
