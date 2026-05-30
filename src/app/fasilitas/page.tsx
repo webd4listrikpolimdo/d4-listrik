@@ -57,7 +57,7 @@ export default function FasilitasPage() {
   const selectedPhotos =
     selectedFasilitas && Array.isArray(selectedFasilitas.foto_urls) && selectedFasilitas.foto_urls.length > 0
       ? selectedFasilitas.foto_urls
-      : ["/images/hero-bg.jpg"];
+      : ["/images/default.svg"];
 
   return (
     <>
@@ -119,7 +119,7 @@ export default function FasilitasPage() {
               {filtered.map((item, index) => {
                 const photos = Array.isArray(item.foto_urls) && item.foto_urls.length > 0
                   ? item.foto_urls
-                  : ["/images/hero-bg.jpg"];
+                  : ["/images/default.svg"];
 
                 return (
                   <button
