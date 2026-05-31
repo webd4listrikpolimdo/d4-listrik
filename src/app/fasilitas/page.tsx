@@ -102,23 +102,7 @@ export default function FasilitasPage() {
           </div>
 
           {/* Grid with Lazy Rendering */}
-          <LazySection
-            placeholderHeight="600px"
-            skeleton={
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-                    <div className="h-48 bg-gray-200/60" />
-                    <div className="p-5 space-y-3">
-                      <div className="h-4 bg-gray-200/80 rounded w-3/4" />
-                      <div className="h-3 bg-gray-200/55 rounded w-1/2" />
-                      <div className="h-3 bg-gray-200/30 rounded w-full mt-2" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            }
-          >
+          <LazySection placeholderHeight="600px">
             {isLoading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
                 {Array.from({ length: 6 }).map((_, i) => (

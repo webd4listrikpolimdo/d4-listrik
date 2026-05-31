@@ -5,41 +5,23 @@ import React, { useState, useEffect, useRef } from "react";
 interface LazySectionProps {
   children: React.ReactNode;
   /**
-   * Estimated height of the section to prevent layout shift before loading.
-   * e.g. "min-h-[400px]" or a height in pixels.
+   * Estimated height of the placeholder to reserve layout space and prevent collapsing.
+   * e.g., "300px", "400px"
    */
   placeholderHeight?: string;
   className?: string;
   /**
-   * Margin around the root. e.g. "200px" means load 200px before the element enters the viewport.
+   * Margin around the root. A smaller margin (e.g. "50px" or "0px") ensures
+   * the transition is visible precisely when the user scrolls to it.
    */
   rootMargin?: string;
-  /**
-   * Custom skeleton element to display while loading.
-   * If not provided, a default modern shimmer skeleton will be shown.
-   */
-  skeleton?: React.ReactNode;
 }
-
-const DefaultSkeleton = () => (
-  <div className="w-full h-full p-8 bg-gray-50/60 rounded-3xl border border-gray-100 flex flex-col justify-between animate-pulse">
-    <div className="space-y-4">
-      {/* Skeleton title */}
-      <div className="h-6 bg-gray-200/80 rounded-lg w-1/4" />
-      {/* Skeleton subtitle */}
-      <div className="h-4 bg-gray-200/50 rounded-md w-1/2" />
-    </div>
-    {/* Skeleton content area */}
-    <div className="h-48 bg-gray-200/40 rounded-2xl w-full mt-8" />
-  </div>
-);
 
 export default function LazySection({
   children,
-  placeholderHeight = "300px",
+  placeholderHeight = "200px",
   className = "",
-  rootMargin = "200px",
-  skeleton,
+  rootMargin = "50px",
 }: LazySectionProps) {
   const [isInView, setIsInView] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -47,7 +29,6 @@ export default function LazySection({
   useEffect(() => {
     if (isInView) return;
 
-    // Check if IntersectionObserver is supported
     if (typeof window === "undefined" || !("IntersectionObserver" in window)) {
       setIsInView(true);
       return;
@@ -79,16 +60,12 @@ export default function LazySection({
   return (
     <div
       ref={containerRef}
-      className={className}
+      className={`${className} transition-all duration-700 ease-out ${
+        isInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8 pointer-events-none"
+      }`}
       style={!isInView ? { minHeight: placeholderHeight } : undefined}
     >
-      {isInView ? (
-        children
-      ) : (
-        <div style={{ height: placeholderHeight }} className="w-full">
-          {skeleton || <DefaultSkeleton />}
-        </div>
-      )}
+      {isInView ? children : null}
     </div>
   );
 }

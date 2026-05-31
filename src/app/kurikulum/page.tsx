@@ -62,22 +62,7 @@ export default function KurikulumPage() {
       </section>
 
       {/* Mata Kuliah per Semester (Dark Navy Blue) */}
-      <LazySection
-        placeholderHeight="550px"
-        skeleton={
-          <div className="py-24 bg-gradient-to-br from-primary-950 via-primary-950/95 to-primary-900/90 border-y border-primary-900 text-white flex flex-col justify-center">
-            <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 w-full animate-pulse">
-              <div className="h-6 bg-white/10 rounded w-48 mb-4" />
-              <div className="h-10 bg-white/5 rounded-xl w-full max-w-lg mb-8" />
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="h-32 bg-white/5 rounded-2xl border border-white/5" />
-                ))}
-              </div>
-            </div>
-          </div>
-        }
-      >
+      <LazySection placeholderHeight="550px">
         <section className="py-24 bg-gradient-to-br from-primary-950 via-primary-950/95 to-primary-900/90 relative overflow-hidden text-white border-y border-primary-900">
           {/* Decorative background */}
           <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-accent-400/5 blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />

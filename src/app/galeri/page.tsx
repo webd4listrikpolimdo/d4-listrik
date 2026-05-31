@@ -158,16 +158,7 @@ export default function GaleriPage() {
             )}
           </div>
 
-          <LazySection
-            placeholderHeight="600px"
-            skeleton={
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="h-80 bg-gray-100/70 rounded-2xl border border-gray-100" />
-                ))}
-              </div>
-            }
-          >
+          <LazySection placeholderHeight="600px">
             {isLoading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {Array.from({ length: 6 }).map((_, i) => (
