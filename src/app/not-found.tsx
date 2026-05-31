@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { HiOutlineHome, HiOutlineArrowRight } from "react-icons/hi2";
+import DevTeamModal from "@/components/universal/DevTeamModal";
 
 interface LogoData {
   file_url: string;
@@ -17,6 +18,8 @@ interface ProdiInfoData {
 export default function NotFound() {
   const [logo, setLogo] = useState<LogoData | null>(null);
   const [prodiInfo, setProdiInfo] = useState<ProdiInfoData | null>(null);
+  const [footer, setFooter] = useState<any>(null);
+  const [isDevModalOpen, setIsDevModalOpen] = useState(false);
 
   useEffect(() => {
     async function fetchConfig() {
@@ -26,6 +29,7 @@ export default function NotFound() {
           const config = await res.json();
           if (config?.logo) setLogo(config.logo);
           if (config?.prodi_info) setProdiInfo(config.prodi_info);
+          if (config?.footer) setFooter(config.footer);
         }
       } catch (e) {
         console.error("Failed to load not-found page config", e);
@@ -35,14 +39,11 @@ export default function NotFound() {
   }, []);
 
   useEffect(() => {
-    const nav = document.querySelector("nav");
     const footer = document.querySelector("footer");
     
-    if (nav) nav.style.display = "none";
     if (footer) footer.style.display = "none";
     
     return () => {
-      if (nav) nav.style.display = "";
       if (footer) footer.style.display = "";
     };
   }, []);
@@ -104,11 +105,23 @@ export default function NotFound() {
       </div>
 
       {/* Footer copyright indicator */}
-      <div className="absolute bottom-6 left-0 right-0 text-center select-none">
+      <div className="absolute bottom-6 left-0 right-0 text-center flex flex-col items-center gap-1.5 z-20">
         <p className="text-[10px] text-gray-500 tracking-wider">
-          &copy; {new Date().getFullYear()} D4 Teknik Listrik Polimdo. All rights reserved.
+          {footer?.copyright ? (
+            `© ${new Date().getFullYear()} - ${footer.copyright.replace(/^(©\s*(\d{4})?\s*|(\d{4})\s*)/i, "").trim()}`
+          ) : (
+            `© ${new Date().getFullYear()} - D4 Teknik Listrik Polimdo. All rights reserved.`
+          )}
         </p>
+        <button
+          onClick={() => setIsDevModalOpen(true)}
+          className="text-center text-gray-500 hover:text-accent-400 text-[10px] transition-colors duration-200 cursor-pointer font-semibold uppercase tracking-wider"
+        >
+          Tim Pengembang
+        </button>
       </div>
+
+      <DevTeamModal isOpen={isDevModalOpen} onClose={() => setIsDevModalOpen(false)} />
     </div>
   );
 }

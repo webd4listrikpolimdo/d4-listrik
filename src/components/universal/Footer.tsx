@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { cachedFetch } from "@/lib/fetchCache";
 import IconRenderer from "@/lib/icons";
+import DevTeamModal from "@/components/universal/DevTeamModal";
 
 const quickLinks = [
   { href: "/", label: "Beranda" },
@@ -45,6 +46,7 @@ export default function Footer() {
   const [kontak, setKontak] = useState<KontakItem[]>([]);
   const [logo, setLogo] = useState<LogoData | null>(null);
   const [prodiInfo, setProdiInfo] = useState<ProdiInfoData | null>(null);
+  const [isDevModalOpen, setIsDevModalOpen] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -66,15 +68,25 @@ export default function Footer() {
 
   if (isDashboard) {
     return (
-      <footer className="fixed bottom-0 left-0 right-0 z-40 bg-primary-950/95 backdrop-blur-sm border-t border-primary-900 text-white h-12 flex items-center justify-center shadow-lg">
-        <p className="text-center text-primary-400 text-xs">
-          {footer?.copyright ? (
-            `© ${new Date().getFullYear()} ${footer.copyright.replace(/^(©\s*(\d{4})?\s*|(\d{4})\s*)/i, "").trim()}`
-          ) : (
-            `© ${new Date().getFullYear()}`
-          )}
-        </p>
-      </footer>
+      <>
+        <footer className="fixed bottom-0 left-0 right-0 z-40 bg-primary-950/95 backdrop-blur-sm border-t border-primary-900 text-white h-16 flex flex-col items-center justify-center gap-0.5 shadow-lg">
+          <p className="text-center text-primary-400 text-[10px] sm:text-xs">
+            {footer?.copyright ? (
+              `© ${new Date().getFullYear()} - ${footer.copyright.replace(/^(©\s*(\d{4})?\s*|(\d{4})\s*)/i, "").trim()}`
+            ) : (
+              `© ${new Date().getFullYear()}`
+            )}
+          </p>
+          <button
+            onClick={() => setIsDevModalOpen(true)}
+            className="text-center text-primary-400 hover:text-accent-400 text-[10px] sm:text-xs transition-colors duration-200 cursor-pointer font-medium"
+          >
+            Tim Pengembang
+          </button>
+        </footer>
+
+        <DevTeamModal isOpen={isDevModalOpen} onClose={() => setIsDevModalOpen(false)} />
+      </>
     );
   }
 
@@ -165,16 +177,24 @@ export default function Footer() {
         </div>
 
         {/* Divider + Copyright */}
-        <div className="mt-10 pt-6 border-t border-primary-800">
+        <div className="mt-10 pt-6 border-t border-primary-800 flex flex-col items-center gap-2">
           <p className="text-center text-primary-400 text-xs">
             {footer?.copyright ? (
-              `© ${new Date().getFullYear()} ${footer.copyright.replace(/^(©\s*(\d{4})?\s*|(\d{4})\s*)/i, "").trim()}`
+              `© ${new Date().getFullYear()} - ${footer.copyright.replace(/^(©\s*(\d{4})?\s*|(\d{4})\s*)/i, "").trim()}`
             ) : (
               `© ${new Date().getFullYear()}`
             )}
           </p>
+          <button
+            onClick={() => setIsDevModalOpen(true)}
+            className="text-center text-primary-400 hover:text-accent-400 text-xs transition-colors duration-200 cursor-pointer font-medium"
+          >
+            Tim Pengembang
+          </button>
         </div>
       </div>
+
+      <DevTeamModal isOpen={isDevModalOpen} onClose={() => setIsDevModalOpen(false)} />
     </footer>
   );
 }

@@ -53,7 +53,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isActive = (href: string) => pathname === href || (pathname.startsWith(href) && href !== `/dashboard/${user.role}`);
 
   return (
-    <div className="fixed inset-x-0 top-16 bottom-12 bg-gray-50 flex flex-col md:flex-row overflow-hidden">
+    <div className="fixed inset-x-0 top-16 bottom-16 bg-gray-50 flex flex-col md:flex-row overflow-hidden">
       {/* Sidebar (Desktop Only) */}
       <aside className="hidden md:flex w-64 shrink-0 px-4 md:px-6 py-6 flex-col h-full">
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex-1 flex flex-col justify-between overflow-y-auto">
