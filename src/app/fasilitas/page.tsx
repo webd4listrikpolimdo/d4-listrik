@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import PageHero from "@/components/universal/PageHero";
 import Modal from "@/components/universal/Modal";
 import { cachedFetch } from "@/lib/fetchCache";
+import LazySection from "@/components/universal/LazySection";
 import {
   HiUser,
   HiHome,
@@ -100,105 +101,123 @@ export default function FasilitasPage() {
             </div>
           </div>
 
-          {/* Grid */}
-          {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden animate-pulse">
-                  <div className="h-48 bg-gray-200" />
-                  <div className="p-5 space-y-3">
-                    <div className="h-4 bg-gray-200 rounded w-3/4" />
-                    <div className="h-3 bg-gray-100 rounded w-full" />
-                    <div className="h-3 bg-gray-100 rounded w-2/3" />
+          {/* Grid with Lazy Rendering */}
+          <LazySection
+            placeholderHeight="600px"
+            skeleton={
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                    <div className="h-48 bg-gray-200/60" />
+                    <div className="p-5 space-y-3">
+                      <div className="h-4 bg-gray-200/80 rounded w-3/4" />
+                      <div className="h-3 bg-gray-200/55 rounded w-1/2" />
+                      <div className="h-3 bg-gray-200/30 rounded w-full mt-2" />
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : filtered.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filtered.map((item, index) => {
-                const photos = Array.isArray(item.foto_urls) && item.foto_urls.length > 0
-                  ? item.foto_urls
-                  : ["/images/default.svg"];
-
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      setSelectedFasilitas(item);
-                      setCurrentPhotoIndex(0);
-                    }}
-                    className="group text-left bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-fade-in-up block w-full focus:outline-none focus:ring-2 focus:ring-primary-500/20 cursor-pointer"
-                    style={{ animationDelay: `${index * 80}ms` }}
-                  >
-                    {/* Image */}
-                    <div className="h-48 relative overflow-hidden bg-gray-100">
-                      <img
-                        src={photos[0]}
-                        alt={item.nama}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-
-                      {/* Photo count badge */}
-                      {photos.length > 1 && (
-                        <span className="absolute top-3 right-3 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/55 text-xs font-medium text-white backdrop-blur-sm">
-                          <HiPhoto className="w-3.5 h-3.5" />
-                          {photos.length}
-                        </span>
-                      )}
-
-                      {/* Room badge on image */}
-                      {item.no_ruangan && (
-                        <div className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/95 text-xs font-semibold text-gray-700 backdrop-blur-sm shadow-sm">
-                          <HiHome className="w-3.5 h-3.5 text-primary-600" />
-                          Ruang {item.no_ruangan}
-                        </div>
-                      )}
+                ))}
+              </div>
+            }
+          >
+            {isLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                    <div className="h-48 bg-gray-200/60" />
+                    <div className="p-5 space-y-3">
+                      <div className="h-4 bg-gray-200/80 rounded w-3/4" />
+                      <div className="h-3 bg-gray-200/55 rounded w-1/2" />
+                      <div className="h-3 bg-gray-200/30 rounded w-full mt-2" />
                     </div>
+                  </div>
+                ))}
+              </div>
+            ) : filtered.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filtered.map((item, index) => {
+                  const photos = Array.isArray(item.foto_urls) && item.foto_urls.length > 0
+                    ? item.foto_urls
+                    : ["/images/default.svg"];
 
-                    <div className="p-5">
-                      <h3 className="font-bold text-primary-950 text-base group-hover:text-primary-600 transition-colors leading-snug">
-                        {item.nama}
-                      </h3>
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setSelectedFasilitas(item);
+                        setCurrentPhotoIndex(0);
+                      }}
+                      className="group text-left bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-fade-in-up block w-full focus:outline-none focus:ring-2 focus:ring-primary-500/20 cursor-pointer"
+                      style={{ animationDelay: `${index * 80}ms` }}
+                    >
+                      {/* Image */}
+                      <div className="h-48 relative overflow-hidden bg-gray-100">
+                        <img
+                          src={photos[0]}
+                          alt={item.nama}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
 
-                      {item.kepala_lab && (
-                        <div className="flex items-center gap-1.5 mt-2 text-xs text-gray-500">
-                          <HiUser className="w-3.5 h-3.5 text-gray-400" />
-                          Ka. Lab: {item.kepala_lab}
-                        </div>
-                      )}
+                        {/* Photo count badge */}
+                        {photos.length > 1 && (
+                          <span className="absolute top-3 right-3 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/55 text-xs font-medium text-white backdrop-blur-sm">
+                            <HiPhoto className="w-3.5 h-3.5" />
+                            {photos.length}
+                          </span>
+                        )}
 
-                      <p className="mt-3 text-sm text-gray-500 leading-relaxed line-clamp-3">
-                        {item.deskripsi || "Belum ada deskripsi untuk fasilitas laboratorium ini."}
-                      </p>
-
-                      <div className="mt-4 inline-flex items-center text-sm font-semibold text-primary-600 group-hover:text-primary-700">
-                        Lihat Detail
-                        <svg
-                          className="ml-1 w-4 h-4 group-hover:translate-x-1 transition-transform"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                        </svg>
+                        {/* Room badge on image */}
+                        {item.no_ruangan && (
+                          <div className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/95 text-xs font-semibold text-gray-700 backdrop-blur-sm shadow-sm">
+                            <HiHome className="w-3.5 h-3.5 text-primary-600" />
+                            Ruang {item.no_ruangan}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="bg-white rounded-3xl p-12 text-center border border-gray-100 shadow-sm">
-              <HiMagnifyingGlass className="w-8 h-8 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 font-medium">
-                {searchQuery
-                  ? "Tidak ada fasilitas yang cocok dengan pencarian."
-                  : "Belum ada data fasilitas laboratorium."}
-              </p>
-            </div>
-          )}
+
+                      <div className="p-5">
+                        <h3 className="font-bold text-primary-950 text-base group-hover:text-primary-600 transition-colors leading-snug">
+                          {item.nama}
+                        </h3>
+
+                        {item.kepala_lab && (
+                          <div className="flex items-center gap-1.5 mt-2 text-xs text-gray-500">
+                            <HiUser className="w-3.5 h-3.5 text-gray-400" />
+                            Ka. Lab: {item.kepala_lab}
+                          </div>
+                        )}
+
+                        <p className="mt-3 text-sm text-gray-500 leading-relaxed line-clamp-3">
+                          {item.deskripsi || "Belum ada deskripsi untuk fasilitas laboratorium ini."}
+                        </p>
+
+                        <div className="mt-4 inline-flex items-center text-sm font-semibold text-primary-600 group-hover:text-primary-700">
+                          Lihat Detail
+                          <svg
+                            className="ml-1 w-4 h-4 group-hover:translate-x-1 transition-transform"
+                            fill="none;;"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                          </svg>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="bg-white rounded-3xl p-12 text-center border border-gray-100 shadow-sm">
+                <HiMagnifyingGlass className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500 font-medium">
+                  {searchQuery
+                    ? "Tidak ada fasilitas yang cocok dengan pencarian."
+                    : "Belum ada data fasilitas laboratorium."}
+                </p>
+              </div>
+            )}
+          </LazySection>
         </div>
       </section>
 

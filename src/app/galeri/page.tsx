@@ -7,6 +7,7 @@ import GaleriCard from "@/components/galeri/GaleriCard";
 import { GaleriItem } from "@/types/galeri";
 import { cachedFetch } from "@/lib/fetchCache";
 import { HiInboxStack } from "react-icons/hi2";
+import LazySection from "@/components/universal/LazySection";
 
 const jenisLabels: Record<string, string> = {
   publikasi: "Publikasi & Penelitian",
@@ -157,28 +158,39 @@ export default function GaleriPage() {
             )}
           </div>
 
-          {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="h-80 bg-gray-100 rounded-2xl animate-pulse" />
-              ))}
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filtered.map((item, index) => (
-                  <GaleriCard key={item.id} item={item} index={index} />
+          <LazySection
+            placeholderHeight="600px"
+            skeleton={
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="h-80 bg-gray-100/70 rounded-2xl border border-gray-100" />
                 ))}
               </div>
-
-              {filtered.length === 0 && (
-                <div className="text-center py-16">
-                  <HiInboxStack className="text-4xl mb-3 text-gray-300 mx-auto" />
-                  <p className="text-gray-400 text-sm font-medium">Belum ada data untuk kategori ini</p>
+            }
+          >
+            {isLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="h-80 bg-gray-100 rounded-2xl animate-pulse" />
+                ))}
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filtered.map((item, index) => (
+                    <GaleriCard key={item.id} item={item} index={index} />
+                  ))}
                 </div>
-              )}
-            </>
-          )}
+
+                {filtered.length === 0 && (
+                  <div className="text-center py-16">
+                    <HiInboxStack className="text-4xl mb-3 text-gray-300 mx-auto" />
+                    <p className="text-gray-400 text-sm font-medium">Belum ada data untuk kategori ini</p>
+                  </div>
+                )}
+              </>
+            )}
+          </LazySection>
         </div>
       </section>
     </>
