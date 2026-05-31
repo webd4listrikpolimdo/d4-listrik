@@ -10,7 +10,7 @@ export async function GET() {
 
     const { data, error } = await adminSupabase
       .from("dosen")
-      .select("*")
+      .select("id, nama, nidn, foto_url, jabatan, pangkat, email, telepon, bidang_keahlian, program_studi, pendidikan_terakhir")
       .order("updated_at", { ascending: false });
 
     if (error) {

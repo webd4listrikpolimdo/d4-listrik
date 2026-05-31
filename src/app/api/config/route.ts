@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     if (shouldFetch("visi_misi_tujuan")) {
       const { data } = await supabase
         .from("visi_misi_tujuan")
-        .select("*")
+        .select("id, kategori, konten, urutan")
         .order("urutan", { ascending: true });
       result.visi_misi_tujuan = data || [];
     }
@@ -24,18 +24,16 @@ export async function GET(request: NextRequest) {
     if (shouldFetch("prodi_info")) {
       const { data } = await supabase
         .from("prodi_info")
-        .select("*")
+        .select("id, nama, nama_alternatif, nama_kampus, deskripsi, hero_bg_url")
         .eq("id", 1)
         .single();
       result.prodi_info = data || null;
     }
 
-
-
     if (shouldFetch("footer")) {
       const { data } = await supabase
         .from("footer")
-        .select("*")
+        .select("id, deskripsi, copyright")
         .eq("id", 1)
         .single();
       result.footer = data || null;
@@ -44,7 +42,7 @@ export async function GET(request: NextRequest) {
     if (shouldFetch("kontak")) {
       const { data } = await supabase
         .from("kontak")
-        .select("*")
+        .select("id, tipe, label, url_atau_nomor, urutan")
         .order("urutan", { ascending: true });
       result.kontak = data || [];
     }
@@ -52,7 +50,7 @@ export async function GET(request: NextRequest) {
     if (shouldFetch("logo")) {
       const { data } = await supabase
         .from("logo")
-        .select("*")
+        .select("id, file_url, alt_text")
         .eq("id", 1)
         .single();
       result.logo = data || null;
@@ -61,7 +59,7 @@ export async function GET(request: NextRequest) {
     if (shouldFetch("sambutan_kajur")) {
       const { data } = await supabase
         .from("sambutan_kajur")
-        .select("*, dosen:dosen_id(id, nama, foto_url)")
+        .select("id, kutipan, dosen_id, dosen:dosen_id(id, nama, foto_url)")
         .eq("id", 1)
         .single();
       result.sambutan_kajur = data || null;
@@ -70,7 +68,7 @@ export async function GET(request: NextRequest) {
     if (shouldFetch("sambutan_kaprodi")) {
       const { data } = await supabase
         .from("sambutan_kaprodi")
-        .select("*, dosen:dosen_id(id, nama, foto_url)")
+        .select("id, kutipan, dosen_id, dosen:dosen_id(id, nama, foto_url)")
         .eq("id", 1)
         .single();
       result.sambutan_kaprodi = data || null;

@@ -9,7 +9,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from("galeri")
-      .select("*")
+      .select("id, judul, deskripsi, tanggal, kategori, foto_urls")
       .order("updated_at", { ascending: false });
 
     if (error) {

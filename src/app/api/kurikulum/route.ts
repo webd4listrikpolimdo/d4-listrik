@@ -8,9 +8,9 @@ export async function GET() {
     const supabase = await createClient();
 
     const [kurikulumRes, mataKuliahRes, cplRes] = await Promise.all([
-      supabase.from("kurikulum_aktif").select("*").eq("id", 1).single(),
-      supabase.from("mata_kuliah").select("*").order("updated_at", { ascending: false }),
-      supabase.from("cpl").select("*").order("updated_at", { ascending: false }),
+      supabase.from("kurikulum_aktif").select("id, nama, deskripsi, berlaku_sejak, file_url").eq("id", 1).single(),
+      supabase.from("mata_kuliah").select("kode, nama, sks, jenis, semester_level, deskripsi").order("updated_at", { ascending: false }),
+      supabase.from("cpl").select("id, kode, deskripsi, kategori").order("updated_at", { ascending: false }),
     ]);
 
     if (kurikulumRes.error) {

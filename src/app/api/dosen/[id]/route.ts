@@ -12,7 +12,7 @@ export async function GET(_request: NextRequest, { params }: Params) {
 
     const { data: dosen, error } = await supabase
       .from("dosen")
-      .select("*")
+      .select("id, nama, nidn, foto_url, jabatan, pangkat, email, telepon, bidang_keahlian, program_studi, pendidikan_terakhir")
       .eq("id", id)
       .single();
 
@@ -26,7 +26,7 @@ export async function GET(_request: NextRequest, { params }: Params) {
     // Fetch all karya for this dosen
     const { data: karya } = await supabase
       .from("karya")
-      .select("*")
+      .select("id, dosen_id, judul, jenis, tahun, penerbit, tautan, penulis, foto_urls, deskripsi")
       .eq("dosen_id", id)
       .order("tahun", { ascending: false });
 

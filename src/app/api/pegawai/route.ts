@@ -9,7 +9,7 @@ export async function GET() {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("pegawai")
-      .select("*")
+      .select("id, nama, nip, foto_url, email, telepon, program_studi, pendidikan_terakhir")
       .order("updated_at", { ascending: false });
 
     if (error) {

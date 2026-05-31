@@ -8,7 +8,7 @@ export async function GET() {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("fasilitas")
-      .select("*")
+      .select("id, nama, deskripsi, foto_urls, kepala_lab, no_ruangan")
       .order("updated_at", { ascending: false });
 
     if (error) {

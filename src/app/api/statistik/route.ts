@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     // Fetch active semester
     const { data: activeSemester } = await supabase
       .from("semester")
-      .select("*")
+      .select("id, jenis, tahun_akademik, is_aktif")
       .eq("is_aktif", true)
       .single();
 
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     if (semesterId) {
       const { data: targetSem } = await supabase
         .from("semester")
-        .select("*")
+        .select("id, jenis, tahun_akademik, is_aktif")
         .eq("id", semesterId)
         .single();
       
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     if (selectedSemester) {
       const { data: levelData } = await supabase
         .from("statistik_mahasiswa")
-        .select("*")
+        .select("id, semester_id, semester_level, total_mahasiswa_aktif")
         .eq("semester_id", selectedSemester.id)
         .order("semester_level", { ascending: true });
 
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
     // Fetch per-year lulusan
     const { data: lulusanRows } = await supabase
       .from("statistik_lulusan")
-      .select("*")
+      .select("id, tahun, jumlah_lulusan")
       .order("tahun", { ascending: true });
 
     const lulusanList = lulusanRows || [];
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
     // Fetch all semesters
     const { data: semestersList } = await supabase
       .from("semester")
-      .select("*")
+      .select("id, jenis, tahun_akademik, is_aktif")
       .order("tahun_akademik", { ascending: false });
 
     return NextResponse.json({
