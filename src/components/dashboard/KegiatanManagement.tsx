@@ -18,6 +18,7 @@ import {
   HiPhoto 
 } from "react-icons/hi2";
 import Modal from "@/components/universal/Modal";
+import ComboBox from "@/components/universal/ComboBox";
 import ConfirmDialog from "@/components/universal/ConfirmDialog";
 import TablePagination from "@/components/universal/TablePagination";
 import { cachedFetch, invalidateCache } from "@/lib/fetchCache";
@@ -479,53 +480,44 @@ export default function KegiatanManagement() {
         <div className="flex flex-wrap items-center gap-3 w-full">
           <span className="text-xs font-semibold text-gray-500 block">Filter:</span>
           
-          <select
+          <ComboBox
+            options={uniqueCategories.map(cat => ({ id: cat, nama: cat }))}
             value={filterKategori}
-            onChange={(e) => {
-              setFilterKategori(e.target.value);
+            onChange={(val) => {
+              setFilterKategori(val);
               setPendingPage(1);
               setReviewedPage(1);
               setAllPage(1);
             }}
-            className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/25 text-gray-800 font-medium cursor-pointer"
-          >
-            <option value="">Semua Kategori</option>
-            {uniqueCategories.map(cat => (
-              <option key={cat} value={cat}>{cat}</option>
-            ))}
-          </select>
+            placeholder="Semua Kategori"
+            className="w-48"
+          />
 
-          <select
+          <ComboBox
+            options={months.map(m => ({ id: m.value, nama: m.label }))}
             value={filterBulan}
-            onChange={(e) => {
-              setFilterBulan(e.target.value);
+            onChange={(val) => {
+              setFilterBulan(val);
               setPendingPage(1);
               setReviewedPage(1);
               setAllPage(1);
             }}
-            className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/25 text-gray-800 font-medium cursor-pointer"
-          >
-            <option value="">Semua Bulan</option>
-            {months.map(m => (
-              <option key={m.value} value={m.value}>{m.label}</option>
-            ))}
-          </select>
+            placeholder="Semua Bulan"
+            className="w-40"
+          />
 
-          <select
+          <ComboBox
+            options={uniqueYears.map(yr => ({ id: yr, nama: yr }))}
             value={filterTahun}
-            onChange={(e) => {
-              setFilterTahun(e.target.value);
+            onChange={(val) => {
+              setFilterTahun(val);
               setPendingPage(1);
               setReviewedPage(1);
               setAllPage(1);
             }}
-            className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/25 text-gray-800 font-medium cursor-pointer"
-          >
-            <option value="">Semua Tahun</option>
-            {uniqueYears.map(yr => (
-              <option key={yr} value={yr}>{yr}</option>
-            ))}
-          </select>
+            placeholder="Semua Tahun"
+            className="w-36"
+          />
 
           {(filterKategori || filterBulan || filterTahun) && (
             <button

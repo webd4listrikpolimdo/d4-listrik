@@ -46,6 +46,19 @@ export async function createLog(params: {
       data_sesudah: params.data_sesudah || null,
       ip_address: params.ip_address || null,
     });
+
+    // Enforce max 1000 logs limit (keep only the 999 newest, since we just inserted 1)
+    const { data: countData } = await adminSupabase
+      .from("logs")
+      .select("id")
+      .order("created_at", { ascending: false });
+
+    if (countData && countData.length > 1000) {
+      const idsToDelete = countData.slice(1000).map(item => item.id);
+      if (idsToDelete.length > 0) {
+        await adminSupabase.from("logs").delete().in("id", idsToDelete);
+      }
+    }
   } catch (error) {
     console.error("Failed to create log:", error);
   }

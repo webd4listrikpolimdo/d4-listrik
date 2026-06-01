@@ -6,6 +6,7 @@ import { useData } from "@/context/DataContext";
 import { Dosen } from "@/types/dosen";
 import { Pegawai } from "@/types/pegawai";
 import Modal from "@/components/universal/Modal";
+import ComboBox from "@/components/universal/ComboBox";
 import ConfirmDialog from "@/components/universal/ConfirmDialog";
 import { 
   HiOutlinePlus, 
@@ -571,38 +572,29 @@ export default function AdminStafPage() {
 
             {activeTab === "dosen" && (
               <>
-                <select
+                <ComboBox
+                  options={uniqueJabatans.map((j) => ({ id: j, nama: j }))}
                   value={filterJabatan}
-                  onChange={(e) => { setFilterJabatan(e.target.value); setDosenPage(1); }}
-                  className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/25 text-gray-800 font-medium cursor-pointer"
-                >
-                  <option value="">Semua Jabatan</option>
-                  {uniqueJabatans.map((j) => (
-                    <option key={j} value={j}>{j}</option>
-                  ))}
-                </select>
+                  onChange={(val) => { setFilterJabatan(val); setDosenPage(1); }}
+                  placeholder="Semua Jabatan"
+                  className="w-40"
+                />
 
-                <select
+                <ComboBox
+                  options={uniqueBidangs.map((b) => ({ id: b, nama: b }))}
                   value={filterBidang}
-                  onChange={(e) => { setFilterBidang(e.target.value); setDosenPage(1); }}
-                  className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/25 text-gray-800 font-medium cursor-pointer"
-                >
-                  <option value="">Semua Bidang</option>
-                  {uniqueBidangs.map((b) => (
-                    <option key={b} value={b}>{b}</option>
-                  ))}
-                </select>
+                  onChange={(val) => { setFilterBidang(val); setDosenPage(1); }}
+                  placeholder="Semua Bidang"
+                  className="w-44"
+                />
 
-                <select
+                <ComboBox
+                  options={uniqueHomebases.map((h) => ({ id: h, nama: h }))}
                   value={filterHomebase}
-                  onChange={(e) => { setFilterHomebase(e.target.value); setDosenPage(1); }}
-                  className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/25 text-gray-800 font-medium cursor-pointer"
-                >
-                  <option value="">Semua Homebase</option>
-                  {uniqueHomebases.map((h) => (
-                    <option key={h} value={h}>{h}</option>
-                  ))}
-                </select>
+                  onChange={(val) => { setFilterHomebase(val); setDosenPage(1); }}
+                  placeholder="Semua Homebase"
+                  className="w-48"
+                />
 
                 {(filterJabatan || filterBidang || filterHomebase) && (
                   <button

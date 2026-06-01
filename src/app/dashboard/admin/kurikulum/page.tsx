@@ -802,38 +802,29 @@ export default function AdminKurikulumPage() {
                 )}
               </div>
 
-              <select
+              <ComboBox
+                options={[1, 2, 3, 4, 5, 6, 7, 8].map(s => ({ id: String(s), nama: `Semester ${s}` }))}
                 value={mkFilterSemester}
-                onChange={(e) => { setMkFilterSemester(e.target.value); setMkPage(1); }}
-                className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/25 text-gray-800 font-medium cursor-pointer"
-              >
-                <option value="">Smt: Semua</option>
-                {[1, 2, 3, 4, 5, 6, 7, 8].map(s => (
-                  <option key={s} value={String(s)}>Smt {s}</option>
-                ))}
-              </select>
+                onChange={(val) => { setMkFilterSemester(val); setMkPage(1); }}
+                placeholder="Semua Semester"
+                className="w-40"
+              />
 
-              <select
+              <ComboBox
+                options={uniqueMkSks.map(s => ({ id: String(s), nama: `${s} SKS` }))}
                 value={mkFilterSks}
-                onChange={(e) => { setMkFilterSks(e.target.value); setMkPage(1); }}
-                className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/25 text-gray-800 font-medium cursor-pointer"
-              >
-                <option value="">SKS: Semua</option>
-                {uniqueMkSks.map(s => (
-                  <option key={s} value={String(s)}>{s} SKS</option>
-                ))}
-              </select>
+                onChange={(val) => { setMkFilterSks(val); setMkPage(1); }}
+                placeholder="Semua SKS"
+                className="w-36"
+              />
 
-              <select
+              <ComboBox
+                options={uniqueMkJenis.map(j => ({ id: j, nama: j }))}
                 value={mkFilterJenis}
-                onChange={(e) => { setMkFilterJenis(e.target.value); setMkPage(1); }}
-                className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/25 text-gray-800 font-medium cursor-pointer"
-              >
-                <option value="">Jenis: Semua</option>
-                {uniqueMkJenis.map(j => (
-                  <option key={j} value={j}>{j}</option>
-                ))}
-              </select>
+                onChange={(val) => { setMkFilterJenis(val); setMkPage(1); }}
+                placeholder="Semua Jenis"
+                className="w-36"
+              />
 
               {(mkFilterSemester || mkFilterSks || mkFilterJenis) && (
                 <button
@@ -951,16 +942,13 @@ export default function AdminKurikulumPage() {
                 )}
               </div>
 
-              <select
+              <ComboBox
+                options={categories.map(cat => ({ id: cat.nama, nama: cat.nama }))}
                 value={cplFilterKategori}
-                onChange={(e) => { setCplFilterKategori(e.target.value); setcplPage(1); }}
-                className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/25 text-gray-800 font-medium cursor-pointer"
-              >
-                <option value="">Semua Kategori</option>
-                {categories.map(cat => (
-                  <option key={cat.id} value={cat.nama}>{cat.nama}</option>
-                ))}
-              </select>
+                onChange={(val) => { setCplFilterKategori(val); setcplPage(1); }}
+                placeholder="Semua Kategori"
+                className="w-48"
+              />
 
               {cplFilterKategori && (
                 <button

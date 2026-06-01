@@ -500,53 +500,44 @@ export default function AdminKaryaPage() {
         <div className="flex flex-wrap items-center gap-3 w-full">
           <span className="text-xs font-semibold text-gray-500 block">Filter:</span>
           
-          <select
+          <ComboBox
+            options={dosenOptions}
             value={filterDosen}
-            onChange={(e) => {
-              setFilterDosen(e.target.value);
+            onChange={(val) => {
+              setFilterDosen(val);
               setPendingPage(1);
               setReviewedPage(1);
               setAllPage(1);
             }}
-            className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/25 text-gray-800 font-medium cursor-pointer"
-          >
-            <option value="">Semua Dosen</option>
-            {dosenOptions.map(d => (
-              <option key={d.id} value={d.id}>{d.nama}</option>
-            ))}
-          </select>
+            placeholder="Semua Dosen"
+            className="w-48"
+          />
 
-          <select
+          <ComboBox
+            options={Object.entries(jenisLabels).map(([val, label]) => ({ id: val, nama: label }))}
             value={filterJenis}
-            onChange={(e) => {
-              setFilterJenis(e.target.value);
+            onChange={(val) => {
+              setFilterJenis(val);
               setPendingPage(1);
               setReviewedPage(1);
               setAllPage(1);
             }}
-            className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/25 text-gray-800 font-medium cursor-pointer"
-          >
-            <option value="">Semua Jenis</option>
-            {Object.entries(jenisLabels).map(([val, label]) => (
-              <option key={val} value={val}>{label}</option>
-            ))}
-          </select>
+            placeholder="Semua Jenis"
+            className="w-44"
+          />
 
-          <select
+          <ComboBox
+            options={uniqueYears.map(yr => ({ id: String(yr), nama: String(yr) }))}
             value={filterTahun}
-            onChange={(e) => {
-              setFilterTahun(e.target.value);
+            onChange={(val) => {
+              setFilterTahun(val);
               setPendingPage(1);
               setReviewedPage(1);
               setAllPage(1);
             }}
-            className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/25 text-gray-800 font-medium cursor-pointer"
-          >
-            <option value="">Semua Tahun</option>
-            {uniqueYears.map(yr => (
-              <option key={yr} value={yr}>{yr}</option>
-            ))}
-          </select>
+            placeholder="Semua Tahun"
+            className="w-40"
+          />
 
           {(filterDosen || filterJenis || filterTahun) && (
             <button

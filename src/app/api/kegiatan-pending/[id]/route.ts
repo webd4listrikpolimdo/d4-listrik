@@ -74,6 +74,20 @@ export async function PUT(request: NextRequest, { params }: Params) {
       return NextResponse.json({ error: updateError.message }, { status: 400 });
     }
 
+    // Enforce max 100 reviewed/riwayat entries in kegiatan_pending table
+    const { data: reviewedData } = await supabase
+      .from("kegiatan_pending")
+      .select("id")
+      .neq("status", "pending")
+      .order("reviewed_at", { ascending: false });
+
+    if (reviewedData && reviewedData.length > 100) {
+      const idsToDelete = reviewedData.slice(100).map(item => item.id);
+      if (idsToDelete.length > 0) {
+        await supabase.from("kegiatan_pending").delete().in("id", idsToDelete);
+      }
+    }
+
     await createLog({
       kategori: "kegiatan_pending",
       aksi: action === "approve" ? "approve" : "reject",
