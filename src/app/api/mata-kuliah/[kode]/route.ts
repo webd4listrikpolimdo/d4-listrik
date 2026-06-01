@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
+import { createLog, getClientIp } from "@/lib/logging";
 
 type Params = { params: Promise<{ kode: string }> };
 
@@ -32,6 +33,15 @@ export async function PUT(request: NextRequest, { params }: Params) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
+
+    await createLog({
+      kategori: "mata_kuliah",
+      aksi: "update",
+      deskripsi: `Mengubah mata kuliah: ${kode}`,
+      data_sesudah: data,
+      ip_address: getClientIp(request),
+    });
+
     return NextResponse.json(data);
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -55,6 +65,14 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
+
+    await createLog({
+      kategori: "mata_kuliah",
+      aksi: "delete",
+      deskripsi: `Menghapus mata kuliah: ${kode}`,
+      ip_address: getClientIp(_request),
+    });
+
     return NextResponse.json({ message: "Mata kuliah deleted" });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

@@ -1,8 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireAuth } from "@/lib/auth";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { createLog, getClientIp } from "@/lib/logging";
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
     const result = await requireAuth();
     if (result instanceof NextResponse) return result;
@@ -16,6 +17,20 @@ export async function POST() {
         { status: 500 }
       );
     }
+
+    // Log the logout event
+    const ipAddress = getClientIp(request);
+    await createLog({
+      kategori: "auth",
+      aksi: "logout",
+      deskripsi: `User ${result.full_name || result.email} berhasil keluar dari dashboard`,
+      ip_address: ipAddress,
+      user: {
+        id: result.id,
+        email: result.email,
+        full_name: result.full_name,
+      },
+    });
 
     return NextResponse.json({ message: "Logged out successfully" });
   } catch {

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
+import { createLog, getClientIp } from "@/lib/logging";
 
 // GET /api/mata-kuliah — Public: List all mata kuliah
 export async function GET() {
@@ -53,6 +54,15 @@ export async function POST(request: NextRequest) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
+
+    await createLog({
+      kategori: "mata_kuliah",
+      aksi: "create",
+      deskripsi: `Menambahkan mata kuliah: ${kode} - ${nama}`,
+      data_sesudah: data,
+      ip_address: getClientIp(request),
+    });
+
     return NextResponse.json(data, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

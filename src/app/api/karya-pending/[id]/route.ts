@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireRole, requireAuth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
+import { createLog, getClientIp } from "@/lib/logging";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -73,6 +74,15 @@ export async function PUT(request: NextRequest, { params }: Params) {
       return NextResponse.json({ error: updateError.message }, { status: 400 });
     }
 
+    await createLog({
+      kategori: "karya_pending",
+      aksi: action === "approve" ? "approve" : "reject",
+      deskripsi: `${action === "approve" ? "Menyetujui" : "Menolak"} pengajuan karya: ${pending.judul}`,
+      data_sebelum: pending,
+      data_sesudah: data,
+      ip_address: getClientIp(request),
+    });
+
     return NextResponse.json(data);
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -129,6 +139,14 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
         await adminSupabase.storage.from("galeri").remove(fileNames);
       }
     }
+
+    await createLog({
+      kategori: "karya_pending",
+      aksi: "delete",
+      deskripsi: `Menghapus pengajuan karya ID: ${id}`,
+      data_sebelum: pending,
+      ip_address: getClientIp(_request),
+    });
 
     return NextResponse.json({ message: "Deleted" });
   } catch {

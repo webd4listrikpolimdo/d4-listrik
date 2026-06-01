@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import { createLog, getClientIp } from "@/lib/logging";
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,6 +37,20 @@ export async function POST(request: NextRequest) {
     if (profileError) {
       console.error("Profile fetch error:", profileError.message);
     }
+
+    // Log the login event
+    const ipAddress = getClientIp(request);
+    await createLog({
+      kategori: "auth",
+      aksi: "login",
+      deskripsi: `User ${profile?.full_name || data.user.email} berhasil masuk ke dashboard (${profile?.role || "dosen"})`,
+      ip_address: ipAddress,
+      user: {
+        id: data.user.id,
+        email: data.user.email!,
+        full_name: profile?.full_name || null,
+      },
+    });
 
     return NextResponse.json({
       user: {

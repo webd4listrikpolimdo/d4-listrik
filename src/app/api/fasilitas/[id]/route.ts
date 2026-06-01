@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
+import { createLog, getClientIp } from "@/lib/logging";
 
 // PUT /api/fasilitas/[id] — Admin/Pegawai
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -55,6 +56,15 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       }
     }
 
+    await createLog({
+      kategori: "fasilitas",
+      aksi: "update",
+      deskripsi: `Mengubah fasilitas: ${data?.nama || id}`,
+      data_sebelum: currentFasilitas,
+      data_sesudah: data,
+      ip_address: getClientIp(request),
+    });
+
     return NextResponse.json(data);
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -95,6 +105,14 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
         await adminSupabase.storage.from("galeri").remove(fileNames);
       }
     }
+
+    await createLog({
+      kategori: "fasilitas",
+      aksi: "delete",
+      deskripsi: `Menghapus fasilitas ID: ${id}`,
+      data_sebelum: currentFasilitas,
+      ip_address: getClientIp(_request),
+    });
 
     return NextResponse.json({ success: true });
   } catch {

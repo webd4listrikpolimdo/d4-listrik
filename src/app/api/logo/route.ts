@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
+import { createLog, getClientIp } from "@/lib/logging";
 
 export async function GET() {
   try {
@@ -47,6 +48,14 @@ export async function PUT(request: NextRequest) {
         await adminSupabase.storage.from("galeri").remove([fileName]);
       }
     }
+
+    await createLog({
+      kategori: "config",
+      aksi: "update",
+      deskripsi: `Memperbarui logo program studi`,
+      data_sesudah: data,
+      ip_address: getClientIp(request),
+    });
 
     return NextResponse.json({ success: true });
   } catch {

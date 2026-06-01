@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireAuth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
+import { createLog, getClientIp } from "@/lib/logging";
 
 // GET /api/karya — Public: List karya (filter by ?dosen_id=)
 export async function GET(request: NextRequest) {
@@ -87,6 +88,14 @@ export async function POST(request: NextRequest) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
+
+    await createLog({
+      kategori: "karya",
+      aksi: "create",
+      deskripsi: `Menambahkan karya: ${judul} (${jenis})`,
+      data_sesudah: data,
+      ip_address: getClientIp(request),
+    });
 
     return NextResponse.json(data, { status: 201 });
   } catch {

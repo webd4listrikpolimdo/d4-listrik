@@ -12,14 +12,19 @@ export function getClientIp(request: NextRequest): string {
 
 export async function createLog(params: {
   kategori: string;
-  aksi: "create" | "update" | "delete" | "approve" | "reject";
+  aksi: "create" | "update" | "delete" | "approve" | "reject" | "login" | "logout";
   deskripsi: string;
   data_sebelum?: any;
   data_sesudah?: any;
   ip_address?: string;
+  user?: {
+    id: string;
+    email: string;
+    full_name?: string | null;
+  };
 }) {
   try {
-    const user = await getUser();
+    const user = params.user || await getUser();
     if (!user) return; // logs only for authenticated actions
 
     const adminSupabase = createAdminClient();

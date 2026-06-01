@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
+import { createLog, getClientIp } from "@/lib/logging";
 
 export async function GET() {
   try {
@@ -49,6 +50,14 @@ export async function PUT(request: NextRequest) {
         await adminSupabase.storage.from("heroBackground").remove([fileName]);
       }
     }
+
+    await createLog({
+      kategori: "config",
+      aksi: "update",
+      deskripsi: `Memperbarui gambar latar belakang hero website`,
+      data_sesudah: { hero_bg_url: data.hero_bg_url || null },
+      ip_address: getClientIp(request),
+    });
 
     return NextResponse.json({ success: true });
   } catch {

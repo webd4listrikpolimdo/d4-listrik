@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
+import { createLog, getClientIp } from "@/lib/logging";
 
 // GET /api/kurikulum — Public: Get kurikulum_aktif, mata_kuliah, cpl
 export async function GET() {
@@ -76,6 +77,14 @@ export async function PUT(request: NextRequest) {
         await adminSupabase.storage.from("kurikulum").remove([fileName]);
       }
     }
+
+    await createLog({
+      kategori: "kurikulum",
+      aksi: "update",
+      deskripsi: `Memperbarui dokumen kurikulum aktif: ${data.nama}`,
+      data_sesudah: data,
+      ip_address: getClientIp(request),
+    });
 
     return NextResponse.json(data);
   } catch {

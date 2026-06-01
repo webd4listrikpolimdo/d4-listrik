@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireAuth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
+import { createLog, getClientIp } from "@/lib/logging";
 
 // GET /api/kegiatan-pending — Admin: all pending; Dosen/Pegawai: own pending
 export async function GET() {
@@ -68,6 +69,15 @@ export async function POST(request: NextRequest) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
+
+    await createLog({
+      kategori: "kegiatan_pending",
+      aksi: "create",
+      deskripsi: `Mengajukan kegiatan baru: ${nama}`,
+      data_sesudah: data,
+      ip_address: getClientIp(request),
+    });
+
     return NextResponse.json(data, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

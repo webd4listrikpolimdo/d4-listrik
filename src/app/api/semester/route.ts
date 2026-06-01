@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
+import { createLog, getClientIp } from "@/lib/logging";
 
 // GET /api/semester — Public: Get all semesters
 export async function GET() {
@@ -62,6 +63,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: statError.message }, { status: 400 });
     }
 
+    await createLog({
+      kategori: "semester",
+      aksi: "create",
+      deskripsi: `Membuat semester baru: ${id} (${jenis} ${tahun_akademik})`,
+      data_sesudah: semester,
+      ip_address: getClientIp(request),
+    });
+
     return NextResponse.json(semester, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -97,6 +106,14 @@ export async function PUT(request: NextRequest) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
+
+    await createLog({
+      kategori: "semester",
+      aksi: "update",
+      deskripsi: `Mengaktifkan semester: ${id}`,
+      data_sesudah: data,
+      ip_address: getClientIp(request),
+    });
 
     return NextResponse.json(data);
   } catch {
@@ -139,6 +156,13 @@ export async function DELETE(request: NextRequest) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
+
+    await createLog({
+      kategori: "semester",
+      aksi: "delete",
+      deskripsi: `Menghapus semester: ${id}`,
+      ip_address: getClientIp(request),
+    });
 
     return NextResponse.json({ success: true });
   } catch {

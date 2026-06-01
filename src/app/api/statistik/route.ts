@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
+import { createLog, getClientIp } from "@/lib/logging";
 
 // GET /api/statistik — Public: Get stats summary + per-level breakdown + per-year lulusan
 export async function GET(request: NextRequest) {
@@ -125,6 +126,14 @@ export async function PUT(request: NextRequest) {
       }
     }
 
+    await createLog({
+      kategori: "statistik",
+      aksi: "update",
+      deskripsi: `Mengubah statistik mahasiswa per tingkat`,
+      data_sesudah: per_level,
+      ip_address: getClientIp(request),
+    });
+
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -156,6 +165,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
+    await createLog({
+      kategori: "statistik",
+      aksi: "create",
+      deskripsi: `Menambahkan data lulusan tahun ${tahun}: ${jumlah_lulusan} orang`,
+      data_sesudah: data,
+      ip_address: getClientIp(request),
+    });
+
     return NextResponse.json(data, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -183,6 +200,13 @@ export async function DELETE(request: NextRequest) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
+
+    await createLog({
+      kategori: "statistik",
+      aksi: "delete",
+      deskripsi: `Menghapus data lulusan ID: ${lulusanId}`,
+      ip_address: getClientIp(request),
+    });
 
     return NextResponse.json({ success: true });
   } catch {

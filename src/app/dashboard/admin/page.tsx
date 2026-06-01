@@ -3,9 +3,11 @@
 import { HiOutlineUserGroup, HiOutlinePhoto, HiOutlineAcademicCap, HiOutlineBookOpen, HiOutlineTrophy, HiOutlineChartBarSquare, HiOutlineClock, HiOutlineFunnel } from "react-icons/hi2";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { cachedFetch } from "@/lib/fetchCache";
 import { useNotification } from "@/context/NotificationContext";
 import TablePagination from "@/components/universal/TablePagination";
+import Modal from "@/components/universal/Modal";
 
 interface Stats {
   total_mahasiswa_aktif: number;
@@ -26,17 +28,36 @@ interface AuditLog {
   deskripsi: string;
   ip_address: string | null;
   created_at: string;
+  data_sebelum?: any;
+  data_sesudah?: any;
 }
 
 export default function AdminDashboardPage() {
   const { showError } = useNotification();
   const [stats, setStats] = useState<Stats | null>(null);
   const [mataKuliahCount, setMataKuliahCount] = useState<number>(0);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Logs state
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [count, setCount] = useState(0);
   const [isLoadingLogs, setIsLoadingLogs] = useState(true);
+  const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
+
+  const formatLogTime = (dateStr: string) => {
+    const d = new Date(dateStr);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    const seconds = String(d.getSeconds()).padStart(2, '0');
+    return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+  };
 
   // Pagination states for logs
   const [currentPage, setCurrentPage] = useState(1);
@@ -425,12 +446,13 @@ export default function AdminDashboardPage() {
                   <th className="px-6 py-4">Kategori</th>
                   <th className="px-6 py-4">Deskripsi Aktivitas</th>
                   <th className="px-6 py-4">IP Address</th>
+                  <th className="px-6 py-4 text-center">Data</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50 font-medium">
                 {isLoadingLogs ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-gray-400 animate-pulse">
+                    <td colSpan={7} className="px-6 py-12 text-center text-gray-400 animate-pulse">
                       Memuat data log audit...
                     </td>
                   </tr>
@@ -439,7 +461,7 @@ export default function AdminDashboardPage() {
                     {logs.map((log) => (
                       <tr key={log.id} className="hover:bg-gray-50/30 transition-colors text-gray-700">
                         <td className="px-6 py-3 text-xs text-gray-400 whitespace-nowrap">
-                          {new Date(log.created_at).toLocaleString("id-ID")}
+                          {formatLogTime(log.created_at)}
                         </td>
                         <td className="px-6 py-3 text-xs text-gray-900">
                           <div>{log.user_name || log.user_email}</div>
@@ -456,11 +478,23 @@ export default function AdminDashboardPage() {
                         </td>
                         <td className="px-6 py-3 text-xs text-gray-600 max-w-sm leading-relaxed">{log.deskripsi}</td>
                         <td className="px-6 py-3 text-xs text-gray-400 font-mono">{log.ip_address || "—"}</td>
+                        <td className="px-6 py-3 text-center">
+                          {(log.data_sebelum || log.data_sesudah) ? (
+                            <button
+                              onClick={() => setSelectedLog(log)}
+                              className="px-2.5 py-1 text-xs font-bold text-primary-600 bg-primary-50 hover:bg-primary-100 border border-primary-200/50 rounded-lg transition-colors cursor-pointer"
+                            >
+                              Detail
+                            </button>
+                          ) : (
+                            <span className="text-gray-400 text-xs font-normal">—</span>
+                          )}
+                        </td>
                       </tr>
                     ))}
                     {logs.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="px-6 py-10 text-center text-gray-400">
+                        <td colSpan={7} className="px-6 py-10 text-center text-gray-400">
                           Tidak ada aktivitas yang tercatat untuk filter ini.
                         </td>
                       </tr>
@@ -484,16 +518,15 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Filter Pop-up Modal */}
-      {isFilterModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-gray-100 flex flex-col gap-4 animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
+      {isFilterModalOpen && mounted && createPortal(
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 p-3 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl max-w-md w-full max-h-[calc(100vh-2rem)] p-4 sm:p-6 shadow-xl border border-gray-100 flex flex-col gap-3 sm:gap-4 animate-in fade-in zoom-in duration-200 overflow-hidden">
+            <div className="flex items-center gap-2 border-b border-gray-100 pb-3 flex-shrink-0">
               <HiOutlineFunnel className="w-5 h-5 text-primary-600" />
-              <h3 className="text-lg font-bold text-gray-900">Pengaturan Filter</h3>
+              <h3 className="text-base sm:text-lg font-bold text-gray-900">Pengaturan Filter</h3>
             </div>
 
-            <div className="flex flex-col gap-4">
+            <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 flex flex-col gap-3 sm:gap-4 py-1 min-h-0">
               <div>
                 <label className="block text-xs font-bold text-gray-600 mb-1">IP Address</label>
                 <input
@@ -541,7 +574,7 @@ export default function AdminDashboardPage() {
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-600 mb-1">Mulai Tanggal</label>
                   <input
@@ -564,7 +597,7 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between border-t border-gray-100 pt-4 mt-2">
+            <div className="flex items-center justify-between border-t border-gray-100 pt-3 flex-shrink-0">
               <button
                 type="button"
                 onClick={() => {
@@ -582,38 +615,39 @@ export default function AdminDashboardPage() {
                 <button
                   type="button"
                   onClick={closeFilterModal}
-                  className="px-4 py-2 border border-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 transition-colors"
+                  className="px-3.5 py-1.5 sm:px-4 sm:py-2 border border-gray-200 text-gray-700 rounded-xl text-xs sm:text-sm font-bold hover:bg-gray-50 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={applyFilters}
-                  className="px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-bold hover:bg-primary-700 transition-colors shadow-sm"
+                  className="px-3.5 py-1.5 sm:px-4 sm:py-2 bg-primary-600 text-white rounded-xl text-xs sm:text-sm font-bold hover:bg-primary-700 transition-colors shadow-sm"
                 >
                   Apply
                 </button>
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Export Pop-up Modal */}
-      {isExportModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-gray-100 flex flex-col gap-4 animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
+      {isExportModalOpen && mounted && createPortal(
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 p-3 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl max-w-sm w-full max-h-[calc(100vh-2rem)] p-4 sm:p-6 shadow-xl border border-gray-100 flex flex-col gap-3 sm:gap-4 animate-in fade-in zoom-in duration-200 overflow-hidden">
+            <div className="flex items-center gap-2 border-b border-gray-100 pb-3 flex-shrink-0">
               <HiOutlineChartBarSquare className="w-5 h-5 text-primary-600" />
-              <h3 className="text-lg font-bold text-gray-900">Pengaturan Ekspor</h3>
+              <h3 className="text-base sm:text-lg font-bold text-gray-900">Pengaturan Ekspor</h3>
             </div>
 
-            <div>
-              <p className="text-sm text-gray-500 mb-4 leading-relaxed">
+            <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 flex flex-col gap-3 min-h-0">
+              <p className="text-xs sm:text-sm text-gray-500 mb-1 leading-relaxed">
                 Ekspor data log audit berdasarkan filter yang sedang aktif saat ini.
               </p>
 
-              <div className="bg-gray-50 rounded-2xl p-4 mb-4 border border-gray-100 flex flex-col gap-2 text-xs">
+              <div className="bg-gray-50 rounded-2xl p-3 border border-gray-100 flex flex-col gap-2 text-[11px] sm:text-xs">
                 <div className="flex justify-between">
                   <span className="text-gray-500 font-medium">Jumlah Baris:</span>
                   <span className="font-extrabold text-gray-900">{count} baris</span>
@@ -624,7 +658,7 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              <div className="mb-4">
+              <div>
                 <label className="block text-xs font-bold text-gray-600 mb-1">Nama File Kustom</label>
                 <input
                   type="text"
@@ -635,40 +669,40 @@ export default function AdminDashboardPage() {
                 />
               </div>
 
-              <label className="block text-xs font-bold text-gray-600 mb-2">Pilih Format File</label>
-              <div className="grid grid-cols-2 gap-3 mb-2">
+              <label className="block text-xs font-bold text-gray-600 mb-1">Pilih Format File</label>
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 <button
                   type="button"
                   onClick={() => setExportFormat("json")}
-                  className={`py-3 border rounded-2xl font-bold text-sm transition-all flex flex-col items-center justify-center gap-1 shadow-sm ${
+                  className={`py-2 border rounded-2xl font-bold text-xs sm:text-sm transition-all flex flex-col items-center justify-center gap-0.5 shadow-sm ${
                     exportFormat === "json"
                       ? "border-primary-500 bg-primary-50 text-primary-700 ring-2 ring-primary-100"
                       : "border-gray-200 hover:bg-gray-50 text-gray-700 bg-white"
                   }`}
                 >
-                  <span className="text-[10px] uppercase text-gray-400">format file</span>
+                  <span className="text-[9px] uppercase text-gray-400 font-medium">format file</span>
                   JSON File
                 </button>
                 <button
                   type="button"
                   onClick={() => setExportFormat("csv")}
-                  className={`py-3 border rounded-2xl font-bold text-sm transition-all flex flex-col items-center justify-center gap-1 shadow-sm ${
+                  className={`py-2 border rounded-2xl font-bold text-xs sm:text-sm transition-all flex flex-col items-center justify-center gap-0.5 shadow-sm ${
                     exportFormat === "csv"
                       ? "border-primary-500 bg-primary-50 text-primary-700 ring-2 ring-primary-100"
                       : "border-gray-200 hover:bg-gray-50 text-gray-700 bg-white"
                   }`}
                 >
-                  <span className="text-[10px] uppercase text-gray-400">format file</span>
+                  <span className="text-[9px] uppercase text-gray-400 font-medium">format file</span>
                   CSV File
                 </button>
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 border-t border-gray-100 pt-4 mt-2">
+            <div className="flex items-center justify-end gap-2 border-t border-gray-100 pt-3 flex-shrink-0">
               <button
                 type="button"
                 onClick={() => setIsExportModalOpen(false)}
-                className="px-4 py-2 border border-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 transition-colors"
+                className="px-3.5 py-1.5 sm:px-4 sm:py-2 border border-gray-200 text-gray-700 rounded-xl text-xs sm:text-sm font-bold hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
@@ -678,33 +712,34 @@ export default function AdminDashboardPage() {
                   setIsExportModalOpen(false);
                   setIsConfirmModalOpen(true);
                 }}
-                className="px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-bold hover:bg-primary-700 transition-colors shadow-sm"
+                className="px-3.5 py-1.5 sm:px-4 sm:py-2 bg-primary-600 text-white rounded-xl text-xs sm:text-sm font-bold hover:bg-primary-700 transition-colors shadow-sm"
               >
                 Unduh Berkas
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Confirmation Modal */}
-      {isConfirmModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-gray-100 flex flex-col gap-4 animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
+      {isConfirmModalOpen && mounted && createPortal(
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 p-3 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl max-w-sm w-full max-h-[calc(100vh-2rem)] p-4 sm:p-6 shadow-xl border border-gray-100 flex flex-col gap-3 sm:gap-4 animate-in fade-in zoom-in duration-200 overflow-hidden">
+            <div className="flex items-center gap-2 border-b border-gray-100 pb-3 flex-shrink-0">
               <HiOutlineClock className="w-5 h-5 text-amber-500" />
-              <h3 className="text-lg font-bold text-gray-900">Konfirmasi Unduhan</h3>
+              <h3 className="text-base sm:text-lg font-bold text-gray-900">Konfirmasi Unduhan</h3>
             </div>
 
-            <div>
-              <p className="text-sm text-gray-600 leading-relaxed font-semibold mb-3">
+            <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 flex flex-col gap-3 min-h-0">
+              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-semibold">
                 Lanjutkan untuk mengunduh berkas ini dengan detail sebagai berikut:
               </p>
               
-              <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 flex flex-col gap-2 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-gray-500 font-medium">Nama Berkas:</span>
-                  <span className="font-extrabold text-gray-950 font-mono text-right break-all max-w-[180px]">
+              <div className="bg-gray-50 rounded-2xl p-3 border border-gray-100 flex flex-col gap-2 text-[11px] sm:text-xs">
+                <div className="flex justify-between items-start gap-2">
+                  <span className="text-gray-500 font-medium flex-shrink-0">Nama Berkas:</span>
+                  <span className="font-extrabold text-gray-950 font-mono text-right break-all max-w-[170px] sm:max-w-[200px]">
                     {exportFilename.trim() || "audit-logs"}.{exportFormat}
                   </span>
                 </div>
@@ -723,11 +758,11 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 border-t border-gray-100 pt-4 mt-2">
+            <div className="flex items-center justify-end gap-2 border-t border-gray-100 pt-3 flex-shrink-0">
               <button
                 type="button"
                 onClick={() => setIsConfirmModalOpen(false)}
-                className="px-4 py-2 border border-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 transition-colors"
+                className="px-3.5 py-1.5 sm:px-4 sm:py-2 border border-gray-200 text-gray-700 rounded-xl text-xs sm:text-sm font-bold hover:bg-gray-50 transition-colors"
               >
                 Batal
               </button>
@@ -737,14 +772,93 @@ export default function AdminDashboardPage() {
                   exportLogs(exportFormat);
                   setIsConfirmModalOpen(false);
                 }}
-                className="px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-bold hover:bg-primary-700 transition-colors shadow-sm"
+                className="px-3.5 py-1.5 sm:px-4 sm:py-2 bg-primary-600 text-white rounded-xl text-xs sm:text-sm font-bold hover:bg-primary-700 transition-colors shadow-sm"
               >
                 Lanjutkan
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
+
+      <Modal
+        isOpen={!!selectedLog}
+        onClose={() => setSelectedLog(null)}
+        title="Detail Perubahan Data"
+      >
+        {selectedLog && (
+          <div className="space-y-4 max-w-xl">
+            <div className="grid grid-cols-2 gap-3 text-xs border-b border-gray-100 pb-3">
+              <div>
+                <span className="text-gray-400 block font-medium">Waktu</span>
+                <span className="font-semibold text-gray-800">{formatLogTime(selectedLog.created_at)}</span>
+              </div>
+              <div>
+                <span className="text-gray-400 block font-medium">Pengguna</span>
+                <span className="font-semibold text-gray-800">{selectedLog.user_name || selectedLog.user_email}</span>
+              </div>
+              <div>
+                <span className="text-gray-400 block font-medium">Kategori / Aksi</span>
+                <span className="font-semibold text-gray-850 uppercase flex items-center gap-1.5 mt-0.5">
+                  <span className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-bold border border-gray-200 text-[10px]">
+                    {selectedLog.kategori}
+                  </span>
+                  <span>{getActionBadge(selectedLog.aksi)}</span>
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-400 block font-medium">IP Address</span>
+                <span className="font-semibold font-mono text-gray-800">{selectedLog.ip_address || "—"}</span>
+              </div>
+            </div>
+            
+            <div>
+              <span className="text-xs text-gray-400 block mb-1 font-medium">Deskripsi Aktivitas</span>
+              <p className="text-sm text-gray-800 font-semibold bg-slate-50 p-3 rounded-xl border border-slate-200/40 leading-relaxed">
+                {selectedLog.deskripsi}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Sebelum</span>
+                {selectedLog.data_sebelum ? (
+                  <pre className="bg-slate-900 text-slate-100 p-3.5 rounded-xl text-[10px] sm:text-xs overflow-x-auto font-mono max-h-56 border border-slate-800/80 custom-scrollbar">
+                    {JSON.stringify(selectedLog.data_sebelum, null, 2)}
+                  </pre>
+                ) : (
+                  <div className="text-xs text-gray-400 italic bg-gray-50 p-3.5 rounded-xl border border-dashed border-gray-200">
+                    Tidak ada data (Baru)
+                  </div>
+                )}
+              </div>
+              <div>
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Sesudah</span>
+                {selectedLog.data_sesudah ? (
+                  <pre className="bg-slate-900 text-slate-100 p-3.5 rounded-xl text-[10px] sm:text-xs overflow-x-auto font-mono max-h-56 border border-slate-800/80 custom-scrollbar">
+                    {JSON.stringify(selectedLog.data_sesudah, null, 2)}
+                  </pre>
+                ) : (
+                  <div className="text-xs text-gray-400 italic bg-gray-50 p-3.5 rounded-xl border border-dashed border-gray-200">
+                    Tidak ada data (Dihapus)
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-gray-100 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setSelectedLog(null)}
+                className="px-4 py-2 bg-gray-150 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-semibold transition-colors cursor-pointer"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

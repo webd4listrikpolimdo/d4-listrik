@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
+import { createLog, getClientIp } from "@/lib/logging";
 
 export async function GET() {
   try {
@@ -30,6 +31,15 @@ export async function PUT(request: NextRequest) {
       .upsert({ id: 1, ...data });
 
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+    await createLog({
+      kategori: "config",
+      aksi: "update",
+      deskripsi: `Memperbarui informasi umum Program Studi`,
+      data_sesudah: data,
+      ip_address: getClientIp(request),
+    });
+
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

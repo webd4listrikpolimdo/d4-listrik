@@ -40,6 +40,7 @@ export default function AdminKurikulumPage() {
   const [categories, setCategories] = useState<CplKategori[]>([]);
   const [catModalOpen, setCatModalOpen] = useState(false);
   const [catName, setCatName] = useState("");
+  const [catEditingId, setCatEditingId] = useState<number | null>(null);
   const [isCatSubmitting, setIsCatSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isMkLoading, setIsMkLoading] = useState(false);
@@ -286,25 +287,59 @@ export default function AdminKurikulumPage() {
     if (!catName.trim()) return;
     setIsCatSubmitting(true);
     try {
-      const res = await fetch("/api/cpl-kategori", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nama: catName.trim() }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Gagal membuat kategori");
+      if (catEditingId) {
+        const res = await fetch(`/api/cpl-kategori/${catEditingId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nama: catName.trim() }),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || "Gagal mengubah kategori");
+        }
+        showSuccess("Kategori CPL berhasil diubah!");
+      } else {
+        const res = await fetch("/api/cpl-kategori", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nama: catName.trim() }),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || "Gagal membuat kategori");
+        }
+        showSuccess("Kategori CPL baru berhasil ditambahkan!");
       }
       invalidateCache("/api/cpl-kategori");
       await fetchCategories();
-      setCatModalOpen(false);
       setCatName("");
-      showSuccess("Kategori CPL baru berhasil ditambahkan!");
+      setCatEditingId(null);
     } catch (err: any) {
-      showError(err.message || "Gagal menambahkan kategori");
+      showError(err.message || "Gagal menyimpan kategori");
     } finally {
       setIsCatSubmitting(false);
     }
+  };
+
+  const handleCatDelete = async (id: number, nama: string) => {
+    showConfirm("Hapus Kategori CPL", `Hapus kategori "${nama}"? Tindakan ini tidak dapat dibatalkan.`, async () => {
+      try {
+        const res = await fetch(`/api/cpl-kategori/${id}`, { method: "DELETE" });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || "Gagal menghapus kategori");
+        }
+        invalidateCache("/api/cpl-kategori");
+        await fetchCategories();
+        showSuccess("Kategori CPL berhasil dihapus!");
+        if (catEditingId === id) {
+          setCatEditingId(null);
+          setCatName("");
+        }
+      } catch (err: any) {
+        showError(err.message || "Terjadi kesalahan");
+      }
+    });
   };
 
   const handleCplDelete = async (kode: string) => {
@@ -960,37 +995,86 @@ export default function AdminKurikulumPage() {
         </form>
       </Modal>
 
-      <Modal isOpen={catModalOpen} onClose={() => setCatModalOpen(false)} title="Tambah Kategori CPL">
-        <form onSubmit={handleCatSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Nama Kategori</label>
-            <input
-              type="text"
-              required
-              value={catName}
-              onChange={(e) => setCatName(e.target.value)}
-              className={inputCls}
-              placeholder="Contoh: Sikap, Keterampilan Umum"
-            />
+      <Modal isOpen={catModalOpen} onClose={() => { setCatModalOpen(false); setCatEditingId(null); setCatName(""); }} title="Kelola Kategori CPL">
+        <div className="space-y-6">
+          <form onSubmit={handleCatSubmit} className="space-y-3 bg-gray-50 p-4 rounded-xl border border-gray-200/60">
+            <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+              {catEditingId ? "Edit Kategori CPL" : "Tambah Kategori CPL Baru"}
+            </h4>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                required
+                value={catName}
+                onChange={(e) => setCatName(e.target.value)}
+                className={inputCls}
+                placeholder="Contoh: Keterampilan Khusus"
+              />
+              <button
+                type="submit"
+                disabled={isCatSubmitting}
+                className="px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-bold hover:bg-primary-700 transition-colors disabled:opacity-50 flex-shrink-0"
+              >
+                {isCatSubmitting ? "Proses..." : catEditingId ? "Simpan" : "Tambah"}
+              </button>
+              {catEditingId && (
+                <button
+                  type="button"
+                  onClick={() => { setCatEditingId(null); setCatName(""); }}
+                  className="px-3 py-2 bg-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-300 transition-colors flex-shrink-0"
+                >
+                  Batal
+                </button>
+              )}
+            </div>
+          </form>
+
+          <div className="space-y-2">
+            <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+              Daftar Kategori ({categories.length})
+            </h4>
+            <div className="divide-y divide-gray-150 border border-gray-200/80 rounded-xl overflow-hidden bg-white max-h-60 overflow-y-auto custom-scrollbar">
+              {categories.map((cat) => (
+                <div key={cat.id} className="flex items-center justify-between px-4 py-3 hover:bg-gray-50/50 transition-colors">
+                  <span className="text-sm font-medium text-gray-900">{cat.nama}</span>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => { setCatEditingId(cat.id); setCatName(cat.nama); }}
+                      className="p-1 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors cursor-pointer"
+                      title="Ubah Kategori"
+                    >
+                      <HiOutlinePencilSquare className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleCatDelete(cat.id, cat.nama)}
+                      className="p-1 text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                      title="Hapus Kategori"
+                    >
+                      <HiOutlineTrash className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {categories.length === 0 && (
+                <div className="px-4 py-6 text-center text-gray-400 text-xs font-medium">
+                  Belum ada kategori CPL.
+                </div>
+              )}
+            </div>
           </div>
-          <div className="pt-4 flex justify-end gap-3 border-t border-gray-100 mt-6">
+
+          <div className="pt-4 border-t border-gray-100 flex justify-end">
             <button
               type="button"
-              onClick={() => setCatModalOpen(false)}
+              onClick={() => { setCatModalOpen(false); setCatEditingId(null); setCatName(""); }}
               className="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors"
-              disabled={isCatSubmitting}
             >
-              Batal
-            </button>
-            <button
-              type="submit"
-              disabled={isCatSubmitting}
-              className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 transition-colors"
-            >
-              {isCatSubmitting ? "Menyimpan..." : "Simpan"}
+              Tutup
             </button>
           </div>
-        </form>
+        </div>
       </Modal>
 
       <ConfirmDialog

@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createLog, getClientIp } from "@/lib/logging";
 
 // GET /api/pegawai — Public: Get all pegawai
 export async function GET() {
@@ -93,6 +94,14 @@ export async function POST(request: NextRequest) {
       }
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
+
+    await createLog({
+      kategori: "pegawai",
+      aksi: "create",
+      deskripsi: `Menambahkan staf pegawai baru: ${nama} (NIP: ${nip})`,
+      data_sesudah: data,
+      ip_address: getClientIp(request),
+    });
 
     return NextResponse.json(data, { status: 201 });
   } catch {
