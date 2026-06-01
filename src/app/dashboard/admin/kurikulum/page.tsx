@@ -782,87 +782,78 @@ export default function AdminKurikulumPage() {
             <div className="text-center py-12 text-gray-400 font-medium animate-pulse">Loading Mata Kuliah...</div>
           ) : (
           <>
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
-            <div className="relative max-w-xs w-full">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                <HiOutlineMagnifyingGlass className="w-4 h-4" />
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-4">
+            <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+              <div className="relative w-full sm:w-60">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                  <HiOutlineMagnifyingGlass className="w-4 h-4" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Cari mata kuliah..."
+                  value={mkSearchQuery}
+                  onChange={e => { setMkSearchQuery(e.target.value); setMkPage(1); }}
+                  className="w-full pl-9 pr-8 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-gray-900"
+                />
+                {mkSearchQuery && (
+                  <button onClick={() => { setMkSearchQuery(""); setMkPage(1); }} className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-gray-400 hover:text-gray-600">
+                    <HiOutlineXMark className="w-4 h-4" />
+                  </button>
+                )}
               </div>
-              <input
-                type="text"
-                placeholder="Cari mata kuliah..."
-                value={mkSearchQuery}
-                onChange={e => { setMkSearchQuery(e.target.value); setMkPage(1); }}
-                className="w-full pl-9 pr-8 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-gray-900"
-              />
-              {mkSearchQuery && (
-                <button onClick={() => { setMkSearchQuery(""); setMkPage(1); }} className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-gray-400 hover:text-gray-600">
-                  <HiOutlineXMark className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-            <button onClick={() => { setMkEditingKode(null); setMkForm({ kode: "", nama: "", sks: 2, semester: 1, jenis: "Teori" }); setMkModalOpen(true); }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm cursor-pointer w-full sm:w-auto justify-center">
-              <HiOutlinePlus className="w-5 h-5" /> Tambah Mata Kuliah
-            </button>
-          </div>
 
-          {/* Mata Kuliah Filters */}
-          <div className="flex flex-wrap items-center gap-4 p-4 bg-gray-50/50 border border-gray-100 rounded-2xl mb-4">
-            <div>
-              <span className="text-xs font-semibold text-gray-500 block mb-1">Semester</span>
               <select
                 value={mkFilterSemester}
                 onChange={(e) => { setMkFilterSemester(e.target.value); setMkPage(1); }}
-                className="w-full sm:w-32 px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/25 text-gray-800 font-medium cursor-pointer"
+                className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/25 text-gray-800 font-medium cursor-pointer"
               >
-                <option value="">Semua</option>
+                <option value="">Smt: Semua</option>
                 {[1, 2, 3, 4, 5, 6, 7, 8].map(s => (
-                  <option key={s} value={String(s)}>Semester {s}</option>
+                  <option key={s} value={String(s)}>Smt {s}</option>
                 ))}
               </select>
-            </div>
 
-            <div>
-              <span className="text-xs font-semibold text-gray-500 block mb-1">SKS</span>
               <select
                 value={mkFilterSks}
                 onChange={(e) => { setMkFilterSks(e.target.value); setMkPage(1); }}
-                className="w-full sm:w-32 px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/25 text-gray-800 font-medium cursor-pointer"
+                className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/25 text-gray-800 font-medium cursor-pointer"
               >
-                <option value="">Semua</option>
+                <option value="">SKS: Semua</option>
                 {uniqueMkSks.map(s => (
                   <option key={s} value={String(s)}>{s} SKS</option>
                 ))}
               </select>
-            </div>
 
-            <div>
-              <span className="text-xs font-semibold text-gray-500 block mb-1">Jenis</span>
               <select
                 value={mkFilterJenis}
                 onChange={(e) => { setMkFilterJenis(e.target.value); setMkPage(1); }}
-                className="w-full sm:w-48 px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/25 text-gray-800 font-medium cursor-pointer"
+                className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/25 text-gray-800 font-medium cursor-pointer"
               >
-                <option value="">Semua</option>
+                <option value="">Jenis: Semua</option>
                 {uniqueMkJenis.map(j => (
                   <option key={j} value={j}>{j}</option>
                 ))}
               </select>
+
+              {(mkFilterSemester || mkFilterSks || mkFilterJenis) && (
+                <button
+                  onClick={() => {
+                    setMkFilterSemester("");
+                    setMkFilterSks("");
+                    setMkFilterJenis("");
+                    setMkPage(1);
+                  }}
+                  className="px-3 py-2 text-xs font-bold bg-gray-105 hover:bg-gray-200 text-gray-650 rounded-xl transition-all cursor-pointer shadow-sm"
+                >
+                  Reset
+                </button>
+              )}
             </div>
 
-            {(mkFilterSemester || mkFilterSks || mkFilterJenis) && (
-              <button
-                onClick={() => {
-                  setMkFilterSemester("");
-                  setMkFilterSks("");
-                  setMkFilterJenis("");
-                  setMkPage(1);
-                }}
-                className="sm:mt-5 px-4 py-2 text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-650 rounded-xl transition-all cursor-pointer shadow-sm"
-              >
-                Reset Filter
-              </button>
-            )}
+            <button onClick={() => { setMkEditingKode(null); setMkForm({ kode: "", nama: "", sks: 2, semester: 1, jenis: "Teori" }); setMkModalOpen(true); }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm cursor-pointer w-full lg:w-auto justify-center">
+              <HiOutlinePlus className="w-5 h-5" /> Tambah Mata Kuliah
+            </button>
           </div>
           <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
@@ -940,25 +931,50 @@ export default function AdminKurikulumPage() {
             <div className="text-center py-12 text-gray-400 font-medium animate-pulse">Loading CPL...</div>
           ) : (
           <>
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
-            <div className="relative max-w-xs w-full">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                <HiOutlineMagnifyingGlass className="w-4 h-4" />
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-4">
+            <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+              <div className="relative w-full sm:w-60">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                  <HiOutlineMagnifyingGlass className="w-4 h-4" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Cari CPL..."
+                  value={cplSearchQuery}
+                  onChange={e => { setCplSearchQuery(e.target.value); setcplPage(1); }}
+                  className="w-full pl-9 pr-8 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-gray-900"
+                />
+                {cplSearchQuery && (
+                  <button onClick={() => { setCplSearchQuery(""); setcplPage(1); }} className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-gray-400 hover:text-gray-600">
+                    <HiOutlineXMark className="w-4 h-4" />
+                  </button>
+                )}
               </div>
-              <input
-                type="text"
-                placeholder="Cari CPL..."
-                value={cplSearchQuery}
-                onChange={e => { setCplSearchQuery(e.target.value); setcplPage(1); }}
-                className="w-full pl-9 pr-8 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-gray-900"
-              />
-              {cplSearchQuery && (
-                <button onClick={() => { setCplSearchQuery(""); setcplPage(1); }} className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-gray-400 hover:text-gray-600">
-                  <HiOutlineXMark className="w-4 h-4" />
+
+              <select
+                value={cplFilterKategori}
+                onChange={(e) => { setCplFilterKategori(e.target.value); setcplPage(1); }}
+                className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/25 text-gray-800 font-medium cursor-pointer"
+              >
+                <option value="">Semua Kategori</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.nama}>{cat.nama}</option>
+                ))}
+              </select>
+
+              {cplFilterKategori && (
+                <button
+                  onClick={() => {
+                    setCplFilterKategori("");
+                    setcplPage(1);
+                  }}
+                  className="px-3 py-2 text-xs font-bold bg-gray-105 hover:bg-gray-250 text-gray-650 rounded-xl transition-all cursor-pointer shadow-sm"
+                >
+                  Reset
                 </button>
               )}
             </div>
-            <div className="flex gap-2 w-full sm:w-auto">
+            <div className="flex gap-2 w-full lg:w-auto">
               <button onClick={() => { setCatModalOpen(true); setCatName(""); }}
                 className="inline-flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-700 bg-white rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm cursor-pointer justify-center w-full sm:w-auto">
                 <HiOutlinePlus className="w-5 h-5 text-gray-400" /> Kategori CPL
@@ -968,35 +984,6 @@ export default function AdminKurikulumPage() {
                 <HiOutlinePlus className="w-5 h-5" /> Tambah CPL
               </button>
             </div>
-          </div>
-
-          {/* CPL Filters */}
-          <div className="flex flex-wrap items-center gap-4 p-4 bg-gray-50/50 border border-gray-100 rounded-2xl mb-4">
-            <div>
-              <span className="text-xs font-semibold text-gray-500 block mb-1">Kategori CPL</span>
-              <select
-                value={cplFilterKategori}
-                onChange={(e) => { setCplFilterKategori(e.target.value); setcplPage(1); }}
-                className="w-full sm:w-64 px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/25 text-gray-800 font-medium cursor-pointer"
-              >
-                <option value="">Semua Kategori</option>
-                {categories.map(cat => (
-                  <option key={cat.id} value={cat.nama}>{cat.nama}</option>
-                ))}
-              </select>
-            </div>
-
-            {cplFilterKategori && (
-              <button
-                onClick={() => {
-                  setCplFilterKategori("");
-                  setcplPage(1);
-                }}
-                className="sm:mt-5 px-4 py-2 text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-650 rounded-xl transition-all cursor-pointer shadow-sm"
-              >
-                Reset Filter
-              </button>
-            )}
           </div>
           <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
             <div className="overflow-x-auto">

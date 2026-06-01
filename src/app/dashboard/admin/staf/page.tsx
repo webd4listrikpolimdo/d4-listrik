@@ -549,87 +549,79 @@ export default function AdminStafPage() {
           </button>
         </div>
 
-        {/* Search bar */}
+        {/* Search bar & Filters aligned horizontally */}
         {activeTab !== "verifikasi" && (
-          <div className="relative w-full md:w-80">
-            <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400">
-              <HiOutlineMagnifyingGlass className="w-5 h-5" />
-            </span>
-            <input
-              type="text"
-              placeholder={`Cari nama, NIP, atau email...`}
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setDosenPage(1);
-                setPegawaiPage(1);
-              }}
-              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-            />
+          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
+            <div className="relative w-full md:w-64">
+              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400">
+                <HiOutlineMagnifyingGlass className="w-5 h-5" />
+              </span>
+              <input
+                type="text"
+                placeholder={`Cari nama, NIP...`}
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setDosenPage(1);
+                  setPegawaiPage(1);
+                }}
+                className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+            </div>
+
+            {activeTab === "dosen" && (
+              <>
+                <select
+                  value={filterJabatan}
+                  onChange={(e) => { setFilterJabatan(e.target.value); setDosenPage(1); }}
+                  className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/25 text-gray-800 font-medium cursor-pointer"
+                >
+                  <option value="">Semua Jabatan</option>
+                  {uniqueJabatans.map((j) => (
+                    <option key={j} value={j}>{j}</option>
+                  ))}
+                </select>
+
+                <select
+                  value={filterBidang}
+                  onChange={(e) => { setFilterBidang(e.target.value); setDosenPage(1); }}
+                  className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/25 text-gray-800 font-medium cursor-pointer"
+                >
+                  <option value="">Semua Bidang</option>
+                  {uniqueBidangs.map((b) => (
+                    <option key={b} value={b}>{b}</option>
+                  ))}
+                </select>
+
+                <select
+                  value={filterHomebase}
+                  onChange={(e) => { setFilterHomebase(e.target.value); setDosenPage(1); }}
+                  className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/25 text-gray-800 font-medium cursor-pointer"
+                >
+                  <option value="">Semua Homebase</option>
+                  {uniqueHomebases.map((h) => (
+                    <option key={h} value={h}>{h}</option>
+                  ))}
+                </select>
+
+                {(filterJabatan || filterBidang || filterHomebase) && (
+                  <button
+                    onClick={() => {
+                      setFilterJabatan("");
+                      setFilterBidang("");
+                      setFilterHomebase("");
+                      setDosenPage(1);
+                    }}
+                    className="px-3 py-2 text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-650 rounded-xl transition-all cursor-pointer shadow-sm"
+                  >
+                    Reset
+                  </button>
+                )}
+              </>
+            )}
           </div>
         )}
       </div>
-
-      {/* Advanced Filters for Dosen */}
-      {activeTab === "dosen" && (
-        <div className="flex flex-wrap items-center gap-4 p-4 bg-gray-50/50 border border-gray-100 rounded-2xl">
-          <div className="w-full sm:w-auto">
-            <span className="text-xs font-semibold text-gray-500 block mb-1">Jabatan</span>
-            <select
-              value={filterJabatan}
-              onChange={(e) => { setFilterJabatan(e.target.value); setDosenPage(1); }}
-              className="w-full sm:w-48 px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/25 text-gray-800 font-medium cursor-pointer"
-            >
-              <option value="">Semua Jabatan</option>
-              {uniqueJabatans.map((j) => (
-                <option key={j} value={j}>{j}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="w-full sm:w-auto">
-            <span className="text-xs font-semibold text-gray-500 block mb-1">Bidang Keahlian</span>
-            <select
-              value={filterBidang}
-              onChange={(e) => { setFilterBidang(e.target.value); setDosenPage(1); }}
-              className="w-full sm:w-56 px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/25 text-gray-800 font-medium cursor-pointer"
-            >
-              <option value="">Semua Bidang Keahlian</option>
-              {uniqueBidangs.map((b) => (
-                <option key={b} value={b}>{b}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="w-full sm:w-auto">
-            <span className="text-xs font-semibold text-gray-500 block mb-1">Homebase (Program Studi)</span>
-            <select
-              value={filterHomebase}
-              onChange={(e) => { setFilterHomebase(e.target.value); setDosenPage(1); }}
-              className="w-full sm:w-48 px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/25 text-gray-800 font-medium cursor-pointer"
-            >
-              <option value="">Semua Homebase</option>
-              {uniqueHomebases.map((h) => (
-                <option key={h} value={h}>{h}</option>
-              ))}
-            </select>
-          </div>
-
-          {(filterJabatan || filterBidang || filterHomebase) && (
-            <button
-              onClick={() => {
-                setFilterJabatan("");
-                setFilterBidang("");
-                setFilterHomebase("");
-                setDosenPage(1);
-              }}
-              className="sm:mt-5 px-4 py-2 text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-650 rounded-xl transition-all cursor-pointer shadow-sm"
-            >
-              Reset Filter
-            </button>
-          )}
-        </div>
-      )}
 
       {/* Tables depending on active tab */}
       {activeTab === "verifikasi" ? (
