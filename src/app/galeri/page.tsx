@@ -30,6 +30,7 @@ export default function GaleriPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<"semua" | "fasilitas" | "tridharma" | "kegiatan">("semua");
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   // Fetch karya, fasilitas, and kegiatan
   useEffect(() => {
@@ -112,8 +113,8 @@ export default function GaleriPage() {
   }, []);
 
   // Merge lists with custom sorting rules:
-  // 1. Kegiatan and Tridharma sorted together by year (descending).
-  // 2. Within the same year, all Kegiatan items appear first (sorted descending by exact date), followed by Tridharma.
+  // 1. Kegiatan and Tridharma sorted together by year (depending on sortOrder: desc is newest first, asc is oldest first).
+  // 2. Within the same year, all Kegiatan items appear first, followed by Tridharma (always, as requested).
   // 3. Fasilitas always appears at the very end of the list.
   const mergedList = [...fasilitasGaleri, ...karyaGaleri, ...kegiatanGaleri].sort((a, b) => {
     // Handle Fasilitas (always last)
@@ -128,7 +129,7 @@ export default function GaleriPage() {
     const yearB = b.tanggal ? new Date(b.tanggal).getFullYear() : 0;
 
     if (yearA !== yearB) {
-      return yearB - yearA; // Newest year first
+      return sortOrder === "desc" ? yearB - yearA : yearA - yearB;
     }
 
     // Same year: Kegiatan comes first, then Tridharma
@@ -139,7 +140,7 @@ export default function GaleriPage() {
     if (a.kategori === "kegiatan" && b.kategori === "kegiatan") {
       const timeA = a.tanggal ? new Date(a.tanggal).getTime() : 0;
       const timeB = b.tanggal ? new Date(b.tanggal).getTime() : 0;
-      return timeB - timeA; // Newest kegiatan first
+      return sortOrder === "desc" ? timeB - timeA : timeA - timeB;
     }
 
     // Same year & both are tridharma
@@ -166,27 +167,57 @@ export default function GaleriPage() {
           <div className="flex flex-col gap-4 mb-8">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <GaleriFilter activeFilter={filter} onFilterChange={setFilter} />
-              <div className="relative max-w-sm w-full">
-                <svg
-                  className="w-5 h-5 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              <div className="flex items-center gap-2.5 max-w-md w-full">
+                <div className="relative flex-1">
+                  <svg
+                    className="w-5 h-5 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                  <input
+                    type="text"
+                    placeholder="Cari galeri..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-primary-950 transition-all"
                   />
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Cari galeri..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-primary-950 transition-all"
-                />
+                </div>
+                <div className="flex items-center border border-gray-200 rounded-xl bg-white p-1 shrink-0 h-[42px] shadow-sm">
+                  <button
+                    onClick={() => setSortOrder("desc")}
+                    title="Urutkan Terbaru"
+                    className={`p-2 rounded-lg transition-all cursor-pointer ${
+                      sortOrder === "desc"
+                        ? "bg-primary-50 text-primary-700 font-bold"
+                        : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 4.5h14.25M3 9h9.75M3 13.5h9.75m4.5-4.5v12m0 0l-3.75-3.75M17.25 21L21 17.25" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => setSortOrder("asc")}
+                    title="Urutkan Terlama"
+                    className={`p-2 rounded-lg transition-all cursor-pointer ${
+                      sortOrder === "asc"
+                        ? "bg-primary-50 text-primary-700 font-bold"
+                        : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 4.5h14.25M3 9h9.75M3 13.5h9.75m4.5 4.5V3m0 0L13.5 6.75M17.25 3L21 6.75" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
             {!isLoading && (
