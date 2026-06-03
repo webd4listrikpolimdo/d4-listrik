@@ -144,7 +144,7 @@ export default function DevTeamModal({ isOpen, onClose }: DevTeamModalProps) {
                 {/* Ribbon Role Label */}
                 <div
                   className="absolute top-0 left-0 z-10"
-                  style={{ width: '140px', height: '140px', pointerEvents: 'none' }}
+                  style={{ width: '200px', height: '200px', pointerEvents: 'none' }}
                 >
                   <div
                     className={`absolute text-center font-extrabold uppercase shadow-md ${
@@ -155,16 +155,19 @@ export default function DevTeamModal({ isOpen, onClose }: DevTeamModalProps) {
                         : 'bg-gradient-to-r from-indigo-500 to-indigo-700 text-white'
                     }`}
                     style={{
-                      width: '200px',
-                      top: '26px',
-                      left: '-50px',
+                      width: '240px',
+                      top: '30px',
+                      left: '-58px',
                       transform: 'rotate(-35deg)',
-                      fontSize: '9px',
+                      fontSize: '8px',
                       letterSpacing: '0.04em',
-                      padding: '5px 0',
-                      lineHeight: '1.3',
+                      padding: '6px 10px',
+                      lineHeight: '1.35',
                       pointerEvents: 'auto',
                       textShadow: '0 1px 2px rgba(0,0,0,0.2)',
+                      wordBreak: 'keep-all' as any,
+                      whiteSpace: 'nowrap' as any,
+                      overflow: 'visible',
                     }}
                   >
                     {member.role}
