@@ -139,14 +139,43 @@ export default function DevTeamModal({ isOpen, onClose }: DevTeamModalProps) {
               return (
               <div 
                 key={idx}
-                className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 flex flex-col items-center text-center shadow-sm relative group hover:border-primary-300 transition-colors duration-200"
+                className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 pt-5 flex flex-col items-center text-center shadow-sm relative group hover:border-primary-300 transition-colors duration-200 overflow-hidden"
               >
+                {/* Ribbon Role Label */}
+                <div
+                  className="absolute top-0 left-0 z-10"
+                  style={{ width: '120px', height: '120px', pointerEvents: 'none' }}
+                >
+                  <div
+                    className={`absolute text-center font-bold uppercase shadow-md ${
+                      idx === 0
+                        ? 'bg-gradient-to-r from-primary-600 to-primary-700 text-white'
+                        : idx === 1
+                        ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white'
+                        : 'bg-gradient-to-r from-indigo-500 to-indigo-700 text-white'
+                    }`}
+                    style={{
+                      width: '170px',
+                      top: '22px',
+                      left: '-42px',
+                      transform: 'rotate(-35deg)',
+                      fontSize: '7.5px',
+                      letterSpacing: '0.05em',
+                      padding: '3.5px 0',
+                      lineHeight: '1.3',
+                      pointerEvents: 'auto',
+                    }}
+                  >
+                    {member.role}
+                  </div>
+                </div>
+
                 {member.link ? (
                   <a
                     href={member.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mb-2.5 sm:mb-3.5"
+                    className="mb-2.5 sm:mb-3.5 mt-2"
                   >
                     <Avatar
                       url={member.foto_url}
@@ -156,7 +185,7 @@ export default function DevTeamModal({ isOpen, onClose }: DevTeamModalProps) {
                     />
                   </a>
                 ) : (
-                  <div className="mb-2.5 sm:mb-3.5">
+                  <div className="mb-2.5 sm:mb-3.5 mt-2">
                     <Avatar
                       url={member.foto_url}
                       initials={member.initials}
@@ -184,17 +213,13 @@ export default function DevTeamModal({ isOpen, onClose }: DevTeamModalProps) {
                 <code className="text-[10px] sm:text-xs bg-gray-200/85 text-gray-800 font-mono px-2 py-0.5 rounded-md mb-2.5 select-all">
                   NIM. {member.nim}
                 </code>
-                
-                <span className={`inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${member.bg}`}>
-                  {member.role}
-                </span>
 
                 {social && member.link && (
                   <a
                     href={member.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition-colors duration-150 ${social.color}`}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition-colors duration-150 ${social.color}`}
                     title={`Kunjungi ${social.label}`}
                   >
                     <social.Icon className="w-3 h-3" />
