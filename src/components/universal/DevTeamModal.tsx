@@ -240,7 +240,7 @@ export default function DevTeamModal({ isOpen, onClose }: DevTeamModalProps) {
             <span className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider mb-2.5 font-bold">
               Dosen Pengajar
             </span>
-            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl px-5 py-3.5 flex items-center gap-4 w-full max-w-sm hover:border-primary-300 transition-all duration-200 group">
+            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl px-5 py-3.5 flex items-center gap-4 w-full hover:border-primary-300 transition-all duration-200 group">
               {lecturer.link ? (
                 lecturer.link.startsWith("/") ? (
                   <Link
