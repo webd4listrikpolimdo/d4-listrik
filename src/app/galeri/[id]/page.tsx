@@ -13,7 +13,9 @@ import {
   HiOutlineIdentification,
   HiOutlineLink,
   HiOutlineUserGroup,
-  HiOutlineMapPin
+  HiOutlineMapPin,
+  HiChevronLeft,
+  HiChevronRight
 } from "react-icons/hi2";
 import ImageLightbox from "@/components/universal/ImageLightbox";
 import { GaleriItem } from "@/types/galeri";
@@ -84,6 +86,11 @@ export default function GaleriDetailPage() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImages, setLightboxImages] = useState<string[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  useEffect(() => {
+    setCurrentSlide(0);
+  }, [id]);
 
   const [karyaItem, setKaryaItem] = useState<GaleriItem | null>(null);
   const [originalKarya, setOriginalKarya] = useState<any | null>(null);
@@ -605,7 +612,7 @@ export default function GaleriDetailPage() {
                   <>
                     <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-6">Dokumentasi Terkait</h2>
 
-                    {(!item.foto || item.foto.length === 0) ? (
+                     {(!item.foto || item.foto.length === 0) ? (
                       <div className="rounded-2xl overflow-hidden shadow-sm border border-gray-100">
                         <img
                           src="/images/default.svg"
@@ -613,25 +620,91 @@ export default function GaleriDetailPage() {
                           className="w-full h-auto object-cover aspect-video opacity-20"
                         />
                       </div>
+                    ) : item.foto.length === 1 ? (
+                      <div className="w-full max-w-4xl mx-auto rounded-2xl overflow-hidden shadow-sm border border-gray-100 bg-gray-50">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setLightboxImages(item.foto || []);
+                            setLightboxIndex(0);
+                            setLightboxOpen(true);
+                          }}
+                          className="w-full h-full cursor-zoom-in relative block text-left group focus:outline-none"
+                        >
+                          <img
+                            src={item.foto[0]}
+                            alt={item.judul}
+                            className="w-full h-auto max-h-[60vh] object-contain mx-auto group-hover:scale-101 transition-transform duration-500"
+                          />
+                        </button>
+                      </div>
                     ) : (
-                      <div className={`grid gap-6 ${item.foto.length === 1 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
-                        {item.foto.map((url, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => {
-                              setLightboxImages(item.foto || []);
-                              setLightboxIndex(idx);
-                              setLightboxOpen(true);
-                            }}
-                            className="relative rounded-2xl overflow-hidden shadow-sm border border-gray-100 group cursor-zoom-in text-left focus:outline-none focus:ring-2 focus:ring-primary-500/20"
-                          >
-                            <img
-                              src={url}
-                              alt={`${item.judul} - Foto ${idx + 1}`}
-                              className="w-full h-auto object-cover aspect-video group-hover:scale-105 transition-transform duration-500"
+                      <div className="relative w-full max-w-4xl mx-auto aspect-video rounded-2xl overflow-hidden shadow-md border border-gray-100 group/slider">
+                        {/* Current Image */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setLightboxImages(item.foto || []);
+                            setLightboxIndex(currentSlide);
+                            setLightboxOpen(true);
+                          }}
+                          className="w-full h-full cursor-zoom-in relative block text-left focus:outline-none bg-black"
+                        >
+                          <img
+                            src={item.foto[currentSlide]}
+                            alt={`${item.judul} - Foto ${currentSlide + 1}`}
+                            className="w-full h-full object-contain mx-auto select-none"
+                          />
+                        </button>
+
+                        {/* Left Arrow Button */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCurrentSlide((prev) => (prev === 0 ? item.foto.length - 1 : prev - 1));
+                          }}
+                          className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-2 sm:p-2.5 rounded-full backdrop-blur-sm transition-all opacity-0 group-hover/slider:opacity-100 focus:opacity-100 cursor-pointer z-10 select-none border-0"
+                          aria-label="Previous Slide"
+                        >
+                          <HiChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+                        </button>
+
+                        {/* Right Arrow Button */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCurrentSlide((prev) => (prev === item.foto.length - 1 ? 0 : prev + 1));
+                          }}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-2 sm:p-2.5 rounded-full backdrop-blur-sm transition-all opacity-0 group-hover/slider:opacity-100 focus:opacity-100 cursor-pointer z-10 select-none border-0"
+                          aria-label="Next Slide"
+                        >
+                          <HiChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+                        </button>
+
+                        {/* Slide Indicator Badge */}
+                        <div className="absolute top-4 right-4 bg-black/60 text-white px-2.5 py-1 rounded-full text-xs font-semibold select-none z-10 backdrop-blur-sm">
+                          {currentSlide + 1} / {item.foto.length}
+                        </div>
+
+                        {/* Dot Indicators */}
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10">
+                          {item.foto.map((_, dotIdx) => (
+                            <button
+                              key={dotIdx}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setCurrentSlide(dotIdx);
+                              }}
+                              className={`w-2 h-2 rounded-full transition-all cursor-pointer border-0 ${
+                                currentSlide === dotIdx ? "bg-white w-4" : "bg-white/50 hover:bg-white/80"
+                              }`}
+                              aria-label={`Go to slide ${dotIdx + 1}`}
                             />
-                          </button>
-                        ))}
+                          ))}
+                        </div>
                       </div>
                     )}
                   </>
