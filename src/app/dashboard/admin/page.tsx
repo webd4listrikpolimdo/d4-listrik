@@ -13,6 +13,7 @@ interface Stats {
   total_mahasiswa_aktif: number;
   total_lulusan: number;
   total_dosen: number;
+  total_dosen_homebase?: number;
   total_galeri: number;
   total_mata_kuliah: number;
   active_semester?: { id: string; tahun_akademik: string; jenis: string } | null;
@@ -382,8 +383,10 @@ export default function AdminDashboardPage() {
 
   const cards = [
     {
-      label: "Total Dosen",
-      value: stats?.total_dosen ?? "—",
+      label: stats?.total_dosen_homebase !== undefined ? "Dosen Homebase / Total" : "Total Dosen",
+      value: stats?.total_dosen_homebase !== undefined
+        ? `${stats.total_dosen_homebase} / ${stats.total_dosen}`
+        : (stats?.total_dosen ?? "—"),
       link: "/dashboard/admin/staf",
       linkLabel: "Kelola Staf",
       icon: HiOutlineUserGroup,

@@ -71,7 +71,7 @@ export default function StatsSection() {
 
         const mahasiswaAktif = statData.total_mahasiswa_aktif || 0;
         const lulusan = statData.total_lulusan || 0;
-        const dosenCount = statData.total_dosen || 0;
+        const dosenCount = statData.total_dosen_homebase !== undefined ? statData.total_dosen_homebase : (statData.total_dosen || 0);
         const mataKuliahCount = statData.total_mata_kuliah || 0;
 
         setStats([

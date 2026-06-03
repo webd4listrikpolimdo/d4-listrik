@@ -64,9 +64,18 @@ export async function GET(request: NextRequest) {
       0
     );
 
+    // Fetch active prodi info name
+    const { data: prodiData } = await supabase
+      .from("prodi_info")
+      .select("nama")
+      .eq("id", 1)
+      .single();
+    const prodiName = prodiData?.nama || "D4 Teknik Listrik";
+
     // Fetch dosen + galeri + mata_kuliah counts
-    const [dosenResult, galeriResult, karyaResult, mataKuliahResult] = await Promise.all([
+    const [dosenResult, dosenHomebaseResult, galeriResult, karyaResult, mataKuliahResult] = await Promise.all([
       supabase.from("dosen").select("id", { count: "exact", head: true }),
+      supabase.from("dosen").select("id", { count: "exact", head: true }).ilike("program_studi", prodiName),
       supabase.from("galeri").select("id", { count: "exact", head: true }),
       supabase
         .from("karya")
@@ -93,6 +102,7 @@ export async function GET(request: NextRequest) {
       total_lulusan: totalLulusan,
       lulusan_per_tahun: lulusanList,
       total_dosen: dosenResult.count ?? 0,
+      total_dosen_homebase: dosenHomebaseResult.count ?? 0,
       total_galeri: (galeriResult.count ?? 0) + virtualGaleriCount,
       total_mata_kuliah: mataKuliahResult.count ?? 0,
       per_level: perLevel,
