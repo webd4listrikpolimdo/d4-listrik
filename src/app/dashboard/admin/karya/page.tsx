@@ -8,7 +8,7 @@ import ComboBox from "@/components/universal/ComboBox";
 import ConfirmDialog from "@/components/universal/ConfirmDialog";
 import { cachedFetch, invalidateCache } from "@/lib/fetchCache";
 import type { PersonLink } from "@/components/universal/PersonLinker";
-import { HiOutlineCheck, HiOutlineXMark, HiOutlineTrash, HiOutlineClock, HiOutlineCheckCircle, HiOutlineXCircle, HiOutlinePlus, HiOutlinePencilSquare, HiOutlinePhoto, HiOutlineEye, HiOutlineMagnifyingGlass } from "react-icons/hi2";
+import { HiOutlineCheck, HiOutlineXMark, HiOutlineTrash, HiOutlineClock, HiOutlineCheckCircle, HiOutlineXCircle, HiOutlinePlus, HiOutlinePencilSquare, HiOutlinePhoto, HiOutlineEye, HiOutlineMagnifyingGlass, HiStar, HiOutlineStar } from "react-icons/hi2";
 import { useRef } from "react";
 import { useNotification } from "@/context/NotificationContext";
 import TablePagination from "@/components/universal/TablePagination";
@@ -403,6 +403,17 @@ export default function AdminKaryaPage() {
 
   const handleRemovePhoto = (index: number) => {
     setFotoUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSetMainPhoto = (index: number) => {
+    setFotoUrls((prev) => {
+      const urls = [...prev];
+      if (index <= 0 || index >= urls.length) return prev;
+      const target = urls[index];
+      urls.splice(index, 1);
+      urls.unshift(target);
+      return urls;
+    });
   };
 
   // ========== Karya CRUD ==========
@@ -1149,11 +1160,33 @@ export default function AdminKaryaPage() {
               {fotoUrls.length > 0 && (
                 <div className="flex flex-wrap gap-3 mb-3">
                   {fotoUrls.map((url, i) => (
-                    <div key={i} className="relative group w-20 h-20 rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+                    <div key={i} className="relative group w-24 h-24 rounded-xl overflow-hidden border border-gray-200 shadow-sm">
                       <img src={url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
-                      <button type="button" onClick={() => handleRemovePhoto(i)}
-                        className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                        <HiOutlineTrash className="w-5 h-5 text-white" />
+                      
+                      {/* Utama / Star Badge */}
+                      {i === 0 ? (
+                        <span className="absolute top-1 left-1 bg-yellow-500 text-white px-1.5 py-0.5 rounded text-[8px] font-bold shadow flex items-center gap-0.5 z-10 select-none">
+                          <HiStar className="w-2.5 h-2.5" /> Utama
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleSetMainPhoto(i)}
+                          className="absolute top-1 left-1 bg-white/95 hover:bg-white text-yellow-600 hover:text-yellow-700 p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity shadow cursor-pointer z-10"
+                          title="Set sebagai foto utama"
+                        >
+                          <HiOutlineStar className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+
+                      {/* Hapus Button */}
+                      <button
+                        type="button"
+                        onClick={() => handleRemovePhoto(i)}
+                        className="absolute top-1 right-1 bg-red-650 hover:bg-red-700 text-white p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity shadow cursor-pointer z-10"
+                        title="Hapus foto"
+                      >
+                        <HiOutlineTrash className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   ))}

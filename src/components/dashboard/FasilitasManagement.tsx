@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { HiOutlinePlus as PlusIcon, HiOutlinePencilSquare as EditIcon, HiOutlineTrash as TrashIcon, HiOutlineArrowUpTray as UploadIcon, HiPhoto } from "react-icons/hi2";
+import { HiOutlinePlus as PlusIcon, HiOutlinePencilSquare as EditIcon, HiOutlineTrash as TrashIcon, HiOutlineArrowUpTray as UploadIcon, HiPhoto, HiStar, HiOutlineStar } from "react-icons/hi2";
 import Modal from "@/components/universal/Modal";
 import ConfirmDialog from "@/components/universal/ConfirmDialog";
 import { cachedFetch, invalidateCache } from "@/lib/fetchCache";
@@ -152,6 +152,20 @@ export default function FasilitasManagement() {
       ...prev,
       foto_urls: prev.foto_urls.filter((_, idx) => idx !== indexToRemove),
     }));
+  };
+
+  const handleSetMainPhoto = (idx: number) => {
+    setForm((prev) => {
+      const urls = [...prev.foto_urls];
+      if (idx <= 0 || idx >= urls.length) return prev;
+      const target = urls[idx];
+      urls.splice(idx, 1);
+      urls.unshift(target);
+      return {
+        ...prev,
+        foto_urls: urls,
+      };
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -435,12 +449,31 @@ export default function FasilitasManagement() {
                 {form.foto_urls.map((url, idx) => (
                   <div key={idx} className="relative aspect-video rounded-lg overflow-hidden group border border-gray-100">
                     <img src={url} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
+                    
+                    {/* Utama / Star Badge */}
+                    {idx === 0 ? (
+                      <span className="absolute top-1.5 left-1.5 bg-yellow-500 text-white px-1.5 py-0.5 rounded-md text-[9px] font-bold shadow flex items-center gap-0.5 z-10 select-none">
+                        <HiStar className="w-3 h-3" /> Utama
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleSetMainPhoto(idx)}
+                        className="absolute top-1.5 left-1.5 bg-white/95 hover:bg-white text-yellow-600 hover:text-yellow-700 p-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity shadow cursor-pointer z-10"
+                        title="Set sebagai foto utama"
+                      >
+                        <HiOutlineStar className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+
+                    {/* Hapus Button */}
                     <button
                       type="button"
                       onClick={() => handleRemovePhoto(idx)}
-                      className="absolute inset-0 bg-red-600/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold"
+                      className="absolute top-1.5 right-1.5 bg-red-650 hover:bg-red-700 text-white p-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity shadow cursor-pointer z-10"
+                      title="Hapus foto"
                     >
-                      Hapus
+                      <TrashIcon className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 ))}
