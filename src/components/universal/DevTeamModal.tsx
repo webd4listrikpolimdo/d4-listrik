@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { HiOutlineXMark, HiOutlineCodeBracket } from "react-icons/hi2";
+import { HiOutlineXMark, HiOutlineCodeBracket, HiArrowTopRightOnSquare } from "react-icons/hi2";
+import { FaLinkedinIn, FaInstagram, FaGithub } from "react-icons/fa6";
 import { devTeam, lecturerInfo } from "@/lib/devTeam";
 
 interface DevTeamModalProps {
@@ -123,7 +124,19 @@ export default function DevTeamModal({ isOpen, onClose }: DevTeamModalProps) {
 
           {/* Members Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-            {developers.map((member, idx) => (
+            {developers.map((member, idx) => {
+              // Detect social platform from link
+              const getSocialInfo = (url?: string) => {
+                if (!url) return null;
+                const lower = url.toLowerCase();
+                if (lower.includes("linkedin.com")) return { Icon: FaLinkedinIn, label: "LinkedIn", color: "text-[#0A66C2] bg-[#0A66C2]/10 hover:bg-[#0A66C2]/20 border-[#0A66C2]/20" };
+                if (lower.includes("instagram.com")) return { Icon: FaInstagram, label: "Instagram", color: "text-[#E4405F] bg-[#E4405F]/10 hover:bg-[#E4405F]/20 border-[#E4405F]/20" };
+                if (lower.includes("github.com")) return { Icon: FaGithub, label: "GitHub", color: "text-gray-800 bg-gray-100 hover:bg-gray-200 border-gray-200" };
+                return { Icon: HiArrowTopRightOnSquare, label: "Link", color: "text-primary-600 bg-primary-50 hover:bg-primary-100 border-primary-200" };
+              };
+              const social = getSocialInfo(member.link);
+
+              return (
               <div 
                 key={idx}
                 className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 flex flex-col items-center text-center shadow-sm relative group hover:border-primary-300 transition-colors duration-200"
@@ -175,8 +188,22 @@ export default function DevTeamModal({ isOpen, onClose }: DevTeamModalProps) {
                 <span className={`inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${member.bg}`}>
                   {member.role}
                 </span>
+
+                {social && member.link && (
+                  <a
+                    href={member.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition-colors duration-150 ${social.color}`}
+                    title={`Kunjungi ${social.label}`}
+                  >
+                    <social.Icon className="w-3 h-3" />
+                    {social.label}
+                  </a>
+                )}
               </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Lecturer Section */}

@@ -366,10 +366,24 @@ export default function GaleriDetailPage() {
       case "bukuAjar": {
         const penerbit = meta("penerbit");
         const isbn = meta("isbn");
+        const link = meta("link");
         return (
           <>
             {penerbit && <InfoItem icon={HiOutlineBuildingOffice} label="Penerbit" value={penerbit} />}
             {isbn && <InfoItem icon={HiOutlineIdentification} label="ISBN" value={isbn} />}
+            {link && (
+              <div className="flex items-start gap-3 min-w-[200px]">
+                <div className="mt-0.5 text-primary-500 flex-shrink-0">
+                  <HiOutlineLink className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Tautan</p>
+                  <a href={link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary-600 hover:underline font-medium text-sm sm:text-base mt-1 truncate">
+                    Buka File Online / Repository
+                  </a>
+                </div>
+              </div>
+            )}
           </>
         );
       }

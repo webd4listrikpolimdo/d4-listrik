@@ -36,6 +36,7 @@ export interface BukuAjar extends KaryaBase {
   penulis: PersonLink[];
   penerbit: string;
   isbn?: string;
+  link?: string;
 }
 
 export interface Hki extends KaryaBase {

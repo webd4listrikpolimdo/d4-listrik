@@ -172,6 +172,7 @@ export default function AdminKaryaPage() {
       setMetaPenerbit((meta.penerbit as string) || "");
       setMetaIsbn((meta.isbn as string) || "");
       setMetaPenulis((meta.penulis as PersonLink[]) || []);
+      setMetaLink((meta.link as string) || "");
       setMetaSampulDepan((meta.sampul_depan as string) || "");
       setMetaSampulBelakang((meta.sampul_belakang as string) || "");
     } else if (jenis === "hki") {
@@ -191,7 +192,7 @@ export default function AdminKaryaPage() {
       case "publikasi": return { jurnal: metaJurnal, link: metaLink, penulis: metaPenulis };
       case "penelitian": return { sumberDana: metaSumberDana, ketua: metaKetua[0] || null, anggota: metaAnggota };
       case "pengabdian": return { mitra: metaMitra, ketua: metaKetua[0] || null, anggota: metaAnggota };
-      case "bukuAjar": return { penerbit: metaPenerbit, isbn: metaIsbn, penulis: metaPenulis, sampul_depan: metaSampulDepan, sampul_belakang: metaSampulBelakang };
+      case "bukuAjar": return { penerbit: metaPenerbit, isbn: metaIsbn, penulis: metaPenulis, link: metaLink || undefined, sampul_depan: metaSampulDepan, sampul_belakang: metaSampulBelakang };
       case "hki": return { jenisHki: metaJenisHki, nomorSertifikat: metaNomorSertifikat, fotoHki: metaFotoHki };
       case "sertifikasi": return {
         penyelenggara: metaPenyelenggara,
@@ -959,6 +960,10 @@ export default function AdminKaryaPage() {
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">ISBN</label>
                   <input type="text" value={metaIsbn} onChange={e => setMetaIsbn(e.target.value)} className={inputCls} placeholder="978-..." />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Tautan File Online / Repository <span className="text-gray-400 font-normal">(opsional)</span></label>
+                  <input type="url" value={metaLink} onChange={e => setMetaLink(e.target.value)} className={inputCls} placeholder="https://repository.polimdo.ac.id/..." />
                 </div>
                 <PersonLinker label="Penulis" dosenOptions={dosenOptions} value={metaPenulis} onChange={setMetaPenulis} />
                 
