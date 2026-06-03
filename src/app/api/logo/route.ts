@@ -41,11 +41,19 @@ export async function PUT(request: NextRequest) {
 
     // If file_url was changed/removed, delete the old file from bucket
     if (current?.file_url && current.file_url !== data.file_url) {
-      const parts = current.file_url.split("/storage/v1/object/public/galeri/");
-      if (parts.length > 1) {
-        const fileName = parts[1];
-        const adminSupabase = createAdminClient();
-        await adminSupabase.storage.from("galeri").remove([fileName]);
+      const adminSupabase = createAdminClient();
+      if (current.file_url.includes("/storage/v1/object/public/logo/")) {
+        const parts = current.file_url.split("/storage/v1/object/public/logo/");
+        if (parts.length > 1) {
+          const fileName = parts[1];
+          await adminSupabase.storage.from("logo").remove([fileName]);
+        }
+      } else if (current.file_url.includes("/storage/v1/object/public/galeri/")) {
+        const parts = current.file_url.split("/storage/v1/object/public/galeri/");
+        if (parts.length > 1) {
+          const fileName = parts[1];
+          await adminSupabase.storage.from("galeri").remove([fileName]);
+        }
       }
     }
 

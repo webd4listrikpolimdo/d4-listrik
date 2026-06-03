@@ -245,7 +245,7 @@ export default function ConfigManagement() {
     try {
       const fd = new FormData();
       fd.append("file", file);
-      const res = await fetch("/api/upload/galeri", {
+      const res = await fetch("/api/upload/logo", {
         method: "POST",
         body: fd,
       });
