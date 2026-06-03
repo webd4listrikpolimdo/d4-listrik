@@ -113,10 +113,10 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
     const user = result;
     const supabase = await createClient();
 
-    // Fetch to check ownership and get foto_urls
+    // Fetch to check ownership and get foto_urls & metadata
     const { data: pending } = await supabase
       .from("karya_pending")
-      .select("submitted_by, status, foto_urls")
+      .select("submitted_by, status, foto_urls, metadata")
       .eq("id", id)
       .single();
 
@@ -141,16 +141,28 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
     }
 
     // Delete files from storage if not approved (so they are not used by the main karya table)
-    if (pending.status !== "approved" && pending.foto_urls && Array.isArray(pending.foto_urls) && pending.foto_urls.length > 0) {
-      const { createAdminClient } = await import("@/lib/supabase/admin");
-      const adminSupabase = createAdminClient();
-      const fileNames = pending.foto_urls.map((url: string) => {
-        const parts = url.split("/storage/v1/object/public/galeri/");
-        return parts.length > 1 ? parts[1] : null;
-      }).filter(Boolean) as string[];
+    if (pending.status !== "approved") {
+      const urlsToDelete: string[] = [];
+      if (pending.foto_urls && Array.isArray(pending.foto_urls)) urlsToDelete.push(...pending.foto_urls);
+      if (pending.metadata) {
+        const md = pending.metadata as any;
+        if (md.sampul_depan) urlsToDelete.push(md.sampul_depan);
+        if (md.sampul_belakang) urlsToDelete.push(md.sampul_belakang);
+        if (md.fotoSertifikat) urlsToDelete.push(md.fotoSertifikat);
+        if (md.fotoHki) urlsToDelete.push(md.fotoHki);
+      }
 
-      if (fileNames.length > 0) {
-        await adminSupabase.storage.from("galeri").remove(fileNames);
+      if (urlsToDelete.length > 0) {
+        const { createAdminClient } = await import("@/lib/supabase/admin");
+        const adminSupabase = createAdminClient();
+        const fileNames = urlsToDelete.map((url: string) => {
+          const parts = url.split("/storage/v1/object/public/galeri/");
+          return parts.length > 1 ? parts[1] : null;
+        }).filter(Boolean) as string[];
+
+        if (fileNames.length > 0) {
+          await adminSupabase.storage.from("galeri").remove(fileNames);
+        }
       }
     }
 

@@ -25,7 +25,17 @@ export async function POST(request: NextRequest) {
     const adminSupabase = createAdminClient();
     const ext = file.name.split(".").pop();
     const label = jenis || "karya";
-    const fileName = `galeri-${label}-${Date.now()}.${ext}`;
+    const baseName = `galeri-${label}-${Date.now()}.${ext}`;
+
+    // Map jenis to folder inside galeri bucket
+    let folder = "";
+    if (jenis === "bukuAjar") folder = "buku-ajar";
+    else if (jenis === "publikasi" || jenis === "penelitian") folder = "publikasi-penelitian";
+    else if (jenis === "pengabdian") folder = "pengabdian";
+    else if (jenis === "sertifikasi") folder = "sertifikasi";
+    else if (jenis === "hki") folder = "hki";
+
+    const fileName = folder ? `${folder}/${baseName}` : baseName;
 
     // Convert File to Buffer for Node.js compatibility
     const arrayBuffer = await file.arrayBuffer();

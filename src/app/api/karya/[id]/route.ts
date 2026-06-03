@@ -68,21 +68,40 @@ export async function PUT(request: NextRequest, { params }: Params) {
     }
 
     // Compare and delete any removed files
-    if (karya?.foto_urls && Array.isArray(karya.foto_urls)) {
-      const newUrls = new Set(data?.foto_urls || []);
-      const removedUrls = karya.foto_urls.filter((url: string) => !newUrls.has(url));
+    const oldUrls: string[] = [];
+    if (karya?.foto_urls && Array.isArray(karya.foto_urls)) oldUrls.push(...karya.foto_urls);
+    if (karya?.metadata) {
+      const md = karya.metadata as any;
+      if (md.sampul_depan) oldUrls.push(md.sampul_depan);
+      if (md.sampul_belakang) oldUrls.push(md.sampul_belakang);
+      if (md.fotoSertifikat) oldUrls.push(md.fotoSertifikat);
+      if (md.fotoHki) oldUrls.push(md.fotoHki);
+    }
 
-      if (removedUrls.length > 0) {
-        const { createAdminClient } = await import("@/lib/supabase/admin");
-        const adminSupabase = createAdminClient();
-        const fileNames = removedUrls.map((url: string) => {
-          const parts = url.split("/storage/v1/object/public/galeri/");
-          return parts.length > 1 ? parts[1] : null;
-        }).filter(Boolean) as string[];
+    const newUrlsSet = new Set<string>();
+    if (data?.foto_urls && Array.isArray(data.foto_urls)) {
+      data.foto_urls.forEach((url: string) => newUrlsSet.add(url));
+    }
+    if (data?.metadata) {
+      const md = data.metadata as any;
+      if (md.sampul_depan) newUrlsSet.add(md.sampul_depan);
+      if (md.sampul_belakang) newUrlsSet.add(md.sampul_belakang);
+      if (md.fotoSertifikat) newUrlsSet.add(md.fotoSertifikat);
+      if (md.fotoHki) newUrlsSet.add(md.fotoHki);
+    }
 
-        if (fileNames.length > 0) {
-          await adminSupabase.storage.from("galeri").remove(fileNames);
-        }
+    const removedUrls = oldUrls.filter((url: string) => !newUrlsSet.has(url));
+
+    if (removedUrls.length > 0) {
+      const { createAdminClient } = await import("@/lib/supabase/admin");
+      const adminSupabase = createAdminClient();
+      const fileNames = removedUrls.map((url: string) => {
+        const parts = url.split("/storage/v1/object/public/galeri/");
+        return parts.length > 1 ? parts[1] : null;
+      }).filter(Boolean) as string[];
+
+      if (fileNames.length > 0) {
+        await adminSupabase.storage.from("galeri").remove(fileNames);
       }
     }
 
@@ -155,10 +174,20 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
     }
 
     // Delete all attached photos from storage
-    if (karya?.foto_urls && Array.isArray(karya.foto_urls) && karya.foto_urls.length > 0) {
+    const urlsToDelete: string[] = [];
+    if (karya?.foto_urls && Array.isArray(karya.foto_urls)) urlsToDelete.push(...karya.foto_urls);
+    if (karya?.metadata) {
+      const md = karya.metadata as any;
+      if (md.sampul_depan) urlsToDelete.push(md.sampul_depan);
+      if (md.sampul_belakang) urlsToDelete.push(md.sampul_belakang);
+      if (md.fotoSertifikat) urlsToDelete.push(md.fotoSertifikat);
+      if (md.fotoHki) urlsToDelete.push(md.fotoHki);
+    }
+
+    if (urlsToDelete.length > 0) {
       const { createAdminClient } = await import("@/lib/supabase/admin");
       const adminSupabase = createAdminClient();
-      const fileNames = karya.foto_urls.map((url: string) => {
+      const fileNames = urlsToDelete.map((url: string) => {
         const parts = url.split("/storage/v1/object/public/galeri/");
         return parts.length > 1 ? parts[1] : null;
       }).filter(Boolean) as string[];

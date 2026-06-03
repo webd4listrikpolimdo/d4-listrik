@@ -134,6 +134,11 @@ export default function AdminKaryaPage() {
   const [metaNomorSertifikat, setMetaNomorSertifikat] = useState("");
   const [metaPenyelenggara, setMetaPenyelenggara] = useState("");
   const [metaLinkSertifikat, setMetaLinkSertifikat] = useState("");
+  const [metaTipeSertifikat, setMetaTipeSertifikat] = useState<"file" | "link">("file");
+  const [metaFotoSertifikat, setMetaFotoSertifikat] = useState("");
+  const [isUploadingSertifikat, setIsUploadingSertifikat] = useState(false);
+  const [metaFotoHki, setMetaFotoHki] = useState("");
+  const [isUploadingHki, setIsUploadingHki] = useState(false);
   const [metaSampulDepan, setMetaSampulDepan] = useState("");
   const [metaSampulBelakang, setMetaSampulBelakang] = useState("");
   const [isUploadingDepan, setIsUploadingDepan] = useState(false);
@@ -143,8 +148,8 @@ export default function AdminKaryaPage() {
     setMetaJurnal(""); setMetaLink(""); setMetaPenulis([]);
     setMetaSumberDana(""); setMetaKetua([]); setMetaAnggota([]);
     setMetaMitra(""); setMetaPenerbit(""); setMetaIsbn("");
-    setMetaJenisHki(""); setMetaNomorSertifikat("");
-    setMetaPenyelenggara(""); setMetaLinkSertifikat("");
+    setMetaJenisHki(""); setMetaNomorSertifikat(""); setMetaFotoHki("");
+    setMetaPenyelenggara(""); setMetaLinkSertifikat(""); setMetaTipeSertifikat("file"); setMetaFotoSertifikat("");
     setMetaSampulDepan(""); setMetaSampulBelakang("");
   };
 
@@ -172,9 +177,12 @@ export default function AdminKaryaPage() {
     } else if (jenis === "hki") {
       setMetaJenisHki((meta.jenisHki as string) || "");
       setMetaNomorSertifikat((meta.nomorSertifikat as string) || "");
+      setMetaFotoHki((meta.fotoHki as string) || "");
     } else if (jenis === "sertifikasi") {
       setMetaPenyelenggara((meta.penyelenggara as string) || "");
+      setMetaTipeSertifikat((meta.tipeSertifikat as "file" | "link") || "file");
       setMetaLinkSertifikat((meta.linkSertifikat as string) || "");
+      setMetaFotoSertifikat((meta.fotoSertifikat as string) || "");
     }
   };
 
@@ -184,8 +192,13 @@ export default function AdminKaryaPage() {
       case "penelitian": return { sumberDana: metaSumberDana, ketua: metaKetua[0] || null, anggota: metaAnggota };
       case "pengabdian": return { mitra: metaMitra, ketua: metaKetua[0] || null, anggota: metaAnggota };
       case "bukuAjar": return { penerbit: metaPenerbit, isbn: metaIsbn, penulis: metaPenulis, sampul_depan: metaSampulDepan, sampul_belakang: metaSampulBelakang };
-      case "hki": return { jenisHki: metaJenisHki, nomorSertifikat: metaNomorSertifikat };
-      case "sertifikasi": return { penyelenggara: metaPenyelenggara, linkSertifikat: metaLinkSertifikat };
+      case "hki": return { jenisHki: metaJenisHki, nomorSertifikat: metaNomorSertifikat, fotoHki: metaFotoHki };
+      case "sertifikasi": return {
+        penyelenggara: metaPenyelenggara,
+        tipeSertifikat: metaTipeSertifikat,
+        linkSertifikat: metaTipeSertifikat === "link" ? metaLinkSertifikat : "",
+        fotoSertifikat: metaTipeSertifikat === "file" ? metaFotoSertifikat : ""
+      };
       default: return {};
     }
   };
@@ -328,6 +341,62 @@ export default function AdminKaryaPage() {
     } finally {
       if (position === "depan") setIsUploadingDepan(false);
       else setIsUploadingBelakang(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleSertifikatUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      showError("Hanya file gambar yang diperbolehkan!");
+      return;
+    }
+    setIsUploadingSertifikat(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("jenis", "sertifikasi");
+      const res = await fetch("/api/upload/karya", { method: "POST", body: fd });
+      if (res.ok) {
+        const data = await res.json();
+        setMetaFotoSertifikat(data.url);
+        showSuccess("Foto sertifikat berhasil diunggah!");
+      } else {
+        throw new Error("Gagal mengunggah foto sertifikat");
+      }
+    } catch (err: any) {
+      showError(err.message || "Terjadi kesalahan saat mengunggah.");
+    } finally {
+      setIsUploadingSertifikat(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleHkiUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      showError("Hanya file gambar yang diperbolehkan!");
+      return;
+    }
+    setIsUploadingHki(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("jenis", "hki");
+      const res = await fetch("/api/upload/karya", { method: "POST", body: fd });
+      if (res.ok) {
+        const data = await res.json();
+        setMetaFotoHki(data.url);
+        showSuccess("Foto/Dokumen HKI berhasil diunggah!");
+      } else {
+        throw new Error("Gagal mengunggah berkas HKI");
+      }
+    } catch (err: any) {
+      showError(err.message || "Terjadi kesalahan saat mengunggah.");
+    } finally {
+      setIsUploadingHki(false);
       e.target.value = "";
     }
   };
@@ -953,6 +1022,40 @@ export default function AdminKaryaPage() {
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Nomor Sertifikat</label>
                   <input type="text" value={metaNomorSertifikat} onChange={e => setMetaNomorSertifikat(e.target.value)} className={inputCls} placeholder="P00202312345" />
                 </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700">Foto/Dokumen HKI (Opsional)</label>
+                  {metaFotoHki ? (
+                    <div className="relative group w-32 aspect-[4/3] rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-gray-50">
+                      <img src={metaFotoHki} alt="Dokumen HKI" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setMetaFotoHki("")}
+                        className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer"
+                      >
+                        <HiOutlineTrash className="w-5 h-5 text-white" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-250 hover:border-primary-500 rounded-2xl cursor-pointer bg-gray-50/50 hover:bg-primary-50/5 transition-all text-center p-4">
+                      <HiOutlinePhoto className="w-8 h-8 text-gray-400 mb-1" />
+                      <span className="text-xs text-gray-500 font-semibold">Pilih atau Seret Foto/Dokumen HKI</span>
+                      <span className="text-[10px] text-gray-400 mt-0.5">Hanya file gambar (PNG, JPG, JPEG)</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleHkiUpload}
+                        className="hidden"
+                        disabled={isUploadingHki}
+                      />
+                    </label>
+                  )}
+                  {isUploadingHki && (
+                    <div className="flex items-center gap-1.5 text-xs text-primary-600 animate-pulse font-medium">
+                      <div className="w-3.5 h-3.5 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
+                      Mengupload berkas HKI...
+                    </div>
+                  )}
+                </div>
               </>
             )}
 
@@ -962,9 +1065,78 @@ export default function AdminKaryaPage() {
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Penyelenggara</label>
                   <input type="text" value={metaPenyelenggara} onChange={e => setMetaPenyelenggara(e.target.value)} className={inputCls} placeholder="Contoh: LSP Kelistrikan" />
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Link Sertifikat</label>
-                  <input type="url" value={metaLinkSertifikat} onChange={e => setMetaLinkSertifikat(e.target.value)} className={inputCls} placeholder="https://drive.google.com/..." />
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700">Lampiran Sertifikat</label>
+                  <div className="flex gap-4 mb-2">
+                    <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="tipeSertifikat"
+                        value="file"
+                        checked={metaTipeSertifikat === "file"}
+                        onChange={() => setMetaTipeSertifikat("file")}
+                        className="text-primary-600 focus:ring-primary-500"
+                      />
+                      Unggah Gambar / Foto
+                    </label>
+                    <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="tipeSertifikat"
+                        value="link"
+                        checked={metaTipeSertifikat === "link"}
+                        onChange={() => setMetaTipeSertifikat("link")}
+                        className="text-primary-600 focus:ring-primary-500"
+                      />
+                      Link Dokumen (Google Drive/Lainnya)
+                    </label>
+                  </div>
+
+                  {metaTipeSertifikat === "file" ? (
+                    <div className="space-y-2">
+                      {metaFotoSertifikat ? (
+                        <div className="relative group w-32 aspect-[4/3] rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-gray-50">
+                          <img src={metaFotoSertifikat} alt="Sertifikat" className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => setMetaFotoSertifikat("")}
+                            className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer"
+                          >
+                            <HiOutlineTrash className="w-5 h-5 text-white" />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-250 hover:border-primary-500 rounded-2xl cursor-pointer bg-gray-50/50 hover:bg-primary-50/5 transition-all text-center p-4">
+                          <HiOutlinePhoto className="w-8 h-8 text-gray-400 mb-1" />
+                          <span className="text-xs text-gray-500 font-semibold">Pilih atau Seret Foto Sertifikat</span>
+                          <span className="text-[10px] text-gray-400 mt-0.5">Hanya file gambar (PNG, JPG, JPEG)</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleSertifikatUpload}
+                            className="hidden"
+                            disabled={isUploadingSertifikat}
+                          />
+                        </label>
+                      )}
+                      {isUploadingSertifikat && (
+                        <div className="flex items-center gap-1.5 text-xs text-primary-600 animate-pulse font-medium">
+                          <div className="w-3.5 h-3.5 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
+                          Mengupload foto sertifikat...
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div>
+                      <input
+                        type="url"
+                        value={metaLinkSertifikat}
+                        onChange={e => setMetaLinkSertifikat(e.target.value)}
+                        className={inputCls}
+                        placeholder="https://drive.google.com/..."
+                      />
+                    </div>
+                  )}
                 </div>
               </>
             )}
@@ -1081,8 +1253,31 @@ export default function AdminKaryaPage() {
                       </div>
                     )}
                     {metaVal("nomorSertifikat") && <div><span className="text-xs text-gray-500 font-medium">Nomor Sertifikat:</span> <span className="text-sm text-gray-800">{metaVal("nomorSertifikat")}</span></div>}
+                    {metaVal("fotoHki") && (
+                      <div>
+                        <span className="text-xs text-gray-500 font-medium block mb-1">Foto/Dokumen HKI:</span>
+                        <div className="w-32 aspect-[4/3] rounded-lg overflow-hidden border border-gray-200 shadow-sm bg-gray-50">
+                          <a href={metaVal("fotoHki")} target="_blank" rel="noopener noreferrer">
+                            <img src={metaVal("fotoHki")} alt="Dokumen HKI" className="w-full h-full object-cover hover:scale-105 transition-transform" />
+                          </a>
+                        </div>
+                      </div>
+                    )}
                     {metaVal("penyelenggara") && <div><span className="text-xs text-gray-500 font-medium">Penyelenggara:</span> <span className="text-sm text-gray-800">{metaVal("penyelenggara")}</span></div>}
-                    {metaVal("linkSertifikat") && <div><span className="text-xs text-gray-500 font-medium">Link Sertifikat:</span> <a href={metaVal("linkSertifikat")} target="_blank" rel="noopener noreferrer" className="text-sm text-primary-600 hover:underline break-all">{metaVal("linkSertifikat")}</a></div>}
+                    {(metaVal("tipeSertifikat") === "file" || metaVal("fotoSertifikat")) ? (
+                      metaVal("fotoSertifikat") && (
+                        <div>
+                          <span className="text-xs text-gray-500 font-medium block mb-1">Foto Sertifikat:</span>
+                          <div className="w-32 aspect-[4/3] rounded-lg overflow-hidden border border-gray-200 shadow-sm bg-gray-50">
+                            <a href={metaVal("fotoSertifikat")} target="_blank" rel="noopener noreferrer">
+                              <img src={metaVal("fotoSertifikat")} alt="Sertifikat" className="w-full h-full object-cover hover:scale-105 transition-transform" />
+                            </a>
+                          </div>
+                        </div>
+                      )
+                    ) : (
+                      metaVal("linkSertifikat") && <div><span className="text-xs text-gray-500 font-medium">Link Sertifikat:</span> <a href={metaVal("linkSertifikat")} target="_blank" rel="noopener noreferrer" className="text-sm text-primary-600 hover:underline break-all">{metaVal("linkSertifikat")}</a></div>
+                    )}
 
                     {personList(metaVal("penulis")).length > 0 && (
                       <div>

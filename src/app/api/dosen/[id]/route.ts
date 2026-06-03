@@ -213,6 +213,55 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
       .eq("id", id)
       .single();
 
+    // Fetch all karya for this dosen to delete files in storage
+    const { data: listKarya } = await adminClient
+      .from("karya")
+      .select("foto_urls, metadata")
+      .eq("dosen_id", id);
+
+    // Fetch all karya_pending for this dosen to delete files in storage
+    const { data: listKaryaPending } = await adminClient
+      .from("karya_pending")
+      .select("foto_urls, metadata")
+      .eq("dosen_id", id);
+
+    const urlsToDelete: string[] = [];
+    if (listKarya) {
+      listKarya.forEach((k: any) => {
+        if (k.foto_urls && Array.isArray(k.foto_urls)) urlsToDelete.push(...k.foto_urls);
+        if (k.metadata) {
+          const md = k.metadata as any;
+          if (md.sampul_depan) urlsToDelete.push(md.sampul_depan);
+          if (md.sampul_belakang) urlsToDelete.push(md.sampul_belakang);
+          if (md.fotoSertifikat) urlsToDelete.push(md.fotoSertifikat);
+          if (md.fotoHki) urlsToDelete.push(md.fotoHki);
+        }
+      });
+    }
+    if (listKaryaPending) {
+      listKaryaPending.forEach((k: any) => {
+        if (k.foto_urls && Array.isArray(k.foto_urls)) urlsToDelete.push(...k.foto_urls);
+        if (k.metadata) {
+          const md = k.metadata as any;
+          if (md.sampul_depan) urlsToDelete.push(md.sampul_depan);
+          if (md.sampul_belakang) urlsToDelete.push(md.sampul_belakang);
+          if (md.fotoSertifikat) urlsToDelete.push(md.fotoSertifikat);
+          if (md.fotoHki) urlsToDelete.push(md.fotoHki);
+        }
+      });
+    }
+
+    if (urlsToDelete.length > 0) {
+      const fileNames = urlsToDelete.map((url: string) => {
+        const parts = url.split("/storage/v1/object/public/galeri/");
+        return parts.length > 1 ? parts[1] : null;
+      }).filter(Boolean) as string[];
+
+      if (fileNames.length > 0) {
+        await adminClient.storage.from("galeri").remove(fileNames);
+      }
+    }
+
     // 1. Delete dosen record
     const { error } = await adminClient
       .from("dosen")
