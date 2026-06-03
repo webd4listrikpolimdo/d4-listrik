@@ -232,11 +232,11 @@ export default function DevTeamModal({ isOpen, onClose }: DevTeamModalProps) {
           </div>
 
           {/* Lecturer Section */}
-          <div className="pt-2 border-t border-gray-100 flex flex-col items-center">
-            <span className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-wider mb-2 font-bold">
+          <div className="pt-3 border-t border-gray-100 flex flex-col items-center">
+            <span className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider mb-2.5 font-bold">
               Dosen Pengajar
             </span>
-            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl px-4 py-2 flex items-center gap-3 w-full max-w-xs hover:border-primary-300 transition-all duration-200 group">
+            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl px-5 py-3.5 flex items-center gap-4 w-full max-w-sm hover:border-primary-300 transition-all duration-200 group">
               {lecturer.link ? (
                 lecturer.link.startsWith("/") ? (
                   <Link
@@ -247,7 +247,7 @@ export default function DevTeamModal({ isOpen, onClose }: DevTeamModalProps) {
                       url={lecturer.foto_url}
                       initials={lecturer.initials}
                       gradient="from-primary-950 to-primary-900"
-                      sizeClass="w-9 h-9 text-[10px]"
+                      sizeClass="w-14 h-14 text-sm"
                     />
                   </Link>
                 ) : (
@@ -260,7 +260,7 @@ export default function DevTeamModal({ isOpen, onClose }: DevTeamModalProps) {
                       url={lecturer.foto_url}
                       initials={lecturer.initials}
                       gradient="from-primary-950 to-primary-900"
-                      sizeClass="w-9 h-9 text-[10px]"
+                      sizeClass="w-14 h-14 text-sm"
                     />
                   </a>
                 )
@@ -270,7 +270,7 @@ export default function DevTeamModal({ isOpen, onClose }: DevTeamModalProps) {
                     url={lecturer.foto_url}
                     initials={lecturer.initials}
                     gradient="from-primary-950 to-primary-900"
-                    sizeClass="w-9 h-9 text-[10px]"
+                    sizeClass="w-14 h-14 text-sm"
                   />
                 </div>
               )}
@@ -280,7 +280,7 @@ export default function DevTeamModal({ isOpen, onClose }: DevTeamModalProps) {
                     <Link
                       href={lecturer.link}
                       onClick={onClose}
-                      className="font-extrabold text-gray-900 hover:text-primary-600 text-xs leading-tight block truncate hover:underline transition-colors"
+                      className="font-extrabold text-gray-900 hover:text-primary-600 text-sm leading-tight block truncate hover:underline transition-colors"
                     >
                       {lecturer.nama}
                     </Link>
@@ -289,17 +289,17 @@ export default function DevTeamModal({ isOpen, onClose }: DevTeamModalProps) {
                       href={lecturer.link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="font-extrabold text-gray-900 hover:text-primary-600 text-xs leading-tight block truncate hover:underline transition-colors"
+                      className="font-extrabold text-gray-900 hover:text-primary-600 text-sm leading-tight block truncate hover:underline transition-colors"
                     >
                       {lecturer.nama}
                     </a>
                   )
                 ) : (
-                  <h4 className="font-extrabold text-gray-900 text-xs leading-tight truncate">
+                  <h4 className="font-extrabold text-gray-900 text-sm leading-tight truncate">
                     {lecturer.nama}
                   </h4>
                 )}
-                <p className="text-[10px] text-gray-600 truncate mt-0.5">
+                <p className="text-xs text-gray-600 truncate mt-1">
                   {lecturer.role}
                 </p>
               </div>
