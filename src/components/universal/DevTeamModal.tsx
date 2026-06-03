@@ -144,10 +144,10 @@ export default function DevTeamModal({ isOpen, onClose }: DevTeamModalProps) {
                 {/* Ribbon Role Label */}
                 <div
                   className="absolute top-0 left-0 z-10"
-                  style={{ width: '120px', height: '120px', pointerEvents: 'none' }}
+                  style={{ width: '140px', height: '140px', pointerEvents: 'none' }}
                 >
                   <div
-                    className={`absolute text-center font-bold uppercase shadow-md ${
+                    className={`absolute text-center font-extrabold uppercase shadow-md ${
                       idx === 0
                         ? 'bg-gradient-to-r from-primary-600 to-primary-700 text-white'
                         : idx === 1
@@ -155,15 +155,16 @@ export default function DevTeamModal({ isOpen, onClose }: DevTeamModalProps) {
                         : 'bg-gradient-to-r from-indigo-500 to-indigo-700 text-white'
                     }`}
                     style={{
-                      width: '170px',
-                      top: '22px',
-                      left: '-42px',
+                      width: '200px',
+                      top: '26px',
+                      left: '-50px',
                       transform: 'rotate(-35deg)',
-                      fontSize: '7.5px',
-                      letterSpacing: '0.05em',
-                      padding: '3.5px 0',
+                      fontSize: '9px',
+                      letterSpacing: '0.04em',
+                      padding: '5px 0',
                       lineHeight: '1.3',
                       pointerEvents: 'auto',
+                      textShadow: '0 1px 2px rgba(0,0,0,0.2)',
                     }}
                   >
                     {member.role}
