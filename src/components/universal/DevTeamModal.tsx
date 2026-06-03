@@ -141,36 +141,40 @@ export default function DevTeamModal({ isOpen, onClose }: DevTeamModalProps) {
                 key={idx}
                 className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 pt-5 flex flex-col items-center text-center shadow-sm relative group hover:border-primary-300 transition-colors duration-200 overflow-hidden"
               >
-                {/* Ribbon Role Label */}
+                {/* Background Role Pattern */}
                 <div
-                  className="absolute top-0 left-0 z-10"
-                  style={{ width: '200px', height: '200px', pointerEvents: 'none' }}
+                  className="absolute inset-0 pointer-events-none select-none overflow-hidden"
+                  aria-hidden="true"
                 >
                   <div
-                    className={`absolute text-center font-extrabold uppercase shadow-md ${
+                    className={`font-black uppercase ${
                       idx === 0
-                        ? 'bg-gradient-to-r from-primary-600 to-primary-700 text-white'
+                        ? 'text-primary-600'
                         : idx === 1
-                        ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white'
-                        : 'bg-gradient-to-r from-indigo-500 to-indigo-700 text-white'
+                        ? 'text-amber-500'
+                        : 'text-indigo-500'
                     }`}
                     style={{
-                      width: '240px',
-                      top: '30px',
-                      left: '-58px',
-                      transform: 'rotate(-35deg)',
-                      fontSize: '8px',
-                      letterSpacing: '0.04em',
-                      padding: '6px 10px',
-                      lineHeight: '1.35',
-                      pointerEvents: 'auto',
-                      textShadow: '0 1px 2px rgba(0,0,0,0.2)',
-                      wordBreak: 'break-word' as any,
-                      whiteSpace: 'normal' as any,
-                      overflow: 'visible',
+                      fontSize: '11px',
+                      opacity: 0.12,
+                      lineHeight: '2.2',
+                      letterSpacing: '0.08em',
+                      whiteSpace: 'nowrap',
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      width: '1500px',
+                      height: '1500px',
+                      transform: 'translate(-50%, -50%) rotate(-18deg)',
                     }}
                   >
-                    {member.role}
+                    {Array.from({ length: 80 }).map((_, row) => (
+                      <div key={row} style={{ marginLeft: row % 2 === 0 ? '0px' : '40px' }}>
+                        {Array.from({ length: 20 }).map((_, col) => (
+                          <span key={col} style={{ marginRight: '20px' }}>{member.role}</span>
+                        ))}
+                      </div>
+                    ))}
                   </div>
                 </div>
 
