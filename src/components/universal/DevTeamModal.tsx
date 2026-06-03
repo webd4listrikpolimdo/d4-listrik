@@ -165,8 +165,8 @@ export default function DevTeamModal({ isOpen, onClose }: DevTeamModalProps) {
                       lineHeight: '1.35',
                       pointerEvents: 'auto',
                       textShadow: '0 1px 2px rgba(0,0,0,0.2)',
-                      wordBreak: 'keep-all' as any,
-                      whiteSpace: 'nowrap' as any,
+                      wordBreak: 'break-word' as any,
+                      whiteSpace: 'normal' as any,
                       overflow: 'visible',
                     }}
                   >
