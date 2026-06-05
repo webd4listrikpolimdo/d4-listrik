@@ -934,7 +934,7 @@ export default function AdminKurikulumPage() {
                 <div><label className="block text-sm font-medium text-gray-700 mb-1">Nama</label><input type="text" required value={mkForm.nama || ""} onChange={e => setMkForm({ ...mkForm, nama: e.target.value })} className={inputCls} /></div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div><label className="block text-sm font-medium text-gray-700 mb-1">SKS</label><input type="number" required min={1} max={8} value={mkForm.sks || ""} onChange={e => setMkForm({ ...mkForm, sks: Number(e.target.value) })} className={inputCls} /></div>
+                <div><label className="block text-sm font-medium text-gray-700 mb-1">SKS</label><input type="number" required min={1} max={100} value={mkForm.sks || ""} onChange={e => setMkForm({ ...mkForm, sks: Number(e.target.value) })} className={inputCls} /></div>
                 <div><label className="block text-sm font-medium text-gray-700 mb-1">Semester</label><input type="number" required min={1} max={8} value={mkForm.semester || ""} onChange={e => setMkForm({ ...mkForm, semester: Number(e.target.value) })} className={inputCls} /></div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Jenis</label>
