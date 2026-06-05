@@ -8,7 +8,7 @@ import ComboBox from "@/components/universal/ComboBox";
 import ConfirmDialog from "@/components/universal/ConfirmDialog";
 import { cachedFetch, invalidateCache } from "@/lib/fetchCache";
 import type { PersonLink } from "@/components/universal/PersonLinker";
-import { HiOutlineCheck, HiOutlineXMark, HiOutlineTrash, HiOutlineClock, HiOutlineCheckCircle, HiOutlineXCircle, HiOutlinePlus, HiOutlinePencilSquare, HiOutlinePhoto, HiOutlineEye, HiOutlineMagnifyingGlass, HiStar, HiOutlineStar } from "react-icons/hi2";
+import { HiOutlineCheck, HiOutlineXMark, HiOutlineTrash, HiOutlineClock, HiOutlineCheckCircle, HiOutlineXCircle, HiOutlinePlus, HiOutlinePencilSquare, HiOutlinePhoto, HiOutlineEye, HiOutlineMagnifyingGlass, HiStar, HiOutlineStar, HiOutlineFunnel } from "react-icons/hi2";
 import { useRef } from "react";
 import { useNotification } from "@/context/NotificationContext";
 import TablePagination from "@/components/universal/TablePagination";
@@ -74,6 +74,12 @@ export default function AdminKaryaPage() {
   const [filterDosen, setFilterDosen] = useState("");
   const [filterJenis, setFilterJenis] = useState("");
   const [filterTahun, setFilterTahun] = useState("");
+
+  // Filter modal states (for small screens)
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [tempFilterDosen, setTempFilterDosen] = useState("");
+  const [tempFilterJenis, setTempFilterJenis] = useState("");
+  const [tempFilterTahun, setTempFilterTahun] = useState("");
 
   // Search & Pagination states
   const [pendingSearchQuery, setPendingSearchQuery] = useState("");
@@ -588,60 +594,84 @@ export default function AdminKaryaPage() {
         <div className="flex flex-wrap items-center gap-3 w-full">
           <span className="text-xs font-semibold text-gray-500 block">Filter:</span>
           
-          <ComboBox
-            options={dosenOptions}
-            value={filterDosen}
-            onChange={(val) => {
-              setFilterDosen(val);
-              setPendingPage(1);
-              setReviewedPage(1);
-              setAllPage(1);
-            }}
-            placeholder="Semua Dosen"
-            className="w-48"
-          />
-
-          <ComboBox
-            options={Object.entries(jenisLabels).map(([val, label]) => ({ id: val, nama: label }))}
-            value={filterJenis}
-            onChange={(val) => {
-              setFilterJenis(val);
-              setPendingPage(1);
-              setReviewedPage(1);
-              setAllPage(1);
-            }}
-            placeholder="Semua Jenis"
-            className="w-44"
-          />
-
-          <ComboBox
-            options={uniqueYears.map(yr => ({ id: String(yr), nama: String(yr) }))}
-            value={filterTahun}
-            onChange={(val) => {
-              setFilterTahun(val);
-              setPendingPage(1);
-              setReviewedPage(1);
-              setAllPage(1);
-            }}
-            placeholder="Semua Tahun"
-            className="w-40"
-          />
-
-          {(filterDosen || filterJenis || filterTahun) && (
-            <button
-              onClick={() => {
-                setFilterDosen("");
-                setFilterJenis("");
-                setFilterTahun("");
+          {/* Inline filters — visible on lg+ screens only */}
+          <div className="hidden lg:contents">
+            <ComboBox
+              options={dosenOptions}
+              value={filterDosen}
+              onChange={(val) => {
+                setFilterDosen(val);
                 setPendingPage(1);
                 setReviewedPage(1);
                 setAllPage(1);
               }}
-              className="px-3 py-2 text-xs font-bold bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 rounded-xl transition-all cursor-pointer shadow-sm"
-            >
-              Reset
-            </button>
-          )}
+              placeholder="Semua Dosen"
+              className="w-48"
+            />
+
+            <ComboBox
+              options={Object.entries(jenisLabels).map(([val, label]) => ({ id: val, nama: label }))}
+              value={filterJenis}
+              onChange={(val) => {
+                setFilterJenis(val);
+                setPendingPage(1);
+                setReviewedPage(1);
+                setAllPage(1);
+              }}
+              placeholder="Semua Jenis"
+              className="w-44"
+            />
+
+            <ComboBox
+              options={uniqueYears.map(yr => ({ id: String(yr), nama: String(yr) }))}
+              value={filterTahun}
+              onChange={(val) => {
+                setFilterTahun(val);
+                setPendingPage(1);
+                setReviewedPage(1);
+                setAllPage(1);
+              }}
+              placeholder="Semua Tahun"
+              className="w-40"
+            />
+
+            {(filterDosen || filterJenis || filterTahun) && (
+              <button
+                onClick={() => {
+                  setFilterDosen("");
+                  setFilterJenis("");
+                  setFilterTahun("");
+                  setPendingPage(1);
+                  setReviewedPage(1);
+                  setAllPage(1);
+                }}
+                className="px-3 py-2 text-xs font-bold bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 rounded-xl transition-all cursor-pointer shadow-sm"
+              >
+                Reset
+              </button>
+            )}
+          </div>
+
+          {/* Filter button — visible on smaller screens only */}
+          <button
+            onClick={() => {
+              setTempFilterDosen(filterDosen);
+              setTempFilterJenis(filterJenis);
+              setTempFilterTahun(filterTahun);
+              setIsFilterModalOpen(true);
+            }}
+            className={`lg:hidden px-4 py-2 border rounded-xl text-sm font-bold flex items-center gap-2 transition-colors shadow-sm cursor-pointer ${
+              (filterDosen || filterJenis || filterTahun)
+                ? "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+            }`}
+          >
+            <HiOutlineFunnel className="w-4 h-4" />
+            Filter
+            {(filterDosen || filterJenis || filterTahun) && (
+              <span className="w-2 h-2 rounded-full bg-amber-500 inline-block animate-pulse"></span>
+            )}
+          </button>
         </div>
       </div>
 
@@ -1376,6 +1406,49 @@ export default function AdminKaryaPage() {
         confirmLabel="OK"
         variant={confirmVariant}
       />
+
+      {/* Filter Modal for small screens */}
+      <Modal isOpen={isFilterModalOpen} onClose={() => setIsFilterModalOpen(false)} title="Filter Karya">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold text-gray-600 mb-1">Dosen</label>
+            <ComboBox
+              options={dosenOptions}
+              value={tempFilterDosen}
+              onChange={setTempFilterDosen}
+              placeholder="Semua Dosen"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-600 mb-1">Jenis Karya</label>
+            <ComboBox
+              options={Object.entries(jenisLabels).map(([val, label]) => ({ id: val, nama: label }))}
+              value={tempFilterJenis}
+              onChange={setTempFilterJenis}
+              placeholder="Semua Jenis"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-600 mb-1">Tahun</label>
+            <ComboBox
+              options={uniqueYears.map(yr => ({ id: String(yr), nama: String(yr) }))}
+              value={tempFilterTahun}
+              onChange={setTempFilterTahun}
+              placeholder="Semua Tahun"
+            />
+          </div>
+          <div className="flex items-center justify-between border-t border-gray-100 pt-4">
+            <button type="button" onClick={() => { setTempFilterDosen(""); setTempFilterJenis(""); setTempFilterTahun(""); }}
+              className="text-xs font-bold text-red-600 hover:text-red-800 transition-colors uppercase cursor-pointer">Reset</button>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setIsFilterModalOpen(false)}
+                className="px-4 py-2 border border-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 transition-colors cursor-pointer">Batal</button>
+              <button type="button" onClick={() => { setFilterDosen(tempFilterDosen); setFilterJenis(tempFilterJenis); setFilterTahun(tempFilterTahun); setPendingPage(1); setReviewedPage(1); setAllPage(1); setIsFilterModalOpen(false); }}
+                className="px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-bold hover:bg-primary-700 transition-colors shadow-sm cursor-pointer">Terapkan</button>
+            </div>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

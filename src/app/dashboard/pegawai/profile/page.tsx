@@ -5,18 +5,18 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useData } from "@/context/DataContext";
 import { Pegawai } from "@/types/pegawai";
-import { HiOutlineArrowUpTray, HiOutlineTrash, HiCheck, HiExclamationTriangle, HiXCircle } from "react-icons/hi2";
+import { HiOutlineArrowUpTray, HiOutlineTrash } from "react-icons/hi2";
 import Image from "next/image";
+import { useNotification } from "@/context/NotificationContext";
 
 export default function PegawaiProfilePage() {
   const router = useRouter();
   const { user } = useAuth();
   const { pegawaiList, ensurePegawaiLoaded } = useData();
+  const { showSuccess, showError } = useNotification();
   const [formData, setFormData] = useState<Partial<Pegawai>>({});
-  const [isSaved, setIsSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
   const [pendingRequest, setPendingRequest] = useState<any>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
 
@@ -50,7 +50,6 @@ export default function PegawaiProfilePage() {
     e.preventDefault();
     if (user && formData.id) {
       setIsSaving(true);
-      setErrorMsg("");
       try {
         const res = await fetch("/api/profile-pending", {
           method: "POST",
@@ -67,17 +66,14 @@ export default function PegawaiProfilePage() {
         });
 
         if (res.ok) {
-          setIsSaved(true);
+          showSuccess("Permohonan perubahan profil berhasil dikirim ke admin!");
           await fetchPendingRequest();
-          setTimeout(() => {
-            setIsSaved(false);
-          }, 3000);
         } else {
           const err = await res.json();
-          setErrorMsg(err.error || "Gagal mengirimkan permohonan update");
+          showError(err.error || "Gagal mengirimkan permohonan update");
         }
       } catch (err) {
-        setErrorMsg("Terjadi kesalahan jaringan.");
+        showError("Terjadi kesalahan jaringan.");
       } finally {
         setIsSaving(false);
       }
@@ -115,8 +111,8 @@ export default function PegawaiProfilePage() {
       </div>
 
       {pendingRequest?.status === "pending" && (
-        <div className="mb-6 p-4 rounded-xl bg-amber-50 text-amber-800 border border-amber-100 font-medium text-sm flex items-start gap-3 shadow-sm animate-fade-in">
-          <HiExclamationTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+        <div className="mb-6 p-4 rounded-xl bg-amber-50 text-amber-800 border border-amber-100 font-medium text-sm flex items-start gap-3 shadow-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="currentColor"><path fillRule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5z" clipRule="evenodd" /></svg>
           <div>
             <p className="font-bold">Menunggu Persetujuan Admin</p>
             <p className="text-amber-700 text-xs font-normal mt-0.5">Perubahan profil Anda sedang ditinjau oleh administrator. Anda masih dapat memperbarui permohonan Anda kembali.</p>
@@ -126,24 +122,11 @@ export default function PegawaiProfilePage() {
 
       {pendingRequest?.status === "rejected" && (
         <div className="mb-6 p-4 rounded-xl bg-red-50 text-red-800 border border-red-100 font-medium text-sm flex items-start gap-3 shadow-sm">
-          <HiXCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-red-600 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="currentColor"><path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-1.72 6.97a.75.75 0 1 0-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 1 0 1.06 1.06L12 13.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L13.06 12l1.72-1.72a.75.75 0 1 0-1.06-1.06L12 10.94l-1.72-1.72z" clipRule="evenodd" /></svg>
           <div>
             <p className="font-bold">Permohonan Terakhir Ditolak</p>
             <p className="text-red-700 text-xs font-normal mt-0.5">Alasan penolakan: &quot;{pendingRequest.rejected_reason || "Tidak ditentukan"}&quot;. Silakan perbaiki data di bawah dan ajukan kembali.</p>
           </div>
-        </div>
-      )}
-
-      {isSaved && (
-        <div className="mb-6 p-4 rounded-xl bg-green-50 text-green-800 border border-green-100 font-medium text-sm flex items-center gap-2 shadow-sm animate-fade-in">
-          <HiCheck className="w-5 h-5 text-green-600" />
-          Permohonan perubahan profil berhasil dikirim ke admin!
-        </div>
-      )}
-
-      {errorMsg && (
-        <div className="mb-6 p-4 rounded-xl bg-red-50 text-red-800 border border-red-100 font-medium text-sm shadow-sm">
-          {errorMsg}
         </div>
       )}
 

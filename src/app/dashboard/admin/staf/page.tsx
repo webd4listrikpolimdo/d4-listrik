@@ -18,6 +18,7 @@ import {
   HiOutlineUserGroup, 
   HiOutlineUser, 
   HiOutlineMagnifyingGlass,
+  HiOutlineFunnel,
   HiCheck,
   HiXMark,
   HiClock,
@@ -38,9 +39,10 @@ interface PendingProfileRequest {
   rejected_reason: string | null;
   created_at: string;
   updated_at: string;
-  profiles: {
-    email: string;
-    full_name: string;
+  current_profile: {
+    nama?: string;
+    email?: string;
+    [key: string]: any;
   } | null;
 }
 
@@ -76,6 +78,12 @@ export default function AdminStafPage() {
   const [isRejectOpen, setIsRejectOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [actionInProgress, setActionInProgress] = useState(false);
+
+  // Filter modal states (for small screens)
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [tempFilterJabatan, setTempFilterJabatan] = useState("");
+  const [tempFilterBidang, setTempFilterBidang] = useState("");
+  const [tempFilterHomebase, setTempFilterHomebase] = useState("");
 
   // Lazy load datasets depending on the active tab
   useEffect(() => {
@@ -341,7 +349,7 @@ export default function AdminStafPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: reqId,
-          status,
+          action: status === "approved" ? "approve" : "reject",
           rejected_reason: reason || null,
         }),
       });
@@ -572,43 +580,67 @@ export default function AdminStafPage() {
 
             {activeTab === "dosen" && (
               <>
-                <ComboBox
-                  options={uniqueJabatans.map((j) => ({ id: j, nama: j }))}
-                  value={filterJabatan}
-                  onChange={(val) => { setFilterJabatan(val); setDosenPage(1); }}
-                  placeholder="Semua Jabatan"
-                  className="w-40"
-                />
+                {/* Inline filters — visible on lg+ screens only */}
+                <div className="hidden lg:contents">
+                  <ComboBox
+                    options={uniqueJabatans.map((j) => ({ id: j, nama: j }))}
+                    value={filterJabatan}
+                    onChange={(val) => { setFilterJabatan(val); setDosenPage(1); }}
+                    placeholder="Semua Jabatan"
+                    className="w-40"
+                  />
 
-                <ComboBox
-                  options={uniqueBidangs.map((b) => ({ id: b, nama: b }))}
-                  value={filterBidang}
-                  onChange={(val) => { setFilterBidang(val); setDosenPage(1); }}
-                  placeholder="Semua Bidang"
-                  className="w-44"
-                />
+                  <ComboBox
+                    options={uniqueBidangs.map((b) => ({ id: b, nama: b }))}
+                    value={filterBidang}
+                    onChange={(val) => { setFilterBidang(val); setDosenPage(1); }}
+                    placeholder="Semua Bidang"
+                    className="w-44"
+                  />
 
-                <ComboBox
-                  options={uniqueHomebases.map((h) => ({ id: h, nama: h }))}
-                  value={filterHomebase}
-                  onChange={(val) => { setFilterHomebase(val); setDosenPage(1); }}
-                  placeholder="Semua Homebase"
-                  className="w-48"
-                />
+                  <ComboBox
+                    options={uniqueHomebases.map((h) => ({ id: h, nama: h }))}
+                    value={filterHomebase}
+                    onChange={(val) => { setFilterHomebase(val); setDosenPage(1); }}
+                    placeholder="Semua Homebase"
+                    className="w-48"
+                  />
 
-                {(filterJabatan || filterBidang || filterHomebase) && (
-                  <button
-                    onClick={() => {
-                      setFilterJabatan("");
-                      setFilterBidang("");
-                      setFilterHomebase("");
-                      setDosenPage(1);
-                    }}
-                    className="px-3 py-2 text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-650 rounded-xl transition-all cursor-pointer shadow-sm"
-                  >
-                    Reset
-                  </button>
-                )}
+                  {(filterJabatan || filterBidang || filterHomebase) && (
+                    <button
+                      onClick={() => {
+                        setFilterJabatan("");
+                        setFilterBidang("");
+                        setFilterHomebase("");
+                        setDosenPage(1);
+                      }}
+                      className="px-3 py-2 text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-650 rounded-xl transition-all cursor-pointer shadow-sm"
+                    >
+                      Reset
+                    </button>
+                  )}
+                </div>
+
+                {/* Filter button — visible on smaller screens only */}
+                <button
+                  onClick={() => {
+                    setTempFilterJabatan(filterJabatan);
+                    setTempFilterBidang(filterBidang);
+                    setTempFilterHomebase(filterHomebase);
+                    setIsFilterModalOpen(true);
+                  }}
+                  className={`lg:hidden px-4 py-2 border rounded-xl text-sm font-bold flex items-center gap-2 transition-colors shadow-sm cursor-pointer ${
+                    (filterJabatan || filterBidang || filterHomebase)
+                      ? "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                      : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  <HiOutlineFunnel className="w-4 h-4" />
+                  Filter
+                  {(filterJabatan || filterBidang || filterHomebase) && (
+                    <span className="w-2 h-2 rounded-full bg-amber-500 inline-block animate-pulse"></span>
+                  )}
+                </button>
               </>
             )}
           </div>
@@ -647,9 +679,9 @@ export default function AdminStafPage() {
                     <tr key={req.id} className="hover:bg-amber-50/30 transition-colors">
                       <td className="px-6 py-3">
                         <div className="font-semibold text-gray-900">
-                          {req.profiles?.full_name || req.data?.nama || "Tanpa Nama"}
+                          {req.current_profile?.nama || req.data?.nama || "Tanpa Nama"}
                         </div>
-                        <div className="text-xs text-gray-400">{req.profiles?.email || "-"}</div>
+                        <div className="text-xs text-gray-400">{req.current_profile?.email || req.data?.email || "-"}</div>
                       </td>
                       <td className="px-6 py-3 text-sm font-medium capitalize text-gray-700">
                         {req.role === "dosen" ? "Dosen" : "Pegawai / Staf"}
@@ -1319,7 +1351,7 @@ export default function AdminStafPage() {
               <div className="flex items-center gap-1.5">
                 <HiOutlineExclamationTriangle className="w-4 h-4 text-amber-500 shrink-0" />
                 <span>
-                  Perubahan diajukan oleh <strong className="font-bold">{selectedReq.profiles?.full_name || selectedReq.data?.nama}</strong> ({selectedReq.role})
+                  Perubahan diajukan oleh <strong className="font-bold">{selectedReq.current_profile?.nama || selectedReq.data?.nama}</strong> ({selectedReq.role})
                 </span>
               </div>
             </div>
@@ -1427,6 +1459,78 @@ export default function AdminStafPage() {
             </button>
           </div>
         </form>
+      </Modal>
+
+      {/* Filter Modal for small screens */}
+      <Modal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        title="Pengaturan Filter Dosen"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold text-gray-600 mb-1">Jabatan Fungsional</label>
+            <ComboBox
+              options={uniqueJabatans.map((j) => ({ id: j, nama: j }))}
+              value={tempFilterJabatan}
+              onChange={setTempFilterJabatan}
+              placeholder="Semua Jabatan"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-600 mb-1">Bidang Keahlian</label>
+            <ComboBox
+              options={uniqueBidangs.map((b) => ({ id: b, nama: b }))}
+              value={tempFilterBidang}
+              onChange={setTempFilterBidang}
+              placeholder="Semua Bidang"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-600 mb-1">Homebase / Program Studi</label>
+            <ComboBox
+              options={uniqueHomebases.map((h) => ({ id: h, nama: h }))}
+              value={tempFilterHomebase}
+              onChange={setTempFilterHomebase}
+              placeholder="Semua Homebase"
+            />
+          </div>
+          <div className="flex items-center justify-between border-t border-gray-100 pt-4">
+            <button
+              type="button"
+              onClick={() => {
+                setTempFilterJabatan("");
+                setTempFilterBidang("");
+                setTempFilterHomebase("");
+              }}
+              className="text-xs font-bold text-red-600 hover:text-red-800 transition-colors uppercase cursor-pointer"
+            >
+              Reset
+            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setIsFilterModalOpen(false)}
+                className="px-4 py-2 border border-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setFilterJabatan(tempFilterJabatan);
+                  setFilterBidang(tempFilterBidang);
+                  setFilterHomebase(tempFilterHomebase);
+                  setDosenPage(1);
+                  setIsFilterModalOpen(false);
+                }}
+                className="px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-bold hover:bg-primary-700 transition-colors shadow-sm cursor-pointer"
+              >
+                Terapkan
+              </button>
+            </div>
+          </div>
+        </div>
       </Modal>
     </div>
   );

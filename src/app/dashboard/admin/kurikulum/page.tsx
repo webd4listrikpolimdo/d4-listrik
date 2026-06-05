@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Modal from "@/components/universal/Modal";
 import ConfirmDialog from "@/components/universal/ConfirmDialog";
-import { HiOutlinePlus, HiOutlinePencilSquare, HiOutlineTrash, HiOutlineArrowUpTray, HiOutlineDocumentText, HiOutlineMagnifyingGlass, HiOutlineXMark, HiOutlineTag } from "react-icons/hi2";
+import { HiOutlinePlus, HiOutlinePencilSquare, HiOutlineTrash, HiOutlineArrowUpTray, HiOutlineDocumentText, HiOutlineMagnifyingGlass, HiOutlineXMark, HiOutlineTag, HiOutlineFunnel } from "react-icons/hi2";
 import { cachedFetch, invalidateCache } from "@/lib/fetchCache";
 import ComboBox from "@/components/universal/ComboBox";
 import { useNotification } from "@/context/NotificationContext";
@@ -73,6 +73,14 @@ export default function AdminKurikulumPage() {
   const [mkFilterJenis, setMkFilterJenis] = useState<string>("");
 
   const [cplFilterKategori, setCplFilterKategori] = useState<string>("");
+
+  // Filter modal states (for small screens)
+  const [isMkFilterModalOpen, setIsMkFilterModalOpen] = useState(false);
+  const [tempMkSemester, setTempMkSemester] = useState("");
+  const [tempMkSks, setTempMkSks] = useState("");
+  const [tempMkJenis, setTempMkJenis] = useState("");
+  const [isCplFilterModalOpen, setIsCplFilterModalOpen] = useState(false);
+  const [tempCplKategori, setTempCplKategori] = useState("");
 
   // Confirm dialog state
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -812,43 +820,67 @@ export default function AdminKurikulumPage() {
                 )}
               </div>
 
-              <ComboBox
-                options={[1, 2, 3, 4, 5, 6, 7, 8].map(s => ({ id: String(s), nama: `Semester ${s}` }))}
-                value={mkFilterSemester}
-                onChange={(val) => { setMkFilterSemester(val); setMkPage(1); }}
-                placeholder="Semua Semester"
-                className="w-40"
-              />
+              {/* Inline filters — visible on lg+ screens only */}
+              <div className="hidden lg:contents">
+                <ComboBox
+                  options={[1, 2, 3, 4, 5, 6, 7, 8].map(s => ({ id: String(s), nama: `Semester ${s}` }))}
+                  value={mkFilterSemester}
+                  onChange={(val) => { setMkFilterSemester(val); setMkPage(1); }}
+                  placeholder="Semua Semester"
+                  className="w-40"
+                />
 
-              <ComboBox
-                options={uniqueMkSks.map(s => ({ id: String(s), nama: `${s} SKS` }))}
-                value={mkFilterSks}
-                onChange={(val) => { setMkFilterSks(val); setMkPage(1); }}
-                placeholder="Semua SKS"
-                className="w-36"
-              />
+                <ComboBox
+                  options={uniqueMkSks.map(s => ({ id: String(s), nama: `${s} SKS` }))}
+                  value={mkFilterSks}
+                  onChange={(val) => { setMkFilterSks(val); setMkPage(1); }}
+                  placeholder="Semua SKS"
+                  className="w-36"
+                />
 
-              <ComboBox
-                options={uniqueMkJenis.map(j => ({ id: j, nama: j }))}
-                value={mkFilterJenis}
-                onChange={(val) => { setMkFilterJenis(val); setMkPage(1); }}
-                placeholder="Semua Jenis"
-                className="w-36"
-              />
+                <ComboBox
+                  options={uniqueMkJenis.map(j => ({ id: j, nama: j }))}
+                  value={mkFilterJenis}
+                  onChange={(val) => { setMkFilterJenis(val); setMkPage(1); }}
+                  placeholder="Semua Jenis"
+                  className="w-36"
+                />
 
-              {(mkFilterSemester || mkFilterSks || mkFilterJenis) && (
-                <button
-                  onClick={() => {
-                    setMkFilterSemester("");
-                    setMkFilterSks("");
-                    setMkFilterJenis("");
-                    setMkPage(1);
-                  }}
-                  className="px-3 py-2 text-xs font-bold bg-gray-105 hover:bg-gray-200 text-gray-650 rounded-xl transition-all cursor-pointer shadow-sm"
-                >
-                  Reset
-                </button>
-              )}
+                {(mkFilterSemester || mkFilterSks || mkFilterJenis) && (
+                  <button
+                    onClick={() => {
+                      setMkFilterSemester("");
+                      setMkFilterSks("");
+                      setMkFilterJenis("");
+                      setMkPage(1);
+                    }}
+                    className="px-3 py-2 text-xs font-bold bg-gray-105 hover:bg-gray-200 text-gray-650 rounded-xl transition-all cursor-pointer shadow-sm"
+                  >
+                    Reset
+                  </button>
+                )}
+              </div>
+
+              {/* Filter button — visible on smaller screens only */}
+              <button
+                onClick={() => {
+                  setTempMkSemester(mkFilterSemester);
+                  setTempMkSks(mkFilterSks);
+                  setTempMkJenis(mkFilterJenis);
+                  setIsMkFilterModalOpen(true);
+                }}
+                className={`lg:hidden px-4 py-2 border rounded-xl text-sm font-bold flex items-center gap-2 transition-colors shadow-sm cursor-pointer ${
+                  (mkFilterSemester || mkFilterSks || mkFilterJenis)
+                    ? "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                    : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <HiOutlineFunnel className="w-4 h-4" />
+                Filter
+                {(mkFilterSemester || mkFilterSks || mkFilterJenis) && (
+                  <span className="w-2 h-2 rounded-full bg-amber-500 inline-block animate-pulse"></span>
+                )}
+              </button>
             </div>
 
             <button onClick={() => { setMkEditingKode(null); setMkForm({ kode: "", nama: "", sks: 2, semester: 1, jenis: "Teori" }); setMkModalOpen(true); }}
@@ -952,25 +984,46 @@ export default function AdminKurikulumPage() {
                 )}
               </div>
 
-              <ComboBox
-                options={categories.map(cat => ({ id: cat.nama, nama: cat.nama }))}
-                value={cplFilterKategori}
-                onChange={(val) => { setCplFilterKategori(val); setcplPage(1); }}
-                placeholder="Semua Kategori"
-                className="w-48"
-              />
+              <div className="hidden lg:contents">
+                <ComboBox
+                  options={categories.map(cat => ({ id: cat.nama, nama: cat.nama }))}
+                  value={cplFilterKategori}
+                  onChange={(val) => { setCplFilterKategori(val); setcplPage(1); }}
+                  placeholder="Semua Kategori"
+                  className="w-48"
+                />
 
-              {cplFilterKategori && (
-                <button
-                  onClick={() => {
-                    setCplFilterKategori("");
-                    setcplPage(1);
-                  }}
-                  className="px-3 py-2 text-xs font-bold bg-gray-105 hover:bg-gray-250 text-gray-650 rounded-xl transition-all cursor-pointer shadow-sm"
-                >
-                  Reset
-                </button>
-              )}
+                {cplFilterKategori && (
+                  <button
+                    onClick={() => {
+                      setCplFilterKategori("");
+                      setcplPage(1);
+                    }}
+                    className="px-3 py-2 text-xs font-bold bg-gray-105 hover:bg-gray-250 text-gray-650 rounded-xl transition-all cursor-pointer shadow-sm"
+                  >
+                    Reset
+                  </button>
+                )}
+              </div>
+
+              {/* Filter button — visible on smaller screens only */}
+              <button
+                onClick={() => {
+                  setTempCplKategori(cplFilterKategori);
+                  setIsCplFilterModalOpen(true);
+                }}
+                className={`lg:hidden px-4 py-2 border rounded-xl text-sm font-bold flex items-center gap-2 transition-colors shadow-sm cursor-pointer ${
+                  cplFilterKategori
+                    ? "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                    : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <HiOutlineFunnel className="w-4 h-4" />
+                Filter
+                {cplFilterKategori && (
+                  <span className="w-2 h-2 rounded-full bg-amber-500 inline-block animate-pulse"></span>
+                )}
+              </button>
             </div>
             <div className="flex gap-2 w-full lg:w-auto">
               <button onClick={() => { setCatModalOpen(true); setCatName(""); }}
@@ -1198,6 +1251,74 @@ export default function AdminKurikulumPage() {
         confirmLabel="Hapus"
         variant="danger"
       />
+
+      {/* MK Filter Modal for small screens */}
+      <Modal isOpen={isMkFilterModalOpen} onClose={() => setIsMkFilterModalOpen(false)} title="Filter Mata Kuliah">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold text-gray-600 mb-1">Semester</label>
+            <ComboBox
+              options={[1, 2, 3, 4, 5, 6, 7, 8].map(s => ({ id: String(s), nama: `Semester ${s}` }))}
+              value={tempMkSemester}
+              onChange={setTempMkSemester}
+              placeholder="Semua Semester"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-600 mb-1">SKS</label>
+            <ComboBox
+              options={uniqueMkSks.map(s => ({ id: String(s), nama: `${s} SKS` }))}
+              value={tempMkSks}
+              onChange={setTempMkSks}
+              placeholder="Semua SKS"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-600 mb-1">Jenis</label>
+            <ComboBox
+              options={uniqueMkJenis.map(j => ({ id: j, nama: j }))}
+              value={tempMkJenis}
+              onChange={setTempMkJenis}
+              placeholder="Semua Jenis"
+            />
+          </div>
+          <div className="flex items-center justify-between border-t border-gray-100 pt-4">
+            <button type="button" onClick={() => { setTempMkSemester(""); setTempMkSks(""); setTempMkJenis(""); }}
+              className="text-xs font-bold text-red-600 hover:text-red-800 transition-colors uppercase cursor-pointer">Reset</button>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setIsMkFilterModalOpen(false)}
+                className="px-4 py-2 border border-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 transition-colors cursor-pointer">Batal</button>
+              <button type="button" onClick={() => { setMkFilterSemester(tempMkSemester); setMkFilterSks(tempMkSks); setMkFilterJenis(tempMkJenis); setMkPage(1); setIsMkFilterModalOpen(false); }}
+                className="px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-bold hover:bg-primary-700 transition-colors shadow-sm cursor-pointer">Terapkan</button>
+            </div>
+          </div>
+        </div>
+      </Modal>
+
+      {/* CPL Filter Modal for small screens */}
+      <Modal isOpen={isCplFilterModalOpen} onClose={() => setIsCplFilterModalOpen(false)} title="Filter CPL">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold text-gray-600 mb-1">Kategori CPL</label>
+            <ComboBox
+              options={categories.map(cat => ({ id: cat.nama, nama: cat.nama }))}
+              value={tempCplKategori}
+              onChange={setTempCplKategori}
+              placeholder="Semua Kategori"
+            />
+          </div>
+          <div className="flex items-center justify-between border-t border-gray-100 pt-4">
+            <button type="button" onClick={() => setTempCplKategori("")}
+              className="text-xs font-bold text-red-600 hover:text-red-800 transition-colors uppercase cursor-pointer">Reset</button>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setIsCplFilterModalOpen(false)}
+                className="px-4 py-2 border border-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 transition-colors cursor-pointer">Batal</button>
+              <button type="button" onClick={() => { setCplFilterKategori(tempCplKategori); setcplPage(1); setIsCplFilterModalOpen(false); }}
+                className="px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-bold hover:bg-primary-700 transition-colors shadow-sm cursor-pointer">Terapkan</button>
+            </div>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
