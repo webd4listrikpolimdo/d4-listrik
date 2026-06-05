@@ -16,6 +16,7 @@ interface ComboBoxProps {
   className?: string;
   customOption?: ComboOption;
   disabled?: boolean;
+  allowCustomInput?: boolean;
 }
 
 export default function ComboBox({
@@ -26,6 +27,7 @@ export default function ComboBox({
   className = "",
   customOption,
   disabled = false,
+  allowCustomInput = false,
 }: ComboBoxProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -46,24 +48,33 @@ export default function ComboBox({
     return allOptions.find((opt) => opt.id === value);
   }, [allOptions, value]);
 
-  // Filter options based on typed query
   const filteredOptions = useMemo(() => {
-    if (!query) return allOptions;
     const lowerQuery = query.toLowerCase();
-    return allOptions.filter((opt) =>
-      opt.nama.toLowerCase().includes(lowerQuery)
-    );
-  }, [allOptions, query]);
+    let res = allOptions;
+    if (query) {
+      res = allOptions.filter((opt) =>
+        opt.nama.toLowerCase().includes(lowerQuery)
+      );
+    }
+    if (allowCustomInput && query) {
+      const exactMatch = allOptions.some(
+        (opt) => opt.nama.toLowerCase() === lowerQuery
+      );
+      if (!exactMatch) {
+        res = [...res, { id: query, nama: `✏️ Gunakan "${query}"` }];
+      }
+    }
+    return res;
+  }, [allOptions, query, allowCustomInput]);
 
-  // Sync query when value changes or dropdown opens/closes
   useEffect(() => {
     if (!isOpen) {
-      setQuery(selectedOption ? selectedOption.nama : "");
+      setQuery(selectedOption ? selectedOption.nama : value || "");
     } else {
       // Clear input so user sees all options and can start typing immediately
       setQuery("");
     }
-  }, [isOpen, selectedOption]);
+  }, [isOpen, selectedOption, value]);
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -72,6 +83,9 @@ export default function ComboBox({
         containerRef.current &&
         !containerRef.current.contains(event.target as Node)
       ) {
+        if (allowCustomInput && query) {
+          onChange(query);
+        }
         setIsOpen(false);
       }
     };
@@ -79,7 +93,7 @@ export default function ComboBox({
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+  }, [allowCustomInput, query, onChange]);
 
   // Keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -117,10 +131,16 @@ export default function ComboBox({
         break;
       case "Escape":
         e.preventDefault();
+        if (allowCustomInput && query) {
+          onChange(query);
+        }
         setIsOpen(false);
         inputRef.current?.blur();
         break;
       case "Tab":
+        if (allowCustomInput && query) {
+          onChange(query);
+        }
         setIsOpen(false);
         break;
       default:

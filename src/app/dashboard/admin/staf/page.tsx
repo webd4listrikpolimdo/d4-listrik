@@ -48,6 +48,26 @@ interface PendingProfileRequest {
 
 type TabType = "dosen" | "pegawai" | "verifikasi";
 
+const pangkatOptions = [
+  { id: "Juru Muda - I/a", nama: "Juru Muda - I/a" },
+  { id: "Juru Muda Tingkat I - I/b", nama: "Juru Muda Tingkat I - I/b" },
+  { id: "Juru - I/c", nama: "Juru - I/c" },
+  { id: "Juru Tingkat I - I/d", nama: "Juru Tingkat I - I/d" },
+  { id: "Pengatur Muda - II/a", nama: "Pengatur Muda - II/a" },
+  { id: "Pengatur Muda Tingkat I - II/b", nama: "Pengatur Muda Tingkat I - II/b" },
+  { id: "Pengatur - II/c", nama: "Pengatur - II/c" },
+  { id: "Pengatur Tingkat I - II/d", nama: "Pengatur Tingkat I - II/d" },
+  { id: "Penata Muda - III/a", nama: "Penata Muda - III/a" },
+  { id: "Penata Muda Tingkat I - III/b", nama: "Penata Muda Tingkat I - III/b" },
+  { id: "Penata - III/c", nama: "Penata - III/c" },
+  { id: "Penata Tingkat I - III/d", nama: "Penata Tingkat I - III/d" },
+  { id: "Pembina - IV/a", nama: "Pembina - IV/a" },
+  { id: "Pembina Tingkat I - IV/b", nama: "Pembina Tingkat I - IV/b" },
+  { id: "Pembina Utama Muda - IV/c", nama: "Pembina Utama Muda - IV/c" },
+  { id: "Pembina Utama Madya - IV/d", nama: "Pembina Utama Madya - IV/d" },
+  { id: "Pembina Utama - IV/e", nama: "Pembina Utama - IV/e" }
+];
+
 export default function AdminStafPage() {
   const router = useRouter();
   const { showSuccess, showError } = useNotification();
@@ -1059,12 +1079,12 @@ export default function AdminStafPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Pangkat / Golongan</label>
-                  <input
-                    type="text"
+                  <ComboBox
+                    options={pangkatOptions}
                     value={dosenForm.pangkat || ""}
-                    onChange={(e) => setDosenForm({ ...dosenForm, pangkat: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-primary-950"
-                    placeholder="Pembina - IV/a"
+                    onChange={(val) => setDosenForm({ ...dosenForm, pangkat: val })}
+                    placeholder="Pilih Pangkat / Golongan..."
+                    allowCustomInput={true}
                   />
                 </div>
               </div>
