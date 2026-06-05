@@ -118,7 +118,7 @@ export default function DevTeamModal({ isOpen, onClose }: DevTeamModalProps) {
               Tim Pengembang Website
             </h2>
             <p className="text-xs sm:text-sm text-gray-700 mt-1.5">
-              Website ini dikembangkan oleh Kelompok 3 Kelas 6TI7, Program Studi <strong>D4 Teknik Informatika</strong>, Politeknik Negeri Manado sebagai bagian dari Project Based Learning (PBL) mata kuliah <strong>Teknologi Web</strong>.
+              Website ini dikembangkan oleh Kelompok 2 Kelas 6TI7, Program Studi <strong>D4 Teknik Informatika</strong>, Politeknik Negeri Manado sebagai bagian dari Project Based Learning (PBL) mata kuliah <strong>Teknologi Web</strong>.
             </p>
           </div>
 

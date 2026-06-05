@@ -40,8 +40,8 @@ export default function KurikulumPage() {
   }
 
   const kurikulum = data?.kurikulum || null;
-  const mataKuliah = data?.mata_kuliah || [];
-  const cpl = data?.cpl || [];
+  const mataKuliah = [...(data?.mata_kuliah || [])].sort((a, b) => a.kode.localeCompare(b.kode, undefined, { numeric: true, sensitivity: "base" }));
+  const cpl = [...(data?.cpl || [])].sort((a, b) => a.kode.localeCompare(b.kode, undefined, { numeric: true, sensitivity: "base" }));
 
   return (
     <>

@@ -118,7 +118,10 @@ export default function AdminKurikulumPage() {
     hasFetchedMK.current = true;
     setIsMkLoading(true);
     cachedFetch<MataKuliah[]>("/api/mata-kuliah")
-      .then(data => setMataKuliahList(data || []))
+      .then(data => {
+        const sorted = (data || []).sort((a, b) => a.kode.localeCompare(b.kode, undefined, { numeric: true, sensitivity: 'base' }));
+        setMataKuliahList(sorted);
+      })
       .catch(e => console.error("Failed to fetch mata kuliah", e))
       .finally(() => setIsMkLoading(false));
   }, [activeTab]);
@@ -142,7 +145,10 @@ export default function AdminKurikulumPage() {
       fetchCategories()
     ])
       .then(([cplData]) => {
-        if (cplData) setCplList(cplData);
+        if (cplData) {
+          const sorted = cplData.sort((a, b) => a.kode.localeCompare(b.kode, undefined, { numeric: true, sensitivity: 'base' }));
+          setCplList(sorted);
+        }
       })
       .catch(e => console.error("Failed to fetch CPL data", e))
       .finally(() => setIsCplLoading(false));
@@ -234,7 +240,7 @@ export default function AdminKurikulumPage() {
           throw new Error(err.error || "Gagal mengubah mata kuliah");
         }
         const u = await res.json(); 
-        setMataKuliahList(prev => prev.map(m => m.kode === mkEditingKode ? u : m)); 
+        setMataKuliahList(prev => prev.map(m => m.kode === mkEditingKode ? u : m).sort((a, b) => a.kode.localeCompare(b.kode, undefined, { numeric: true, sensitivity: 'base' }))); 
         invalidateCache("/api/mata-kuliah");
       } else {
         const res = await fetch("/api/mata-kuliah", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(mkForm) });
@@ -243,7 +249,7 @@ export default function AdminKurikulumPage() {
           throw new Error(err.error || "Gagal membuat mata kuliah");
         }
         const c = await res.json(); 
-        setMataKuliahList(prev => [...prev, c].sort((a, b) => a.semester - b.semester || a.kode.localeCompare(b.kode))); 
+        setMataKuliahList(prev => [...prev, c].sort((a, b) => a.kode.localeCompare(b.kode, undefined, { numeric: true, sensitivity: 'base' }))); 
         invalidateCache("/api/mata-kuliah");
       }
       setMkModalOpen(false);
@@ -285,7 +291,7 @@ export default function AdminKurikulumPage() {
           throw new Error(err.error || "Gagal mengubah CPL");
         }
         const u = await res.json(); 
-        setCplList(prev => prev.map(c => c.kode === cplEditingKode ? u : c)); 
+        setCplList(prev => prev.map(c => c.kode === cplEditingKode ? u : c).sort((a, b) => a.kode.localeCompare(b.kode, undefined, { numeric: true, sensitivity: 'base' }))); 
         invalidateCache("/api/cpl");
       } else {
         const res = await fetch("/api/cpl", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(cplForm) });
@@ -294,7 +300,7 @@ export default function AdminKurikulumPage() {
           throw new Error(err.error || "Gagal membuat CPL");
         }
         const c = await res.json(); 
-        setCplList(prev => [...prev, c].sort((a, b) => a.kode.localeCompare(b.kode))); 
+        setCplList(prev => [...prev, c].sort((a, b) => a.kode.localeCompare(b.kode, undefined, { numeric: true, sensitivity: 'base' }))); 
         invalidateCache("/api/cpl");
       }
       setCplModalOpen(false);
