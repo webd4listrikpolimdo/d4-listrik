@@ -151,47 +151,48 @@ export default function Footer() {
               </div>
             )}
           </div>
-
           {/* Quick Links */}
-          <div>
-            <h4 className="font-semibold text-accent-400 mb-4 text-sm uppercase tracking-wider">
-              Tautan Cepat
-            </h4>
-            <ul className="grid grid-cols-2 gap-x-4 gap-y-2">
-              {quickLinks.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-primary-300 hover:text-white text-sm transition-colors duration-200"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+          <div className="flex flex-col items-center text-center">
+            <div>
+              <h4 className="font-semibold text-accent-400 mb-4 text-sm uppercase tracking-wider text-center">
+                Tautan Cepat
+              </h4>
+              <ul className="grid grid-cols-2 gap-x-8 gap-y-2 text-center">
+                {quickLinks.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      className="text-primary-300 hover:text-white text-sm transition-colors duration-200 block"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
 
           {/* Contact */}
-          <div>
+          <div className="flex flex-col items-end text-right">
             <h4 className="font-semibold text-accent-400 mb-4 text-sm uppercase tracking-wider">
               Kontak
             </h4>
-            <div className="space-y-3 text-sm text-primary-300">
+            <div className="space-y-3 text-sm text-primary-300 w-full flex flex-col items-end">
               {regularKontak.length > 0 ? (
                 regularKontak.map((item) => {
                   const content = (
-                    <div className="flex items-start gap-2">
+                    <div className="flex items-start gap-2 flex-row-reverse text-right">
                       {item.icon && <IconRenderer name={item.icon} className="mt-0.5 flex-shrink-0" />}
                       <span className="whitespace-pre-line">{item.nilai}</span>
                     </div>
                   );
 
                   return (
-                    <div key={item.id}>
+                    <div key={item.id} className="w-full flex justify-end">
                       {item.link ? (
                         <a
                           href={item.link}
-                          className="hover:text-white transition-colors duration-200"
+                          className="hover:text-white transition-colors duration-200 block"
                           target="_blank"
                           rel="noopener noreferrer"
                         >
