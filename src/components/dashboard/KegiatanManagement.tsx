@@ -949,7 +949,7 @@ export default function KegiatanManagement() {
             {form.foto_urls.length > 0 && (
               <div className="flex flex-wrap gap-3 mb-3">
                 {form.foto_urls.map((url, idx) => (
-                  <div key={idx} className="relative group w-24 h-24 rounded-xl overflow-hidden border border-gray-250 shadow-sm">
+                  <div key={url} className="relative group w-24 h-24 rounded-xl overflow-hidden border border-gray-250 shadow-sm">
                     <LazyImage src={url} alt={`Preview ${idx + 1}`} wrapperClassName="w-full h-full" className="w-full h-full object-cover" />
                     
                     {/* Utama / Star Badge */}
@@ -1067,7 +1067,7 @@ export default function KegiatanManagement() {
                 <h4 className="text-sm font-bold text-gray-700 mb-2">Foto Dokumentasi</h4>
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                   {reviewItem.foto_urls.map((url, idx) => (
-                    <a key={idx} href={url} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-lg overflow-hidden border border-gray-100 block">
+                    <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-lg overflow-hidden border border-gray-100 block">
                       <LazyImage src={url} alt={`Dokumentasi ${idx + 1}`} wrapperClassName="w-full h-full" className="w-full h-full object-cover" />
                     </a>
                   ))}

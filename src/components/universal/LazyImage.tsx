@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 
 interface LazyImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   fallbackSrc?: string;
   wrapperClassName?: string;
 }
 
-export default function LazyImage({
+const LazyImage = memo(function LazyImage({
   src,
   alt,
   className = "",
@@ -45,4 +45,6 @@ export default function LazyImage({
       />
     </div>
   );
-}
+});
+
+export default LazyImage;

@@ -882,7 +882,7 @@ export default function DosenKaryaPage() {
               {fotoUrls.length > 0 && (
                 <div className="flex flex-wrap gap-3 mb-3">
                   {fotoUrls.map((url, i) => (
-                    <div key={i} className="relative group w-24 h-24 rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+                    <div key={url} className="relative group w-24 h-24 rounded-xl overflow-hidden border border-gray-200 shadow-sm">
                       <LazyImage src={url} alt={`Foto ${i + 1}`} wrapperClassName="w-full h-full" className="w-full h-full object-cover" />
                       
                       {/* Utama / Star Badge */}

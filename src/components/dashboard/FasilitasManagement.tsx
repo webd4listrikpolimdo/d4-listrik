@@ -449,7 +449,7 @@ export default function FasilitasManagement() {
             {form.foto_urls.length > 0 && (
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mb-4">
                 {form.foto_urls.map((url, idx) => (
-                  <div key={idx} className="relative aspect-video rounded-lg overflow-hidden group border border-gray-100">
+                  <div key={url} className="relative aspect-video rounded-lg overflow-hidden group border border-gray-100">
                     <LazyImage src={url} alt={`Preview ${idx + 1}`} wrapperClassName="w-full h-full" className="w-full h-full object-cover" />
                     
                     {/* Utama / Star Badge */}
