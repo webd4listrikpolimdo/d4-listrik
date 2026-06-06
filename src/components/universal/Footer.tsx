@@ -128,7 +128,7 @@ export default function Footer() {
             <h4 className="font-semibold text-accent-400 mb-4 text-sm uppercase tracking-wider">
               Tautan Cepat
             </h4>
-            <ul className="space-y-2">
+            <ul className="grid grid-cols-2 gap-x-4 gap-y-2">
               {quickLinks.map((link) => (
                 <li key={link.href}>
                   <Link
