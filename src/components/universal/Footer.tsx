@@ -71,6 +71,19 @@ export default function Footer() {
 
   const isDashboard = pathname?.startsWith("/dashboard");
 
+  const socialMediaNames = ["instagram", "facebook", "twitter", "x", "linkedin", "tiktok", "youtube", "github", "whatsapp"];
+  const isSocialMedia = (item: KontakItem) => {
+    const nameLower = item.nama.toLowerCase();
+    const iconLower = (item.icon || "").toLowerCase();
+    return (
+      socialMediaNames.some(sm => nameLower.includes(sm)) ||
+      socialMediaNames.some(sm => iconLower.includes(sm))
+    );
+  };
+
+  const socialMediaKontak = kontak.filter(isSocialMedia);
+  const regularKontak = kontak.filter(item => !isSocialMedia(item));
+
   if (isDashboard) {
     return (
       <>
@@ -121,6 +134,22 @@ export default function Footer() {
             <p className="text-primary-300 text-sm leading-relaxed">
               {footer?.deskripsi || ""}
             </p>
+            {socialMediaKontak.length > 0 && (
+              <div className="flex items-center gap-4 mt-6">
+                {socialMediaKontak.map((item) => (
+                  <a
+                    key={item.id}
+                    href={item.link || item.nilai}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary-300 hover:text-accent-400 hover:scale-110 transition-all duration-200"
+                    title={item.nama}
+                  >
+                    {item.icon && <IconRenderer name={item.icon} className="w-5 h-5" />}
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Quick Links */}
@@ -148,8 +177,8 @@ export default function Footer() {
               Kontak
             </h4>
             <div className="space-y-3 text-sm text-primary-300">
-              {kontak.length > 0 ? (
-                kontak.map((item) => {
+              {regularKontak.length > 0 ? (
+                regularKontak.map((item) => {
                   const content = (
                     <div className="flex items-start gap-2">
                       {item.icon && <IconRenderer name={item.icon} className="mt-0.5 flex-shrink-0" />}
