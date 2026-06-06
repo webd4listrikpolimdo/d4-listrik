@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { HiBriefcase, HiTag, HiDocumentText, HiAcademicCap, HiEnvelope, HiPhone } from "react-icons/hi2";
+import LazyImage from "../universal/LazyImage";
 
 const avatarColors = [
   "from-primary-600 to-primary-800",
@@ -51,10 +52,12 @@ export default function DosenCard({ person, type, index }: StafCardProps) {
       <div className="p-6 flex flex-col flex-1">
         {/* Avatar */}
         <div className="flex items-start gap-4 mb-4">
-          <img
-            src={photo || "/images/default-profile.svg"}
+          <LazyImage
+            src={photo || undefined}
+            fallbackSrc="/images/default-profile.svg"
             alt={person.nama}
-            className="flex-shrink-0 w-16 h-16 rounded-xl object-cover shadow-lg group-hover:scale-105 transition-transform duration-300"
+            wrapperClassName="flex-shrink-0 w-16 h-16 rounded-xl shadow-lg"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
           <div className="min-w-0">
             <h3 className="font-bold text-primary-950 text-base leading-snug truncate" title={person.nama}>

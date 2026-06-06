@@ -8,6 +8,7 @@ import LazySection from "@/components/universal/LazySection";
 import { useData } from "@/context/DataContext";
 import Link from "next/link";
 import ImageLightbox from "@/components/universal/ImageLightbox";
+import LazyImage from "@/components/universal/LazyImage";
 import {
   HiUser,
   HiHome,
@@ -153,9 +154,10 @@ export default function FasilitasPage() {
                     >
                       {/* Image */}
                       <div className="h-48 relative overflow-hidden bg-gray-100">
-                        <img
+                        <LazyImage
                           src={photos[0]}
                           alt={item.nama}
+                          wrapperClassName="w-full h-full"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
@@ -240,9 +242,10 @@ export default function FasilitasPage() {
                }}
                className="relative h-64 sm:h-80 w-full bg-gray-100 rounded-2xl overflow-hidden group/slider cursor-zoom-in"
              >
-               <img
+               <LazyImage
                  src={selectedPhotos[currentPhotoIndex]}
                  alt={selectedFasilitas.nama}
+                 wrapperClassName="w-full h-full"
                  className="w-full h-full object-cover hover:scale-[1.02] transition-transform duration-550"
                />
               <div className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />

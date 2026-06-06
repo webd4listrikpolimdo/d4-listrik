@@ -18,6 +18,7 @@ import {
   HiChevronRight
 } from "react-icons/hi2";
 import ImageLightbox from "@/components/universal/ImageLightbox";
+import LazyImage from "@/components/universal/LazyImage";
 import { GaleriItem } from "@/types/galeri";
 import { cachedFetch } from "@/lib/fetchCache";
 import { getBackInfo, navigateBack } from "@/lib/backLabel";
@@ -585,9 +586,10 @@ export default function GaleriDetailPage() {
                             }}
                             className="relative w-40 h-56 sm:w-48 sm:h-64 rounded-xl overflow-hidden shadow-md border border-gray-200 bg-gray-50 cursor-zoom-in group/cover"
                           >
-                            <img
+                            <LazyImage
                               src={originalKarya.metadata.sampul_depan as string}
                               alt="Sampul Depan"
+                              wrapperClassName="w-full h-full"
                               className="w-full h-full object-cover group-hover/cover:scale-105 transition-transform duration-300"
                             />
                           </button>
@@ -610,9 +612,10 @@ export default function GaleriDetailPage() {
                             }}
                             className="relative w-40 h-56 sm:w-48 sm:h-64 rounded-xl overflow-hidden shadow-md border border-gray-200 bg-gray-50 cursor-zoom-in group/cover"
                           >
-                            <img
+                            <LazyImage
                               src={originalKarya.metadata.sampul_belakang as string}
                               alt="Sampul Belakang"
+                              wrapperClassName="w-full h-full"
                               className="w-full h-full object-cover group-hover/cover:scale-105 transition-transform duration-300"
                             />
                           </button>
@@ -628,10 +631,11 @@ export default function GaleriDetailPage() {
 
                      {(!item.foto || item.foto.length === 0) ? (
                       <div className="rounded-2xl overflow-hidden shadow-sm border border-gray-100">
-                        <img
+                        <LazyImage
                           src="/images/default.svg"
                           alt="Placeholder"
-                          className="w-full h-auto object-cover aspect-video opacity-20"
+                          wrapperClassName="w-full h-auto aspect-video"
+                          className="w-full h-auto object-cover opacity-20"
                         />
                       </div>
                     ) : item.foto.length === 1 ? (
@@ -645,9 +649,10 @@ export default function GaleriDetailPage() {
                           }}
                           className="w-full h-full cursor-zoom-in relative block text-left group focus:outline-none"
                         >
-                          <img
+                          <LazyImage
                             src={item.foto[0]}
                             alt={item.judul}
+                            wrapperClassName="w-full h-auto max-h-[60vh]"
                             className="w-full h-auto max-h-[60vh] object-contain mx-auto group-hover:scale-101 transition-transform duration-500"
                           />
                         </button>
@@ -664,9 +669,10 @@ export default function GaleriDetailPage() {
                           }}
                           className="w-full h-full cursor-zoom-in relative block text-left focus:outline-none bg-black"
                         >
-                          <img
+                          <LazyImage
                             src={item.foto[currentSlide]}
                             alt={`${item.judul} - Foto ${currentSlide + 1}`}
+                            wrapperClassName="w-full h-full"
                             className="w-full h-full object-contain mx-auto select-none"
                           />
                         </button>

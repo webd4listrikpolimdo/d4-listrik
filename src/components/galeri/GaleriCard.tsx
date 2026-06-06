@@ -1,6 +1,7 @@
 import { GaleriItem } from "@/types/galeri";
 import Link from "next/link";
 import { HiOutlineCalendar } from "react-icons/hi2";
+import LazyImage from "../universal/LazyImage";
 
 export default function GaleriCard({
   item,
@@ -24,9 +25,10 @@ export default function GaleriCard({
     >
       {/* Image */}
       <div className="h-48 relative overflow-hidden bg-gray-100">
-        <img
+        <LazyImage
           src={(item.foto && item.foto[0]) ? item.foto[0] : "/images/default.svg"}
           alt={item.judul}
+          wrapperClassName="w-full h-full"
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />

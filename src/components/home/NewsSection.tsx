@@ -7,6 +7,7 @@ import {
   HiChevronLeft,
   HiChevronRight,
 } from "react-icons/hi2";
+import LazyImage from "../universal/LazyImage";
 
 interface NewsArticle {
   id: string;
@@ -219,24 +220,25 @@ export default function NewsSection() {
                       {/* Image or gradient placeholder */}
                       {article.gambar ? (
                         <div className="h-48 overflow-hidden relative">
-                          <img
-                            src={article.gambar}
+                          <LazyImage
+                            src={article.gambar || undefined}
                             alt={article.judul}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            wrapperClassName="w-full h-full"
                             onError={(e) => {
                               const target = e.currentTarget;
                               target.style.display = "none";
-                              const fallback =
-                                target.nextElementSibling?.nextElementSibling;
+                              const parent = target.parentElement?.parentElement;
+                              const fallback = parent?.querySelector(".news-fallback");
                               if (fallback instanceof HTMLElement) {
                                 fallback.style.display = "flex";
                               }
                             }}
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
                           {/* Hidden fallback for broken images */}
                           <div
-                            className={`absolute inset-0 bg-gradient-to-br ${gradientColors[index % gradientColors.length]} items-center justify-center text-white`}
+                            className={`news-fallback absolute inset-0 bg-gradient-to-br ${gradientColors[index % gradientColors.length]} items-center justify-center text-white`}
                             style={{ display: "none" }}
                           >
                             <HiNewspaper className="text-5xl opacity-30" />
