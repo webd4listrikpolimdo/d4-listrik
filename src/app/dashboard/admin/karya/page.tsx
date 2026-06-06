@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Modal from "@/components/universal/Modal";
+import LazyImage from "@/components/universal/LazyImage";
 import PersonLinker from "@/components/universal/PersonLinker";
 import ComboBox from "@/components/universal/ComboBox";
 import ConfirmDialog from "@/components/universal/ConfirmDialog";
@@ -1003,7 +1004,7 @@ export default function AdminKaryaPage() {
                     <label className="block text-sm font-semibold text-gray-700 mb-1.5">Sampul Depan</label>
                     {metaSampulDepan ? (
                       <div className="relative w-28 h-36 rounded-xl overflow-hidden border border-gray-200 group shadow-sm">
-                        <img src={metaSampulDepan} alt="Sampul Depan" className="w-full h-full object-cover" />
+                        <LazyImage src={metaSampulDepan} alt="Sampul Depan" wrapperClassName="w-full h-full" className="w-full h-full object-cover" />
                         <button
                           type="button"
                           onClick={() => setMetaSampulDepan("")}
@@ -1031,7 +1032,7 @@ export default function AdminKaryaPage() {
                     <label className="block text-sm font-semibold text-gray-700 mb-1.5">Sampul Belakang</label>
                     {metaSampulBelakang ? (
                       <div className="relative w-28 h-36 rounded-xl overflow-hidden border border-gray-200 group shadow-sm">
-                        <img src={metaSampulBelakang} alt="Sampul Belakang" className="w-full h-full object-cover" />
+                        <LazyImage src={metaSampulBelakang} alt="Sampul Belakang" wrapperClassName="w-full h-full" className="w-full h-full object-cover" />
                         <button
                           type="button"
                           onClick={() => setMetaSampulBelakang("")}
@@ -1072,7 +1073,7 @@ export default function AdminKaryaPage() {
                   <label className="block text-sm font-semibold text-gray-700">Foto/Dokumen HKI (Opsional)</label>
                   {metaFotoHki ? (
                     <div className="relative group w-32 aspect-[4/3] rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-gray-50">
-                      <img src={metaFotoHki} alt="Dokumen HKI" className="w-full h-full object-cover" />
+                      <LazyImage src={metaFotoHki} alt="Dokumen HKI" wrapperClassName="w-full h-full" className="w-full h-full object-cover" />
                       <button
                         type="button"
                         onClick={() => setMetaFotoHki("")}
@@ -1142,7 +1143,7 @@ export default function AdminKaryaPage() {
                     <div className="space-y-2">
                       {metaFotoSertifikat ? (
                         <div className="relative group w-32 aspect-[4/3] rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-gray-50">
-                          <img src={metaFotoSertifikat} alt="Sertifikat" className="w-full h-full object-cover" />
+                          <LazyImage src={metaFotoSertifikat} alt="Sertifikat" wrapperClassName="w-full h-full" className="w-full h-full object-cover" />
                           <button
                             type="button"
                             onClick={() => setMetaFotoSertifikat("")}
@@ -1196,7 +1197,7 @@ export default function AdminKaryaPage() {
                 <div className="flex flex-wrap gap-3 mb-3">
                   {fotoUrls.map((url, i) => (
                     <div key={i} className="relative group w-24 h-24 rounded-xl overflow-hidden border border-gray-200 shadow-sm">
-                      <img src={url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
+                      <LazyImage src={url} alt={`Foto ${i + 1}`} wrapperClassName="w-full h-full" className="w-full h-full object-cover" />
                       
                       {/* Utama / Star Badge */}
                       {i === 0 ? (
@@ -1306,7 +1307,7 @@ export default function AdminKaryaPage() {
                           <div>
                             <span className="text-xs text-gray-500 font-medium block mb-1">Sampul Depan:</span>
                             <div className="w-20 h-28 rounded-lg overflow-hidden border border-gray-200 shadow-sm bg-gray-50">
-                              <img src={metaVal("sampul_depan")} alt="Sampul Depan" className="w-full h-full object-cover" />
+                              <LazyImage src={metaVal("sampul_depan")} alt="Sampul Depan" wrapperClassName="w-full h-full" className="w-full h-full object-cover" />
                             </div>
                           </div>
                         )}
@@ -1314,7 +1315,7 @@ export default function AdminKaryaPage() {
                           <div>
                             <span className="text-xs text-gray-500 font-medium block mb-1">Sampul Belakang:</span>
                             <div className="w-20 h-28 rounded-lg overflow-hidden border border-gray-200 shadow-sm bg-gray-50">
-                              <img src={metaVal("sampul_belakang")} alt="Sampul Belakang" className="w-full h-full object-cover" />
+                              <LazyImage src={metaVal("sampul_belakang")} alt="Sampul Belakang" wrapperClassName="w-full h-full" className="w-full h-full object-cover" />
                             </div>
                           </div>
                         )}
@@ -1326,7 +1327,7 @@ export default function AdminKaryaPage() {
                         <span className="text-xs text-gray-500 font-medium block mb-1">Foto/Dokumen HKI:</span>
                         <div className="w-32 aspect-[4/3] rounded-lg overflow-hidden border border-gray-200 shadow-sm bg-gray-50">
                           <a href={metaVal("fotoHki")} target="_blank" rel="noopener noreferrer">
-                            <img src={metaVal("fotoHki")} alt="Dokumen HKI" className="w-full h-full object-cover hover:scale-105 transition-transform" />
+                            <LazyImage src={metaVal("fotoHki")} alt="Dokumen HKI" wrapperClassName="w-full h-full" className="w-full h-full object-cover hover:scale-105 transition-transform" />
                           </a>
                         </div>
                       </div>
@@ -1338,7 +1339,7 @@ export default function AdminKaryaPage() {
                           <span className="text-xs text-gray-500 font-medium block mb-1">Foto Sertifikat:</span>
                           <div className="w-32 aspect-[4/3] rounded-lg overflow-hidden border border-gray-200 shadow-sm bg-gray-50">
                             <a href={metaVal("fotoSertifikat")} target="_blank" rel="noopener noreferrer">
-                              <img src={metaVal("fotoSertifikat")} alt="Sertifikat" className="w-full h-full object-cover hover:scale-105 transition-transform" />
+                              <LazyImage src={metaVal("fotoSertifikat")} alt="Sertifikat" wrapperClassName="w-full h-full" className="w-full h-full object-cover hover:scale-105 transition-transform" />
                             </a>
                           </div>
                         </div>
@@ -1376,7 +1377,7 @@ export default function AdminKaryaPage() {
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {k.foto_urls.map((url: string, i: number) => (
                       <div key={i} className="rounded-xl overflow-hidden border border-gray-200 shadow-sm">
-                        <img src={url} alt={`Foto ${i + 1}`} className="w-full h-28 object-cover" />
+                        <LazyImage src={url} alt={`Foto ${i + 1}`} wrapperClassName="w-full h-28" className="w-full h-28 object-cover" />
                       </div>
                     ))}
                   </div>

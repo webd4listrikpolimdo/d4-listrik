@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { HiOutlinePencilSquare as EditIcon, HiOutlineTrash as TrashIcon, HiOutlinePlus as PlusIcon, HiOutlineArrowUpTray as UploadIcon, HiOutlineGlobeAlt as GlobeIcon, HiOutlineIdentification as ShieldIcon, HiOutlineMagnifyingGlass, HiOutlineXMark } from "react-icons/hi2";
 import Modal from "@/components/universal/Modal";
+import LazyImage from "@/components/universal/LazyImage";
 import ConfirmDialog from "@/components/universal/ConfirmDialog";
 import { invalidateCache } from "@/lib/fetchCache";
 import ComboBox from "@/components/universal/ComboBox";
@@ -604,7 +605,7 @@ export default function ConfigManagement() {
               <div className="flex items-center gap-6">
                 <div className="w-20 h-20 rounded-xl border border-gray-100 flex items-center justify-center bg-gray-50 p-2 shrink-0">
                   {logo.logo_url ? (
-                    <img src={logo.logo_url} alt="Logo Prodi" className="max-w-full max-h-full object-contain" />
+                    <LazyImage src={logo.logo_url} alt="Logo Prodi" wrapperClassName="max-w-full max-h-full flex items-center justify-center" className="max-w-full max-h-full object-contain" />
                   ) : (
                     <GlobeIcon className="w-8 h-8 text-gray-400" />
                   )}
@@ -656,10 +657,10 @@ export default function ConfigManagement() {
               <div className="flex flex-col gap-4">
                 <div className="w-full h-48 rounded-xl border border-gray-100 flex items-center justify-center bg-gray-50 overflow-hidden relative">
                   {prodiInfo.hero_bg_url ? (
-                    <img src={prodiInfo.hero_bg_url} alt="Hero Background" className="w-full h-full object-cover" />
+                    <LazyImage src={prodiInfo.hero_bg_url} alt="Hero Background" wrapperClassName="w-full h-full" className="w-full h-full object-cover" />
                   ) : (
                     <div className="text-center w-full h-full relative flex items-center justify-center">
-                      <img src="/images/hero-bg.jpg" alt="Default Hero Background" className="w-full h-full object-cover opacity-50 absolute inset-0" />
+                      <LazyImage src="/images/hero-bg.jpg" alt="Default Hero Background" wrapperClassName="w-full h-full absolute inset-0" className="w-full h-full object-cover opacity-50 absolute inset-0" />
                       <div className="relative z-10 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-lg text-xs font-medium text-gray-600 shadow-sm border border-gray-100">
                         Menggunakan Gambar Default (public/images/hero-bg.jpg)
                       </div>

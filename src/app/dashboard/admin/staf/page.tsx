@@ -25,7 +25,7 @@ import {
   HiEye,
   HiOutlineExclamationTriangle
 } from "react-icons/hi2";
-import Image from "next/image";
+import LazyImage from "@/components/universal/LazyImage";
 import { maskNip, maskPhone } from "@/lib/masks";
 import { useNotification } from "@/context/NotificationContext";
 import TablePagination from "@/components/universal/TablePagination";
@@ -926,13 +926,14 @@ export default function AdminStafPage() {
           {editingId && (
             <div className="flex items-center gap-4 border-b border-gray-100 pb-4">
               <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200 shrink-0">
-                <img 
+                <LazyImage 
                   src={
                     activeTab === "dosen" 
-                      ? (dosenForm.foto || "/images/default-profile.svg") 
-                      : (pegawaiForm.foto_url || "/images/default-profile.svg")
+                      ? (dosenForm.foto || undefined) 
+                      : (pegawaiForm.foto_url || undefined)
                   } 
                   alt="Foto Profile" 
+                  wrapperClassName="w-full h-full"
                   className="w-full h-full object-cover" 
                 />
               </div>

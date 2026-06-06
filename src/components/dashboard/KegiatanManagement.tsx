@@ -20,6 +20,7 @@ import {
   HiOutlineStar
 } from "react-icons/hi2";
 import Modal from "@/components/universal/Modal";
+import LazyImage from "@/components/universal/LazyImage";
 import ComboBox from "@/components/universal/ComboBox";
 import ConfirmDialog from "@/components/universal/ConfirmDialog";
 import TablePagination from "@/components/universal/TablePagination";
@@ -949,7 +950,7 @@ export default function KegiatanManagement() {
               <div className="flex flex-wrap gap-3 mb-3">
                 {form.foto_urls.map((url, idx) => (
                   <div key={idx} className="relative group w-24 h-24 rounded-xl overflow-hidden border border-gray-250 shadow-sm">
-                    <img src={url} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
+                    <LazyImage src={url} alt={`Preview ${idx + 1}`} wrapperClassName="w-full h-full" className="w-full h-full object-cover" />
                     
                     {/* Utama / Star Badge */}
                     {idx === 0 ? (
@@ -1067,7 +1068,7 @@ export default function KegiatanManagement() {
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                   {reviewItem.foto_urls.map((url, idx) => (
                     <a key={idx} href={url} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-lg overflow-hidden border border-gray-100 block">
-                      <img src={url} alt={`Dokumentasi ${idx + 1}`} className="w-full h-full object-cover" />
+                      <LazyImage src={url} alt={`Dokumentasi ${idx + 1}`} wrapperClassName="w-full h-full" className="w-full h-full object-cover" />
                     </a>
                   ))}
                 </div>
@@ -1145,7 +1146,7 @@ export default function KegiatanManagement() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {detailItem.foto_urls.map((url: string, idx: number) => (
                     <a key={idx} href={url} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-lg overflow-hidden border border-gray-150 block hover:opacity-90 transition-opacity">
-                      <img src={url} alt={`Dokumentasi ${idx + 1}`} className="w-full h-full object-cover" />
+                      <LazyImage src={url} alt={`Dokumentasi ${idx + 1}`} wrapperClassName="w-full h-full" className="w-full h-full object-cover" />
                     </a>
                   ))}
                 </div>

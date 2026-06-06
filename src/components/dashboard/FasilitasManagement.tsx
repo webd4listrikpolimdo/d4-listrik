@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { HiOutlinePlus as PlusIcon, HiOutlinePencilSquare as EditIcon, HiOutlineTrash as TrashIcon, HiOutlineArrowUpTray as UploadIcon, HiPhoto, HiStar, HiOutlineStar } from "react-icons/hi2";
 import Modal from "@/components/universal/Modal";
+import LazyImage from "@/components/universal/LazyImage";
 import ConfirmDialog from "@/components/universal/ConfirmDialog";
 import { cachedFetch, invalidateCache } from "@/lib/fetchCache";
 import { useNotification } from "@/context/NotificationContext";
@@ -265,8 +266,8 @@ export default function FasilitasManagement() {
             <div>
               {/* Cover Photo */}
               <div className="relative aspect-video w-full bg-gray-100 overflow-hidden">
-                <img
-                  src={item.foto_urls?.[0] || "/images/default.svg"}
+                <LazyImage
+                  src={item.foto_urls?.[0]}
                   alt={item.nama}
                   onClick={() => {
                     if (item.foto_urls && item.foto_urls.length > 0) {
@@ -275,6 +276,7 @@ export default function FasilitasManagement() {
                       setLightboxOpen(true);
                     }
                   }}
+                  wrapperClassName="w-full h-full"
                   className={`w-full h-full object-cover ${
                     item.foto_urls && item.foto_urls.length > 0 ? "cursor-zoom-in hover:scale-105 transition-transform duration-500" : ""
                   }`}
@@ -448,7 +450,7 @@ export default function FasilitasManagement() {
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mb-4">
                 {form.foto_urls.map((url, idx) => (
                   <div key={idx} className="relative aspect-video rounded-lg overflow-hidden group border border-gray-100">
-                    <img src={url} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
+                    <LazyImage src={url} alt={`Preview ${idx + 1}`} wrapperClassName="w-full h-full" className="w-full h-full object-cover" />
                     
                     {/* Utama / Star Badge */}
                     {idx === 0 ? (
