@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { HiXMark, HiChevronLeft, HiChevronRight } from "react-icons/hi2";
+import LazyImage from "./LazyImage";
 
 interface ImageLightboxProps {
   isOpen: boolean;
@@ -108,11 +109,11 @@ export default function ImageLightbox({
           onClick={(e) => e.stopPropagation()}
           className="relative max-w-[95vw] max-h-[85vh] md:max-h-[88vh] flex items-center justify-center transition-all duration-300 z-10"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <LazyImage
             src={images[currentIndex]}
             alt={`Preview ${currentIndex + 1}`}
-            className="max-w-full max-h-[75vh] md:max-h-[82vh] object-contain rounded-xl shadow-2xl border border-white/10 select-none bg-black/20 w-auto h-auto"
+            wrapperClassName="max-w-full max-h-[75vh] md:max-h-[82vh] rounded-xl shadow-2xl border border-white/10 overflow-hidden bg-black/20"
+            className="max-w-full max-h-[75vh] md:max-h-[82vh] object-contain select-none w-auto h-auto"
           />
         </div>
 
@@ -147,10 +148,10 @@ export default function ImageLightbox({
                   : "border-transparent opacity-60 hover:opacity-100"
               }`}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <LazyImage
                 src={img}
                 alt={`Thumbnail ${idx + 1}`}
+                wrapperClassName="w-full h-full"
                 className="w-full h-full object-cover"
               />
             </button>
