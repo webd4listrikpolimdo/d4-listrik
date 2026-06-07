@@ -33,6 +33,140 @@ function Avatar({ url, initials, gradient, className = "", sizeClass }: AvatarPr
   );
 }
 
+interface DeveloperCardProps {
+  member: any;
+  idx: number;
+  onClose: () => void;
+}
+
+function DeveloperCard({ member, idx, onClose }: DeveloperCardProps) {
+  const links = member.link ? member.link.split(",").map((s: string) => s.trim()).filter(Boolean) : [];
+  const [activeLinkIndex, setActiveLinkIndex] = useState(0);
+
+  useEffect(() => {
+    if (links.length <= 1) return;
+    const interval = setInterval(() => {
+      setActiveLinkIndex((prev) => (prev + 1) % links.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [links.length]);
+
+  const currentLink = links[activeLinkIndex] || "";
+
+  // Detect social platform from link
+  const getSocialInfo = (url?: string) => {
+    if (!url) return null;
+    const lower = url.toLowerCase();
+    if (lower.includes("linkedin.com")) return { Icon: FaLinkedinIn, label: "LinkedIn", color: "text-[#0A66C2] bg-[#0A66C2]/10 hover:bg-[#0A66C2]/20 border-[#0A66C2]/20" };
+    if (lower.includes("instagram.com")) return { Icon: FaInstagram, label: "Instagram", color: "text-[#E4405F] bg-[#E4405F]/10 hover:bg-[#E4405F]/20 border-[#E4405F]/20" };
+    if (lower.includes("github.com")) return { Icon: FaGithub, label: "GitHub", color: "text-gray-800 bg-gray-100 hover:bg-gray-200 border-gray-200" };
+    return { Icon: HiArrowTopRightOnSquare, label: "Link", color: "text-primary-600 bg-primary-50 hover:bg-primary-100 border-primary-200" };
+  };
+
+  const social = getSocialInfo(currentLink);
+
+  return (
+    <div 
+      className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 pt-5 flex flex-col items-center text-center shadow-sm relative group hover:border-primary-300 transition-colors duration-200 overflow-hidden"
+    >
+      {/* Background Role Pattern */}
+      <div
+        className="absolute inset-0 pointer-events-none select-none overflow-hidden"
+        aria-hidden="true"
+      >
+        <div
+          className={`font-black uppercase ${
+            idx === 0
+              ? 'text-primary-650'
+              : idx === 1
+              ? 'text-amber-500'
+              : 'text-indigo-500'
+          }`}
+          style={{
+            fontSize: '11px',
+            opacity: 0.12,
+            lineHeight: '2.2',
+            letterSpacing: '0.08em',
+            whiteSpace: 'nowrap',
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            width: '1500px',
+            height: '1500px',
+            transform: 'translate(-50%, -50%) rotate(-18deg)',
+          }}
+        >
+          {Array.from({ length: 80 }).map((_, row) => (
+            <div key={row} style={{ marginLeft: row % 2 === 0 ? '0px' : '40px' }}>
+              {Array.from({ length: 20 }).map((_, col) => (
+                <span key={col} style={{ marginRight: '20px' }}>{member.role}</span>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {currentLink ? (
+        <a
+          href={currentLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mb-2.5 sm:mb-3.5 mt-2 block"
+        >
+          <Avatar
+            url={member.foto_url}
+            initials={member.initials}
+            gradient={member.gradient}
+            sizeClass="w-12 h-12 sm:w-14 sm:h-14 text-base sm:text-lg"
+          />
+        </a>
+      ) : (
+        <div className="mb-2.5 sm:mb-3.5 mt-2">
+          <Avatar
+            url={member.foto_url}
+            initials={member.initials}
+            gradient={member.gradient}
+            sizeClass="w-12 h-12 sm:w-14 sm:h-14 text-base sm:text-lg"
+          />
+        </div>
+      )}
+      
+      {currentLink ? (
+        <a
+          href={currentLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-extrabold text-gray-900 hover:text-primary-600 text-xs sm:text-sm leading-tight mb-1 truncate w-full hover:underline transition-colors duration-150 block"
+        >
+          {member.nama}
+        </a>
+      ) : (
+        <h3 className="font-extrabold text-gray-900 text-xs sm:text-sm leading-tight mb-1 truncate w-full">
+          {member.nama}
+        </h3>
+      )}
+      
+      <code className="text-[10px] sm:text-xs bg-gray-200/85 text-gray-800 font-mono px-2 py-0.5 rounded-md mb-2.5 select-all">
+        NIM. {member.nim}
+      </code>
+
+      {social && currentLink && (
+        <a
+          href={currentLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition-all duration-300 animate-fade-in ${social.color}`}
+          title={`Kunjungi ${social.label}`}
+          key={currentLink}
+        >
+          <social.Icon className="w-3 h-3" />
+          {social.label}
+        </a>
+      )}
+    </div>
+  );
+}
+
 export default function DevTeamModal({ isOpen, onClose }: DevTeamModalProps) {
   const [mounted, setMounted] = useState(false);
   const [developers, setDevelopers] = useState<any[]>(devTeam);
@@ -129,119 +263,14 @@ export default function DevTeamModal({ isOpen, onClose }: DevTeamModalProps) {
                 </div>
               ))
             ) : (
-              developers.map((member, idx) => {
-                // Detect social platform from link
-                const getSocialInfo = (url?: string) => {
-                  if (!url) return null;
-                  const lower = url.toLowerCase();
-                  if (lower.includes("linkedin.com")) return { Icon: FaLinkedinIn, label: "LinkedIn", color: "text-[#0A66C2] bg-[#0A66C2]/10 hover:bg-[#0A66C2]/20 border-[#0A66C2]/20" };
-                  if (lower.includes("instagram.com")) return { Icon: FaInstagram, label: "Instagram", color: "text-[#E4405F] bg-[#E4405F]/10 hover:bg-[#E4405F]/20 border-[#E4405F]/20" };
-                  if (lower.includes("github.com")) return { Icon: FaGithub, label: "GitHub", color: "text-gray-800 bg-gray-100 hover:bg-gray-200 border-gray-200" };
-                  return { Icon: HiArrowTopRightOnSquare, label: "Link", color: "text-primary-600 bg-primary-50 hover:bg-primary-100 border-primary-200" };
-                };
-                const social = getSocialInfo(member.link);
-
-                return (
-                  <div 
-                    key={idx}
-                    className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 pt-5 flex flex-col items-center text-center shadow-sm relative group hover:border-primary-300 transition-colors duration-200 overflow-hidden"
-                  >
-                    {/* Background Role Pattern */}
-                    <div
-                      className="absolute inset-0 pointer-events-none select-none overflow-hidden"
-                      aria-hidden="true"
-                    >
-                      <div
-                        className={`font-black uppercase ${
-                          idx === 0
-                            ? 'text-primary-600'
-                            : idx === 1
-                            ? 'text-amber-500'
-                            : 'text-indigo-500'
-                        }`}
-                        style={{
-                          fontSize: '11px',
-                          opacity: 0.12,
-                          lineHeight: '2.2',
-                          letterSpacing: '0.08em',
-                          whiteSpace: 'nowrap',
-                          position: 'absolute',
-                          top: '50%',
-                          left: '50%',
-                          width: '1500px',
-                          height: '1500px',
-                          transform: 'translate(-50%, -50%) rotate(-18deg)',
-                        }}
-                      >
-                        {Array.from({ length: 80 }).map((_, row) => (
-                          <div key={row} style={{ marginLeft: row % 2 === 0 ? '0px' : '40px' }}>
-                            {Array.from({ length: 20 }).map((_, col) => (
-                              <span key={col} style={{ marginRight: '20px' }}>{member.role}</span>
-                            ))}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {member.link ? (
-                      <a
-                        href={member.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mb-2.5 sm:mb-3.5 mt-2"
-                      >
-                        <Avatar
-                          url={member.foto_url}
-                          initials={member.initials}
-                          gradient={member.gradient}
-                          sizeClass="w-12 h-12 sm:w-14 sm:h-14 text-base sm:text-lg"
-                        />
-                      </a>
-                    ) : (
-                      <div className="mb-2.5 sm:mb-3.5 mt-2">
-                        <Avatar
-                          url={member.foto_url}
-                          initials={member.initials}
-                          gradient={member.gradient}
-                          sizeClass="w-12 h-12 sm:w-14 sm:h-14 text-base sm:text-lg"
-                        />
-                      </div>
-                    )}
-                    
-                    {member.link ? (
-                      <a
-                        href={member.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-extrabold text-gray-900 hover:text-primary-600 text-xs sm:text-sm leading-tight mb-1 truncate w-full hover:underline transition-colors duration-150"
-                      >
-                        {member.nama}
-                      </a>
-                    ) : (
-                      <h3 className="font-extrabold text-gray-900 text-xs sm:text-sm leading-tight mb-1 truncate w-full">
-                        {member.nama}
-                      </h3>
-                    )}
-                    
-                    <code className="text-[10px] sm:text-xs bg-gray-200/85 text-gray-800 font-mono px-2 py-0.5 rounded-md mb-2.5 select-all">
-                      NIM. {member.nim}
-                    </code>
-
-                    {social && member.link && (
-                      <a
-                        href={member.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition-colors duration-150 ${social.color}`}
-                        title={`Kunjungi ${social.label}`}
-                      >
-                        <social.Icon className="w-3 h-3" />
-                        {social.label}
-                      </a>
-                    )}
-                  </div>
-                );
-              })
+              developers.map((member, idx) => (
+                <DeveloperCard
+                  key={idx}
+                  member={member}
+                  idx={idx}
+                  onClose={onClose}
+                />
+              ))
             )}
           </div>
 
