@@ -42,6 +42,7 @@ export default function FasilitasManagement() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLab, setIsLab] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [form, setForm] = useState({
     nama: "",
     deskripsi: "",
@@ -94,6 +95,7 @@ export default function FasilitasManagement() {
       no_ruangan: "",
       foto_urls: [],
     });
+    setActivePhotoIndex(0);
     setIsOpen(true);
   };
 
@@ -108,6 +110,7 @@ export default function FasilitasManagement() {
       no_ruangan: item.no_ruangan || "",
       foto_urls: item.foto_urls || [],
     });
+    setActivePhotoIndex(0);
     setIsOpen(true);
   };
 
@@ -130,10 +133,14 @@ export default function FasilitasManagement() {
 
         if (res.ok) {
           const data = await res.json();
-          setForm((prev) => ({
-            ...prev,
-            foto_urls: [...prev.foto_urls, data.url],
-          }));
+          setForm((prev) => {
+            const nextUrls = [...prev.foto_urls, data.url];
+            setActivePhotoIndex(nextUrls.length - 1);
+            return {
+              ...prev,
+              foto_urls: nextUrls,
+            };
+          });
           showSuccess(`Foto "${file.name}" berhasil diupload!`);
         } else {
           showError(`Gagal mengupload "${file.name}".`);
@@ -149,10 +156,18 @@ export default function FasilitasManagement() {
   };
 
   const handleRemovePhoto = (indexToRemove: number) => {
-    setForm((prev) => ({
-      ...prev,
-      foto_urls: prev.foto_urls.filter((_, idx) => idx !== indexToRemove),
-    }));
+    setForm((prev) => {
+      const nextUrls = prev.foto_urls.filter((_, idx) => idx !== indexToRemove);
+      setActivePhotoIndex((currentIdx) => {
+        if (nextUrls.length === 0) return 0;
+        if (currentIdx >= nextUrls.length) return nextUrls.length - 1;
+        return currentIdx;
+      });
+      return {
+        ...prev,
+        foto_urls: nextUrls,
+      };
+    });
   };
 
   const handleSetMainPhoto = (idx: number) => {
@@ -162,6 +177,7 @@ export default function FasilitasManagement() {
       const target = urls[idx];
       urls.splice(idx, 1);
       urls.unshift(target);
+      setActivePhotoIndex(0);
       return {
         ...prev,
         foto_urls: urls,
@@ -445,40 +461,74 @@ export default function FasilitasManagement() {
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">Daftar Foto Fasilitas</label>
             
-            {/* Thumbnails grid */}
-            {form.foto_urls.length > 0 && (
-              <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mb-4">
-                {form.foto_urls.map((url, idx) => (
-                  <div key={url} className="relative aspect-video rounded-lg overflow-hidden group border border-gray-100">
-                    <LazyImage src={url} alt={`Preview ${idx + 1}`} wrapperClassName="w-full h-full" className="w-full h-full object-cover" />
-                    
-                    {/* Utama / Star Badge */}
-                    {idx === 0 ? (
-                      <span className="absolute top-1.5 left-1.5 bg-yellow-500 text-white px-1.5 py-0.5 rounded-md text-[9px] font-bold shadow flex items-center gap-0.5 z-10 select-none">
-                        <HiStar className="w-3 h-3" /> Utama
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleSetMainPhoto(idx)}
-                        className="absolute top-1.5 left-1.5 bg-white/95 hover:bg-white text-yellow-600 hover:text-yellow-700 p-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity shadow cursor-pointer z-10"
-                        title="Set sebagai foto utama"
-                      >
-                        <HiOutlineStar className="w-3.5 h-3.5" />
-                      </button>
-                    )}
+            {/* Image Slider */}
+            {form.foto_urls.length > 0 ? (
+              <div className="relative aspect-video max-w-md mx-auto rounded-2xl overflow-hidden border border-gray-100 bg-gray-50 flex items-center justify-center mb-4 group shadow-inner">
+                <LazyImage
+                  src={form.foto_urls[Math.min(activePhotoIndex, form.foto_urls.length - 1)]}
+                  alt={`Preview ${Math.min(activePhotoIndex, form.foto_urls.length - 1) + 1}`}
+                  wrapperClassName="w-full h-full"
+                  className="w-full h-full object-cover"
+                />
+                
+                {/* Controls overlay */}
+                {Math.min(activePhotoIndex, form.foto_urls.length - 1) === 0 ? (
+                  <span className="absolute top-3 left-3 bg-yellow-500 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold shadow-md flex items-center gap-1 z-10 select-none">
+                    <HiStar className="w-3.5 h-3.5" /> Foto Utama
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleSetMainPhoto(Math.min(activePhotoIndex, form.foto_urls.length - 1))}
+                    className="absolute top-3 left-3 bg-white/95 hover:bg-white text-yellow-600 hover:text-yellow-700 px-2.5 py-1 rounded-lg text-[10px] font-bold shadow transition-all hover:scale-105 flex items-center gap-1 cursor-pointer z-10"
+                    title="Set sebagai foto utama"
+                  >
+                    <HiOutlineStar className="w-3.5 h-3.5" /> Jadikan Utama
+                  </button>
+                )}
 
-                    {/* Hapus Button */}
+                <button
+                  type="button"
+                  onClick={() => handleRemovePhoto(Math.min(activePhotoIndex, form.foto_urls.length - 1))}
+                  className="absolute top-3 right-3 bg-red-600 hover:bg-red-750 text-white p-2 rounded-lg shadow-md transition-colors cursor-pointer z-10"
+                  title="Hapus foto"
+                >
+                  <TrashIcon className="w-4 h-4" />
+                </button>
+
+                {form.foto_urls.length > 1 && (
+                  <>
                     <button
                       type="button"
-                      onClick={() => handleRemovePhoto(idx)}
-                      className="absolute top-1.5 right-1.5 bg-red-650 hover:bg-red-700 text-white p-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity shadow cursor-pointer z-10"
-                      title="Hapus foto"
+                      onClick={() => setActivePhotoIndex((prev) => (prev === 0 ? form.foto_urls.length - 1 : prev - 1))}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-md hover:scale-105 transition-all cursor-pointer z-10"
+                      aria-label="Previous photo"
                     >
-                      <TrashIcon className="w-3.5 h-3.5" />
+                      <svg className="w-5 h-5 text-gray-650" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                      </svg>
                     </button>
-                  </div>
-                ))}
+
+                    <button
+                      type="button"
+                      onClick={() => setActivePhotoIndex((prev) => (prev >= form.foto_urls.length - 1 ? 0 : prev + 1))}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-md hover:scale-105 transition-all cursor-pointer z-10"
+                      aria-label="Next photo"
+                    >
+                      <svg className="w-5 h-5 text-gray-650" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </>
+                )}
+
+                <span className="absolute bottom-3 right-3 bg-black/60 text-white px-2.5 py-1 rounded-full text-xs font-bold tracking-wider z-10 select-none">
+                  {Math.min(activePhotoIndex, form.foto_urls.length - 1) + 1} / {form.foto_urls.length}
+                </span>
+              </div>
+            ) : (
+              <div className="border border-dashed border-gray-200 bg-gray-50/50 rounded-2xl p-6 text-center text-gray-400 mb-4 text-sm font-medium">
+                Belum ada foto yang diupload.
               </div>
             )}
 
