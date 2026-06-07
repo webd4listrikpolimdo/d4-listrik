@@ -124,119 +124,137 @@ export default function DevTeamModal({ isOpen, onClose }: DevTeamModalProps) {
 
           {/* Members Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-            {developers.map((member, idx) => {
-              // Detect social platform from link
-              const getSocialInfo = (url?: string) => {
-                if (!url) return null;
-                const lower = url.toLowerCase();
-                if (lower.includes("linkedin.com")) return { Icon: FaLinkedinIn, label: "LinkedIn", color: "text-[#0A66C2] bg-[#0A66C2]/10 hover:bg-[#0A66C2]/20 border-[#0A66C2]/20" };
-                if (lower.includes("instagram.com")) return { Icon: FaInstagram, label: "Instagram", color: "text-[#E4405F] bg-[#E4405F]/10 hover:bg-[#E4405F]/20 border-[#E4405F]/20" };
-                if (lower.includes("github.com")) return { Icon: FaGithub, label: "GitHub", color: "text-gray-800 bg-gray-100 hover:bg-gray-200 border-gray-200" };
-                return { Icon: HiArrowTopRightOnSquare, label: "Link", color: "text-primary-600 bg-primary-50 hover:bg-primary-100 border-primary-200" };
-              };
-              const social = getSocialInfo(member.link);
-
-              return (
-              <div 
-                key={idx}
-                className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 pt-5 flex flex-col items-center text-center shadow-sm relative group hover:border-primary-300 transition-colors duration-200 overflow-hidden"
-              >
-                {/* Background Role Pattern */}
-                <div
-                  className="absolute inset-0 pointer-events-none select-none overflow-hidden"
-                  aria-hidden="true"
+            {loading ? (
+              Array.from({ length: 3 }).map((_, idx) => (
+                <div 
+                  key={idx}
+                  className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 pt-5 flex flex-col items-center text-center shadow-sm relative overflow-hidden animate-pulse"
                 >
-                  <div
-                    className={`font-black uppercase ${
-                      idx === 0
-                        ? 'text-primary-600'
-                        : idx === 1
-                        ? 'text-amber-500'
-                        : 'text-indigo-500'
-                    }`}
-                    style={{
-                      fontSize: '11px',
-                      opacity: 0.12,
-                      lineHeight: '2.2',
-                      letterSpacing: '0.08em',
-                      whiteSpace: 'nowrap',
-                      position: 'absolute',
-                      top: '50%',
-                      left: '50%',
-                      width: '1500px',
-                      height: '1500px',
-                      transform: 'translate(-50%, -50%) rotate(-18deg)',
-                    }}
+                  {/* Avatar Skeleton */}
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-slate-200 mb-3.5 mt-2 shrink-0" />
+                  {/* Name Skeleton */}
+                  <div className="h-4 w-28 bg-slate-200 rounded-md mb-2" />
+                  {/* NIM Skeleton */}
+                  <div className="h-3.5 w-20 bg-slate-200 rounded-md mb-3" />
+                  {/* Social Badge Skeleton */}
+                  <div className="h-6 w-16 bg-slate-200 rounded-lg" />
+                </div>
+              ))
+            ) : (
+              developers.map((member, idx) => {
+                // Detect social platform from link
+                const getSocialInfo = (url?: string) => {
+                  if (!url) return null;
+                  const lower = url.toLowerCase();
+                  if (lower.includes("linkedin.com")) return { Icon: FaLinkedinIn, label: "LinkedIn", color: "text-[#0A66C2] bg-[#0A66C2]/10 hover:bg-[#0A66C2]/20 border-[#0A66C2]/20" };
+                  if (lower.includes("instagram.com")) return { Icon: FaInstagram, label: "Instagram", color: "text-[#E4405F] bg-[#E4405F]/10 hover:bg-[#E4405F]/20 border-[#E4405F]/20" };
+                  if (lower.includes("github.com")) return { Icon: FaGithub, label: "GitHub", color: "text-gray-800 bg-gray-100 hover:bg-gray-200 border-gray-200" };
+                  return { Icon: HiArrowTopRightOnSquare, label: "Link", color: "text-primary-600 bg-primary-50 hover:bg-primary-100 border-primary-200" };
+                };
+                const social = getSocialInfo(member.link);
+
+                return (
+                  <div 
+                    key={idx}
+                    className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 pt-5 flex flex-col items-center text-center shadow-sm relative group hover:border-primary-300 transition-colors duration-200 overflow-hidden"
                   >
-                    {Array.from({ length: 80 }).map((_, row) => (
-                      <div key={row} style={{ marginLeft: row % 2 === 0 ? '0px' : '40px' }}>
-                        {Array.from({ length: 20 }).map((_, col) => (
-                          <span key={col} style={{ marginRight: '20px' }}>{member.role}</span>
+                    {/* Background Role Pattern */}
+                    <div
+                      className="absolute inset-0 pointer-events-none select-none overflow-hidden"
+                      aria-hidden="true"
+                    >
+                      <div
+                        className={`font-black uppercase ${
+                          idx === 0
+                            ? 'text-primary-600'
+                            : idx === 1
+                            ? 'text-amber-500'
+                            : 'text-indigo-500'
+                        }`}
+                        style={{
+                          fontSize: '11px',
+                          opacity: 0.12,
+                          lineHeight: '2.2',
+                          letterSpacing: '0.08em',
+                          whiteSpace: 'nowrap',
+                          position: 'absolute',
+                          top: '50%',
+                          left: '50%',
+                          width: '1500px',
+                          height: '1500px',
+                          transform: 'translate(-50%, -50%) rotate(-18deg)',
+                        }}
+                      >
+                        {Array.from({ length: 80 }).map((_, row) => (
+                          <div key={row} style={{ marginLeft: row % 2 === 0 ? '0px' : '40px' }}>
+                            {Array.from({ length: 20 }).map((_, col) => (
+                              <span key={col} style={{ marginRight: '20px' }}>{member.role}</span>
+                            ))}
+                          </div>
                         ))}
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    </div>
 
-                {member.link ? (
-                  <a
-                    href={member.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mb-2.5 sm:mb-3.5 mt-2"
-                  >
-                    <Avatar
-                      url={member.foto_url}
-                      initials={member.initials}
-                      gradient={member.gradient}
-                      sizeClass="w-12 h-12 sm:w-14 sm:h-14 text-base sm:text-lg"
-                    />
-                  </a>
-                ) : (
-                  <div className="mb-2.5 sm:mb-3.5 mt-2">
-                    <Avatar
-                      url={member.foto_url}
-                      initials={member.initials}
-                      gradient={member.gradient}
-                      sizeClass="w-12 h-12 sm:w-14 sm:h-14 text-base sm:text-lg"
-                    />
-                  </div>
-                )}
-                
-                {member.link ? (
-                  <a
-                    href={member.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-extrabold text-gray-900 hover:text-primary-600 text-xs sm:text-sm leading-tight mb-1 truncate w-full hover:underline transition-colors duration-150"
-                  >
-                    {member.nama}
-                  </a>
-                ) : (
-                  <h3 className="font-extrabold text-gray-900 text-xs sm:text-sm leading-tight mb-1 truncate w-full">
-                    {member.nama}
-                  </h3>
-                )}
-                
-                <code className="text-[10px] sm:text-xs bg-gray-200/85 text-gray-800 font-mono px-2 py-0.5 rounded-md mb-2.5 select-all">
-                  NIM. {member.nim}
-                </code>
+                    {member.link ? (
+                      <a
+                        href={member.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mb-2.5 sm:mb-3.5 mt-2"
+                      >
+                        <Avatar
+                          url={member.foto_url}
+                          initials={member.initials}
+                          gradient={member.gradient}
+                          sizeClass="w-12 h-12 sm:w-14 sm:h-14 text-base sm:text-lg"
+                        />
+                      </a>
+                    ) : (
+                      <div className="mb-2.5 sm:mb-3.5 mt-2">
+                        <Avatar
+                          url={member.foto_url}
+                          initials={member.initials}
+                          gradient={member.gradient}
+                          sizeClass="w-12 h-12 sm:w-14 sm:h-14 text-base sm:text-lg"
+                        />
+                      </div>
+                    )}
+                    
+                    {member.link ? (
+                      <a
+                        href={member.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-extrabold text-gray-900 hover:text-primary-600 text-xs sm:text-sm leading-tight mb-1 truncate w-full hover:underline transition-colors duration-150"
+                      >
+                        {member.nama}
+                      </a>
+                    ) : (
+                      <h3 className="font-extrabold text-gray-900 text-xs sm:text-sm leading-tight mb-1 truncate w-full">
+                        {member.nama}
+                      </h3>
+                    )}
+                    
+                    <code className="text-[10px] sm:text-xs bg-gray-200/85 text-gray-800 font-mono px-2 py-0.5 rounded-md mb-2.5 select-all">
+                      NIM. {member.nim}
+                    </code>
 
-                {social && member.link && (
-                  <a
-                    href={member.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition-colors duration-150 ${social.color}`}
-                    title={`Kunjungi ${social.label}`}
-                  >
-                    <social.Icon className="w-3 h-3" />
-                    {social.label}
-                  </a>
-                )}
-              </div>
-              );
-            })}
+                    {social && member.link && (
+                      <a
+                        href={member.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition-colors duration-150 ${social.color}`}
+                        title={`Kunjungi ${social.label}`}
+                      >
+                        <social.Icon className="w-3 h-3" />
+                        {social.label}
+                      </a>
+                    )}
+                  </div>
+                );
+              })
+            )}
           </div>
 
           {/* Lecturer Section */}
@@ -244,74 +262,87 @@ export default function DevTeamModal({ isOpen, onClose }: DevTeamModalProps) {
             <span className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider mb-2.5 font-bold">
               Dosen Pengajar
             </span>
-            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl px-5 py-3.5 flex items-center gap-4 w-full hover:border-primary-300 transition-all duration-200 group">
-              {lecturer.link ? (
-                lecturer.link.startsWith("/") ? (
-                  <Link
-                    href={lecturer.link}
-                    onClick={onClose}
-                  >
-                    <Avatar
-                      url={lecturer.foto_url}
-                      initials={lecturer.initials}
-                      gradient="from-primary-950 to-primary-900"
-                      sizeClass="w-14 h-14 text-sm"
-                    />
-                  </Link>
-                ) : (
-                  <a
-                    href={lecturer.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Avatar
-                      url={lecturer.foto_url}
-                      initials={lecturer.initials}
-                      gradient="from-primary-950 to-primary-900"
-                      sizeClass="w-14 h-14 text-sm"
-                    />
-                  </a>
-                )
-              ) : (
-                <div>
-                  <Avatar
-                    url={lecturer.foto_url}
-                    initials={lecturer.initials}
-                    gradient="from-primary-950 to-primary-900"
-                    sizeClass="w-14 h-14 text-sm"
-                  />
+            {loading ? (
+              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl px-5 py-3.5 flex items-center gap-4 w-full animate-pulse">
+                {/* Avatar Skeleton */}
+                <div className="w-14 h-14 rounded-full bg-slate-200 shrink-0" />
+                <div className="text-left flex-1 min-w-0">
+                  {/* Name Skeleton */}
+                  <div className="h-4 w-36 bg-slate-200 rounded-md mb-2" />
+                  {/* Role Skeleton */}
+                  <div className="h-3.5 w-48 bg-slate-200 rounded-md" />
                 </div>
-              )}
-              <div className="text-left min-w-0">
+              </div>
+            ) : (
+              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl px-5 py-3.5 flex items-center gap-4 w-full hover:border-primary-300 transition-all duration-200 group">
                 {lecturer.link ? (
                   lecturer.link.startsWith("/") ? (
                     <Link
                       href={lecturer.link}
                       onClick={onClose}
-                      className="font-extrabold text-gray-900 hover:text-primary-600 text-sm leading-tight block truncate hover:underline transition-colors"
                     >
-                      {lecturer.nama}
+                      <Avatar
+                        url={lecturer.foto_url}
+                        initials={lecturer.initials}
+                        gradient="from-primary-950 to-primary-900"
+                        sizeClass="w-14 h-14 text-sm"
+                      />
                     </Link>
                   ) : (
                     <a
                       href={lecturer.link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="font-extrabold text-gray-900 hover:text-primary-600 text-sm leading-tight block truncate hover:underline transition-colors"
                     >
-                      {lecturer.nama}
+                      <Avatar
+                        url={lecturer.foto_url}
+                        initials={lecturer.initials}
+                        gradient="from-primary-950 to-primary-900"
+                        sizeClass="w-14 h-14 text-sm"
+                      />
                     </a>
                   )
                 ) : (
-                  <h4 className="font-extrabold text-gray-900 text-sm leading-tight truncate">
-                    {lecturer.nama}
-                  </h4>
+                  <div>
+                    <Avatar
+                      url={lecturer.foto_url}
+                      initials={lecturer.initials}
+                      gradient="from-primary-950 to-primary-900"
+                      sizeClass="w-14 h-14 text-sm"
+                    />
+                  </div>
                 )}
-                <p className="text-xs text-gray-600 truncate mt-1">
-                  {lecturer.role}
-                </p>
+                <div className="text-left min-w-0">
+                  {lecturer.link ? (
+                    lecturer.link.startsWith("/") ? (
+                      <Link
+                        href={lecturer.link}
+                        onClick={onClose}
+                        className="font-extrabold text-gray-900 hover:text-primary-600 text-sm leading-tight block truncate hover:underline transition-colors"
+                      >
+                        {lecturer.nama}
+                      </Link>
+                    ) : (
+                      <a
+                        href={lecturer.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-extrabold text-gray-900 hover:text-primary-600 text-sm leading-tight block truncate hover:underline transition-colors"
+                      >
+                        {lecturer.nama}
+                      </a>
+                    )
+                  ) : (
+                    <h4 className="font-extrabold text-gray-900 text-sm leading-tight truncate">
+                      {lecturer.nama}
+                    </h4>
+                  )}
+                  <p className="text-xs text-gray-600 truncate mt-1">
+                    {lecturer.role}
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
