@@ -6,6 +6,7 @@ import Link from "next/link";
 import { HiOutlineXMark, HiOutlineCodeBracket, HiArrowTopRightOnSquare } from "react-icons/hi2";
 import { FaLinkedinIn, FaInstagram, FaGithub } from "react-icons/fa6";
 import { devTeam, lecturerInfo } from "@/lib/devTeam";
+import LazyImage from "./LazyImage";
 
 interface DevTeamModalProps {
   isOpen: boolean;
@@ -21,27 +22,14 @@ interface AvatarProps {
 }
 
 function Avatar({ url, initials, gradient, className = "", sizeClass }: AvatarProps) {
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    setError(false);
-  }, [url]);
-
-  if (url && !error) {
-    return (
-      <img
-        src={url}
-        alt={initials}
-        onError={() => setError(true)}
-        className={`${sizeClass} rounded-full object-cover shadow-md group-hover:scale-105 transition-transform duration-200 shrink-0 ${className}`}
-      />
-    );
-  }
-
   return (
-    <div className={`${sizeClass} rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-black shadow-md group-hover:scale-105 transition-transform duration-200 shrink-0 ${className}`}>
-      {initials}
-    </div>
+    <LazyImage
+      src={url || undefined}
+      fallbackSrc="/images/default-profile.svg"
+      alt={initials}
+      wrapperClassName={`${sizeClass} rounded-full shadow-md group-hover:scale-105 transition-transform duration-200 shrink-0 ${className}`}
+      className="w-full h-full object-cover"
+    />
   );
 }
 
